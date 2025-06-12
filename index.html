@@ -327,9 +327,73 @@
             const today = new Date();
             copyrightEl.innerHTML = `&copy; ${today.getFullYear()} Rodytech. All Rights Reserved.`;
 
-            // --- Local Storage ---
-            const saveTasks = () => localStorage.setItem('weeklyTasks', JSON.stringify(allTasks));
-            const loadTasks = () => allTasks = JSON.parse(localStorage.getItem('weeklyTasks')) || [];
+            // --- API Functions ---
+            const fetchTasks = async (date) => {
+                try {
+                    const response = await fetch(`/api/tasks?date=${date}`);
+                    if (!response.ok) throw new Error('Failed to fetch tasks');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching tasks:', error);
+                    return [];
+                }
+            };
+
+            const saveTask = async (task) => {
+                try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(task)
+                    });
+                    if (!response.ok) throw new Error('Failed to save task');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                    throw error;
+                }
+            };
+
+            const updateTask = async (id, updates) => {
+                try {
+                    const response = await fetch(`/api/tasks/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updates)
+                    });
+                    if (!response.ok) throw new Error('Failed to update task');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error updating task:', error);
+                    throw error;
+                }
+            };
+
+            const deleteTask = async (id) => {
+                try {
+                    const response = await fetch(`/api/tasks/${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) throw new Error('Failed to delete task');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error deleting task:', error);
+                    throw error;
+                }
+            };
+
+            const clearAllTasks = async () => {
+                try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) throw new Error('Failed to clear tasks');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error clearing tasks:', error);
+                    throw error;
+                }
+            };
 
             // --- Gemini API Call ---
             async function callGemini(prompt) { 
@@ -355,7 +419,7 @@
                     return null;
                 }
             }
-            
+
             // --- Core Functions ---
             const renderWeek = () => {
                 weekDaysContainer.innerHTML = '';
@@ -391,8 +455,8 @@
                 taskListDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
             };
 
-            const renderTasks = () => {
-                const tasksForSelectedDay = allTasks.filter(task => task.date === selectedDate);
+            const renderTasks = async () => {
+                const tasksForSelectedDay = await fetchTasks(selectedDate);
                 const tasksToRender = currentFilter 
                     ? tasksForSelectedDay.filter(task => task.tags.includes(currentFilter))
                     : tasksForSelectedDay;
@@ -409,8 +473,8 @@
                     }
                     emptyState.style.display = 'block';
                 } else {
-                     if(emptyState) emptyState.style.display = 'none';
-                     tasksToRender.sort((a,b) => (a.time || "23:59").localeCompare(b.time || "23:59")).forEach(task => {
+                    if(emptyState) emptyState.style.display = 'none';
+                    tasksToRender.sort((a,b) => (a.time || "23:59").localeCompare(b.time || "23:59")).forEach(task => {
                         const taskElement = document.createElement('div');
                         taskElement.dataset.id = task.id;
                          const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
@@ -463,32 +527,41 @@
                 smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0);
             };
 
-            const addTask = (task) => {
-                allTasks.push(task);
-                saveTasks();
-                renderTasks();
+            const addTask = async (task) => {
+                try {
+                    await saveTask(task);
+                    await renderTasks();
+                } catch (error) {
+                    alert('Failed to add task. Please try again.');
+                }
             };
 
-            const toggleComplete = (id, event) => {
-                const task = allTasks.find(t => t.id === id);
-                if (!task) return;
-                
-                if (!task.completed) {
-                    const rect = event.target.getBoundingClientRect();
-                    const origin = { x: (rect.left + rect.right) / 2 / window.innerWidth, y: (rect.top + rect.bottom) / 2 / window.innerHeight };
-                    confetti({ particleCount: 100, spread: 70, origin: origin, colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] });
-                    synth.triggerAttackRelease("C5", "8n");
+            const toggleComplete = async (id, event) => {
+                try {
+                    const task = allTasks.find(t => t.id === id);
+                    if (!task) return;
+                    
+                    if (!task.completed) {
+                        const rect = event.target.getBoundingClientRect();
+                        const origin = { x: (rect.left + rect.right) / 2 / window.innerWidth, y: (rect.top + rect.bottom) / 2 / window.innerHeight };
+                        confetti({ particleCount: 100, spread: 70, origin: origin, colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] });
+                        synth.triggerAttackRelease("C5", "8n");
+                    }
+                    
+                    await updateTask(id, { ...task, completed: !task.completed });
+                    await renderTasks();
+                } catch (error) {
+                    alert('Failed to update task. Please try again.');
                 }
-                
-                task.completed = !task.completed;
-                saveTasks();
-                renderTasks();
             };
             
-            const removeTask = (id) => {
-                allTasks = allTasks.filter(task => task.id !== id);
-                saveTasks();
-                renderTasks();
+            const removeTask = async (id) => {
+                try {
+                    await deleteTask(id);
+                    await renderTasks();
+                } catch (error) {
+                    alert('Failed to delete task. Please try again.');
+                }
             };
 
             const openModal = (modalEl) => {
@@ -637,8 +710,7 @@
                             }
                             return task;
                         });
-                        saveTasks();
-                        renderTasks();
+                        await renderTasks();
                     } catch (e) {
                          alert("The AI returned an unexpected schedule format. Please try again.");
                     }
@@ -648,35 +720,39 @@
                 smartPlanBtn.disabled = false;
             });
 
-            editTaskForm.addEventListener('submit', (e) => {
+            editTaskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const id = parseInt(editTaskId.value);
-                allTasks = allTasks.map(task => {
-                    if (task.id === id) {
-                        return {
-                            ...task,
-                            text: editTaskText.value,
-                            time: editTaskTime.value,
-                            priority: editTaskPriority.value,
-                            tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
-                        };
-                    }
-                    return task;
-                });
-                saveTasks();
-                renderTasks();
-                closeModal(editModal);
+                const task = allTasks.find(t => t.id === id);
+                if (!task) return;
+
+                try {
+                    await updateTask(id, {
+                        ...task,
+                        text: editTaskText.value,
+                        time: editTaskTime.value,
+                        priority: editTaskPriority.value,
+                        tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                    });
+                    await renderTasks();
+                    closeModal(editModal);
+                } catch (error) {
+                    alert('Failed to update task. Please try again.');
+                }
             });
 
             cancelEditBtn.addEventListener('click', () => closeModal(editModal));
             
             clearAllBtn.addEventListener('click', () => openModal(confirmClearModal));
             cancelClearBtn.addEventListener('click', () => closeModal(confirmClearModal));
-            confirmClearBtn.addEventListener('click', () => {
-                allTasks = [];
-                saveTasks();
-                renderTasks();
-                closeModal(confirmClearModal);
+            confirmClearBtn.addEventListener('click', async () => {
+                try {
+                    await clearAllTasks();
+                    await renderTasks();
+                    closeModal(confirmClearModal);
+                } catch (error) {
+                    alert('Failed to clear tasks. Please try again.');
+                }
             });
 
             clearFilterBtn.addEventListener('click', () => {
@@ -686,7 +762,6 @@
             });
 
             // --- Initial Load ---
-            loadTasks();
             renderWeek();
             renderTasks();
         });
