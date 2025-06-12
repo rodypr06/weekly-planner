@@ -333,23 +333,20 @@
 
             // --- Gemini API Call ---
             async function callGemini(prompt) { 
-                const apiKey = "AIzaSyBdt6QlYc-mAJfhharUi2w7zEzTVFZR104";
-                
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-
                 try {
-                    const response = await fetch(apiUrl, {
+                    const response = await fetch('/api/gemini', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({ prompt })
                     });
-                     if (!response.ok) {
+                    
+                    if (!response.ok) {
                         throw new Error(`API request failed with status ${response.status}`);
                     }
+                    
                     const result = await response.json();
                     if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
-                       return result.candidates[0].content.parts[0].text;
+                        return result.candidates[0].content.parts[0].text;
                     }
                     throw new Error("Invalid response structure from API.");
                 } catch (error) {
@@ -357,7 +354,7 @@
                     alert(`AI feature failed: ${error.message}`);
                     return null;
                 }
-             }
+            }
             
             // --- Core Functions ---
             const renderWeek = () => {
