@@ -1,0 +1,25 @@
+{
+  "name": "weekly-planner",
+  "version": "1.0.0",
+  "description": "AI-Powered Weekly Planner by Rodytech",
+  "main": "ecosystem.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodypr06/weekly-planner.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rodypr06/weekly-planner/issues"
+  },
+  "homepage": "https://github.com/rodypr06/weekly-planner#readme",
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "express": "^5.1.0"
+  }
+}
