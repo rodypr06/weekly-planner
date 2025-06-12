@@ -33,4 +33,4 @@ ehthumbs.db
 Thumbs.db
 
 # Nginx config (should be in /etc/nginx/sites-available)
-weekly-planner.conf 
+weekly-planner.conf tasks.db

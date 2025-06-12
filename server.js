@@ -2,10 +2,28 @@
 
 const express = require('express');
 const path = require('path');
-const fetch = require('node-fetch'); // Make sure to install this: npm install node-fetch@2
+const fetch = require('node-fetch');
+const Database = require('better-sqlite3');
 
 const app = express();
 const PORT = 2324;
+
+// Initialize SQLite database
+const db = new Database('tasks.db');
+
+// Create tasks table if it doesn't exist
+db.exec(`
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY,
+        date TEXT NOT NULL,
+        text TEXT NOT NULL,
+        emoji TEXT NOT NULL,
+        time TEXT,
+        priority TEXT NOT NULL,
+        tags TEXT,
+        completed INTEGER DEFAULT 0
+    )
+`);
 
 // Middleware
 app.use(express.json());
@@ -14,6 +32,68 @@ app.use(express.static(__dirname));
 // Serve index.html for all routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// API Endpoints for Tasks
+app.get('/api/tasks', (req, res) => {
+    const { date } = req.query;
+    const stmt = db.prepare('SELECT * FROM tasks WHERE date = ?');
+    const tasks = stmt.all(date);
+    res.json(tasks.map(task => ({
+        ...task,
+        tags: task.tags ? task.tags.split(',') : [],
+        completed: Boolean(task.completed)
+    })));
+});
+
+app.post('/api/tasks', (req, res) => {
+    const { date, text, emoji, time, priority, tags, completed } = req.body;
+    const stmt = db.prepare(`
+        INSERT INTO tasks (id, date, text, emoji, time, priority, tags, completed)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const result = stmt.run(
+        Date.now(),
+        date,
+        text,
+        emoji,
+        time || null,
+        priority,
+        tags.join(','),
+        completed ? 1 : 0
+    );
+    res.json({ id: result.lastInsertRowid });
+});
+
+app.put('/api/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    const { text, time, priority, tags, completed } = req.body;
+    const stmt = db.prepare(`
+        UPDATE tasks
+        SET text = ?, time = ?, priority = ?, tags = ?, completed = ?
+        WHERE id = ?
+    `);
+    stmt.run(
+        text,
+        time || null,
+        priority,
+        tags.join(','),
+        completed ? 1 : 0,
+        id
+    );
+    res.json({ success: true });
+});
+
+app.delete('/api/tasks/:id', (req, res) => {
+    const { id } = req.params;
+    const stmt = db.prepare('DELETE FROM tasks WHERE id = ?');
+    stmt.run(id);
+    res.json({ success: true });
+});
+
+app.delete('/api/tasks', (req, res) => {
+    db.prepare('DELETE FROM tasks').run();
+    res.json({ success: true });
 });
 
 // The secure endpoint your frontend will call
