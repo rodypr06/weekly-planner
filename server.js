@@ -77,6 +77,16 @@ app.get('/api/tasks', requireAuth, async (req, res) => {
             query = query.eq('archived', false);
         }
         
+        // Order by position first (if available), then by time for backward compatibility
+        // Note: If position column doesn't exist, this will fall back to time ordering
+        try {
+            query = query.order('position', { ascending: true, nullsLast: true })
+                         .order('time', { ascending: true, nullsLast: true });
+        } catch (error) {
+            console.log('Position column may not exist, falling back to time ordering');
+            query = query.order('time', { ascending: true, nullsLast: true });
+        }
+        
         const { data: tasks, error } = await query;
         
         if (error) {
@@ -101,7 +111,7 @@ app.get('/api/tasks', requireAuth, async (req, res) => {
 
 app.post('/api/tasks', requireAuth, async (req, res) => {
     try {
-        const { date, text, emoji, time, priority, tags, completed } = req.body;
+        const { date, text, emoji, time, priority, tags, completed, position } = req.body;
         
         const taskData = {
             user_id: req.user.id,
@@ -114,6 +124,27 @@ app.post('/api/tasks', requireAuth, async (req, res) => {
             completed: completed || false,
             archived: false
         };
+        
+        // Try to add position if the column exists
+        try {
+            let taskPosition = position;
+            if (taskPosition === undefined) {
+                const { data: existingTasks } = await supabase
+                    .from('tasks')
+                    .select('position')
+                    .eq('user_id', req.user.id)
+                    .eq('date', date)
+                    .eq('archived', false)
+                    .order('position', { ascending: false })
+                    .limit(1);
+                
+                taskPosition = existingTasks && existingTasks.length > 0 ? existingTasks[0].position + 1 : 0;
+            }
+            taskData.position = taskPosition;
+        } catch (error) {
+            // Position column might not exist, continue without it
+            console.log('Could not set position, column may not exist:', error.message);
+        }
         
         const { data, error } = await supabase
             .from('tasks')
@@ -133,10 +164,74 @@ app.post('/api/tasks', requireAuth, async (req, res) => {
     }
 });
 
+// Reorder tasks (must come before /:id routes)
+app.put('/api/tasks/reorder', requireAuth, async (req, res) => {
+    try {
+        const { taskOrders } = req.body;
+        console.log('Reorder request received:', { taskOrders, userId: req.user.id });
+        
+        if (!Array.isArray(taskOrders) || taskOrders.length === 0) {
+            console.log('Invalid taskOrders:', taskOrders);
+            return res.status(400).json({ error: 'Task orders array is required' });
+        }
+        
+        // First, test if the position column exists by trying a simple update
+        const testResult = await supabase
+            .from('tasks')
+            .update({ position: 0 })
+            .eq('id', -999) // Non-existent ID to test column existence
+            .eq('user_id', req.user.id);
+            
+        if (testResult.error && testResult.error.message.includes('column "position" does not exist')) {
+            console.error('Position column does not exist in tasks table');
+            return res.status(500).json({ 
+                error: 'Task reordering feature requires a database update. The "position" column needs to be added to the tasks table.',
+                needsMigration: true 
+            });
+        }
+        
+        // Update each task's position
+        const updatePromises = taskOrders.map(({ id, position }) => {
+            console.log(`Updating task ${id} to position ${position}`);
+            return supabase
+                .from('tasks')
+                .update({ position })
+                .eq('id', id)
+                .eq('user_id', req.user.id);
+        });
+        
+        const results = await Promise.all(updatePromises);
+        console.log('Update results:', results);
+        
+        // Check for any errors
+        const hasErrors = results.some(result => result.error);
+        if (hasErrors) {
+            const errors = results.filter(r => r.error).map(r => r.error);
+            console.error('Reorder errors:', errors);
+            
+            // Check if it's a column not found error
+            const columnError = errors.find(e => e.message && e.message.includes('column "position" does not exist'));
+            if (columnError) {
+                return res.status(500).json({ 
+                    error: 'Task reordering feature requires a database update. The "position" column needs to be added to the tasks table.',
+                    needsMigration: true 
+                });
+            }
+            
+            return res.status(500).json({ error: 'Failed to reorder some tasks', details: errors[0].message });
+        }
+        
+        res.json({ success: true, updatedCount: taskOrders.length });
+    } catch (error) {
+        console.error('Error reordering tasks:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+});
+
 app.put('/api/tasks/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
-        const { text, time, priority, tags, completed } = req.body;
+        const { text, time, priority, tags, completed, position } = req.body;
         
         const updateData = {
             text,
@@ -145,6 +240,11 @@ app.put('/api/tasks/:id', requireAuth, async (req, res) => {
             tags: Array.isArray(tags) ? tags.join(',') : '',
             completed: completed || false
         };
+        
+        // Only include position in update if it's provided
+        if (position !== undefined) {
+            updateData.position = position;
+        }
         
         const { data, error } = await supabase
             .from('tasks')
@@ -215,6 +315,7 @@ app.delete('/api/tasks', requireAuth, async (req, res) => {
     }
 });
 
+
 // Archive tasks for a specific date
 app.post('/api/tasks/archive', requireAuth, async (req, res) => {
     try {
@@ -277,6 +378,43 @@ app.post('/api/tasks/unarchive', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Error unarchiving tasks:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Database migration endpoint to add position column if needed
+app.post('/api/migrate/add-position', requireAuth, async (req, res) => {
+    try {
+        // Only allow this for authenticated users (simple protection)
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        // Try to add the position column - in PostgreSQL/Supabase this is done via SQL
+        // We'll use a raw SQL query to add the column if it doesn't exist
+        const { data, error } = await supabase.rpc('add_position_column_if_not_exists');
+        
+        if (error) {
+            // If the RPC doesn't exist, let's try a direct approach
+            console.log('RPC not found, trying direct SQL approach');
+            
+            // Try to add column using a simple update that will fail if column doesn't exist
+            const testResult = await supabase
+                .from('tasks')
+                .update({ position: 0 })
+                .eq('id', -999); // Non-existent ID, just to test if column exists
+                
+            if (testResult.error && testResult.error.message.includes('column "position" does not exist')) {
+                return res.status(500).json({ 
+                    error: 'Position column needs to be added to the database. Please contact the administrator.',
+                    needsMigration: true 
+                });
+            }
+        }
+        
+        res.json({ success: true, message: 'Migration completed or not needed' });
+    } catch (error) {
+        console.error('Migration error:', error);
+        res.status(500).json({ error: 'Migration failed', details: error.message });
     }
 });
 

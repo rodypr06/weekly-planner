@@ -23,7 +23,17 @@
     
     <!-- Supabase Integration -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="supabase-auth.js"></script>
+    <script src="supabase-auth.js?v=1.1"></script>
+    <script>
+        // Debug script to verify ApiClient is loaded
+        console.log('Checking ApiClient availability after script load...');
+        console.log('window.ApiClient:', typeof window.ApiClient);
+        console.log('window.SupabaseAuth:', typeof window.SupabaseAuth);
+        if (window.ApiClient) {
+            console.log('ApiClient methods:', Object.getOwnPropertyNames(window.ApiClient));
+            console.log('reorderTasks method:', typeof window.ApiClient.reorderTasks);
+        }
+    </script>
 
     <!-- Service Worker Registration -->
     <script>
@@ -50,6 +60,25 @@
         .task-item.removing {
             transform: scale(0.95);
             opacity: 0;
+        }
+        .task-item.dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+            z-index: 1000;
+        }
+        .task-item.drag-over {
+            border-top: 3px solid #818cf8;
+            margin-top: 8px;
+        }
+        .task-list-sortable {
+            min-height: 60px;
+        }
+        .touch-dragging {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            transform: rotate(3deg);
+            opacity: 0.8;
         }
         .task-item.completed .task-text {
             text-decoration: line-through;
@@ -329,7 +358,7 @@
         </div>
         
         <!-- Task List -->
-        <div id="task-list" class="space-y-3 min-h-[100px]">
+        <div id="task-list" class="task-list-sortable space-y-3 min-h-[100px]">
              <div id="empty-state" class="text-center py-8 px-4 border-2 border-dashed border-white/10 rounded-lg">
                 <i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i>
                 <p class="text-gray-400">No tasks for this day.</p>
@@ -485,6 +514,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // Debug: Check if ApiClient is available
+            console.log('DOMContentLoaded - ApiClient available:', typeof ApiClient !== 'undefined');
+            console.log('DOMContentLoaded - window.ApiClient available:', typeof window.ApiClient !== 'undefined');
+            console.log('DOMContentLoaded - SupabaseAuth available:', typeof SupabaseAuth !== 'undefined');
+            console.log('DOMContentLoaded - window.SupabaseAuth available:', typeof window.SupabaseAuth !== 'undefined');
+            
+            // If ApiClient is not available globally, try to use window.ApiClient
+            if (typeof ApiClient === 'undefined' && typeof window.ApiClient !== 'undefined') {
+                console.log('Using window.ApiClient as fallback');
+                window.ApiClient = window.ApiClient; // This ensures global access
+            }
+            
             // Initialize Supabase
             if (!initializeSupabase()) {
                 console.error('Failed to initialize Supabase');
@@ -756,6 +797,7 @@
             let synth = null;
             let audioContextStarted = false;
             let showingArchive = false;
+            let positionColumnExists = true; // Assume it exists until we find out otherwise
             
             // Initialize audio context after user interaction
             const initAudio = async () => {
@@ -998,6 +1040,221 @@
                 taskListDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
             };
 
+            // --- Drag and Drop Functions ---
+            let draggedElement = null;
+            let draggedTaskId = null;
+            let touchDragClone = null;
+            let touchStartY = 0;
+            let touchStartX = 0;
+            let isTouchDragging = false;
+            
+            const setupDragAndDrop = (taskElement) => {
+                taskElement.addEventListener('dragstart', (e) => {
+                    draggedElement = taskElement;
+                    draggedTaskId = parseInt(taskElement.dataset.id);
+                    taskElement.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', taskElement.outerHTML);
+                });
+                
+                taskElement.addEventListener('dragend', () => {
+                    taskElement.classList.remove('dragging');
+                    // Clean up any drag-over indicators
+                    document.querySelectorAll('.task-item').forEach(el => {
+                        el.classList.remove('drag-over');
+                    });
+                    draggedElement = null;
+                    draggedTaskId = null;
+                });
+                
+                taskElement.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    
+                    if (draggedElement && draggedElement !== taskElement) {
+                        // Remove previous drag-over indicators
+                        document.querySelectorAll('.task-item').forEach(el => {
+                            el.classList.remove('drag-over');
+                        });
+                        
+                        // Add drag-over indicator
+                        taskElement.classList.add('drag-over');
+                    }
+                });
+                
+                taskElement.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    taskElement.classList.remove('drag-over');
+                    
+                    if (draggedElement && draggedElement !== taskElement) {
+                        await handleTaskReorder(draggedTaskId, parseInt(taskElement.dataset.id));
+                    }
+                });
+                
+                taskElement.addEventListener('dragleave', (e) => {
+                    // Only remove drag-over if we're actually leaving the element
+                    if (!taskElement.contains(e.relatedTarget)) {
+                        taskElement.classList.remove('drag-over');
+                    }
+                });
+                
+                // Touch events for mobile drag and drop
+                const dragHandle = taskElement.querySelector('.drag-handle');
+                if (dragHandle) {
+                    dragHandle.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        touchStartY = touch.clientY;
+                        touchStartX = touch.clientX;
+                        draggedElement = taskElement;
+                        draggedTaskId = parseInt(taskElement.dataset.id);
+                        
+                        // Create a clone for visual feedback
+                        touchDragClone = taskElement.cloneNode(true);
+                        touchDragClone.classList.add('touch-dragging');
+                        touchDragClone.style.width = taskElement.offsetWidth + 'px';
+                        touchDragClone.style.left = touchStartX - (taskElement.offsetWidth / 2) + 'px';
+                        touchDragClone.style.top = touchStartY - 20 + 'px';
+                        document.body.appendChild(touchDragClone);
+                        
+                        taskElement.classList.add('dragging');
+                        isTouchDragging = true;
+                    });
+                    
+                    dragHandle.addEventListener('touchmove', (e) => {
+                        if (!isTouchDragging || !touchDragClone) return;
+                        
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        
+                        // Update clone position
+                        touchDragClone.style.left = touch.clientX - (touchDragClone.offsetWidth / 2) + 'px';
+                        touchDragClone.style.top = touch.clientY - 20 + 'px';
+                        
+                        // Find element under touch
+                        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const taskBelow = elementBelow?.closest('.task-item');
+                        
+                        // Clear previous drag-over indicators
+                        document.querySelectorAll('.task-item').forEach(el => {
+                            el.classList.remove('drag-over');
+                        });
+                        
+                        // Add drag-over to target
+                        if (taskBelow && taskBelow !== taskElement) {
+                            taskBelow.classList.add('drag-over');
+                        }
+                    });
+                    
+                    dragHandle.addEventListener('touchend', async (e) => {
+                        if (!isTouchDragging) return;
+                        
+                        e.preventDefault();
+                        const touch = e.changedTouches[0];
+                        
+                        // Clean up
+                        if (touchDragClone) {
+                            document.body.removeChild(touchDragClone);
+                            touchDragClone = null;
+                        }
+                        
+                        taskElement.classList.remove('dragging');
+                        document.querySelectorAll('.task-item').forEach(el => {
+                            el.classList.remove('drag-over');
+                        });
+                        
+                        // Find drop target
+                        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const taskBelow = elementBelow?.closest('.task-item');
+                        
+                        if (taskBelow && taskBelow !== taskElement) {
+                            const targetId = parseInt(taskBelow.dataset.id);
+                            await handleTaskReorder(draggedTaskId, targetId);
+                        }
+                        
+                        // Reset state
+                        isTouchDragging = false;
+                        draggedElement = null;
+                        draggedTaskId = null;
+                    });
+                }
+            };
+            
+            const handleTaskReorder = async (draggedId, targetId, placement = 'before') => {
+                try {
+                    // Check if user is authenticated before proceeding
+                    if (!currentUser) {
+                        alert('Please log in to reorder tasks.');
+                        return;
+                    }
+                    
+                    // Get current tasks order
+                    const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
+                    const draggedElement = taskElements.find(el => parseInt(el.dataset.id) === draggedId);
+                    const targetElement = taskElements.find(el => parseInt(el.dataset.id) === targetId);
+                    
+                    if (!draggedElement || !targetElement || draggedId === targetId) return;
+                    
+                    // Calculate new positions
+                    const taskOrders = [];
+                    let position = 0;
+                    
+                    for (const element of taskElements) {
+                        const elementId = parseInt(element.dataset.id);
+                        
+                        if (elementId === draggedId) {
+                            // Skip the dragged element in its original position
+                            continue;
+                        }
+                        
+                        if (elementId === targetId) {
+                            if (placement === 'before') {
+                                // Insert dragged task before target
+                                taskOrders.push({ id: draggedId, position: position++ });
+                                taskOrders.push({ id: targetId, position: position++ });
+                            } else {
+                                // Insert dragged task after target
+                                taskOrders.push({ id: targetId, position: position++ });
+                                taskOrders.push({ id: draggedId, position: position++ });
+                            }
+                        } else {
+                            taskOrders.push({ id: elementId, position: position++ });
+                        }
+                    }
+                    
+                    // Send reorder request to API
+                    await ApiClient.reorderTasks(taskOrders);
+                    
+                    // Re-render tasks to show new order
+                    await renderTasks();
+                    
+                } catch (error) {
+                    console.error('Failed to reorder tasks:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    
+                    // Check if it's an authentication error
+                    if (error.message.includes('401') || error.message.includes('Authentication required') || error.message.includes('Invalid token')) {
+                        alert('Authentication required. Please log in to reorder tasks.');
+                        return;
+                    }
+                    
+                    // Check if it's an HTML error page (Internal Server Error)
+                    if (error.message.includes('<!DOCTYPE html>') || error.message.includes('<html')) {
+                        alert('Server error occurred. Please try again. If the problem persists, check if you are logged in.');
+                        return;
+                    }
+                    
+                    if (error.needsMigration) {
+                        positionColumnExists = false; // Disable drag and drop
+                        alert(`Database Update Required\n\nThe drag-and-drop feature requires a database update. Please run the following SQL in your Supabase dashboard:\n\n${error.message}\n\nCheck the migrate-add-position.sql file for the complete migration script.`);
+                        // Re-render to hide drag handles
+                        await renderTasks();
+                    } else {
+                        alert(`Failed to reorder tasks: ${error.message}. Please try again.`);
+                    }
+                }
+            };
+            
             const renderTasks = async () => {
                 const tasksForSelectedDay = await fetchTasks(selectedDate, showingArchive);
                 // Always update allTasks with the latest fetched tasks for the selected day
@@ -1026,9 +1283,12 @@
                     emptyState.style.display = 'block';
                 } else {
                     if(emptyState) emptyState.style.display = 'none';
-                    tasksToRender.sort((a,b) => (a.time || "23:59").localeCompare(b.time || "23:59")).forEach(task => {
+                    // Tasks are already sorted by position from the backend
+                    tasksToRender.forEach(task => {
                         const taskElement = document.createElement('div');
                         taskElement.dataset.id = task.id;
+                        taskElement.dataset.position = task.position || 0;
+                        taskElement.draggable = !showingArchive; // Only allow dragging in active view
                         const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
                         // Always coerce completed to boolean for robust UI
                         const isCompleted = !!task.completed;
@@ -1040,6 +1300,9 @@
 
                         taskElement.innerHTML = `
                             <div class="flex items-start justify-between">
+                                ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>` : ''}
                                 <div class="flex items-start gap-4 flex-grow">
                                     <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
                                     <div class="flex-grow">
@@ -1065,6 +1328,12 @@
                         taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
                             tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
                         });
+                        
+                        // Add drag and drop event listeners if not in archive view and position column exists
+                        if (!showingArchive && positionColumnExists) {
+                            setupDragAndDrop(taskElement);
+                        }
+                        
                         taskList.appendChild(taskElement);
                     });
                 }
@@ -1430,7 +1699,32 @@
                 renderTasks();
             });
 
+            // --- Setup Task List Drop Zone ---
+            const setupTaskListDropZone = () => {
+                taskList.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                });
+                
+                taskList.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    
+                    if (draggedElement) {
+                        // If dropped on empty area, move to end
+                        const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
+                        if (allTasks.length > 0) {
+                            const lastTask = allTasks[allTasks.length - 1];
+                            const lastTaskId = parseInt(lastTask.dataset.id);
+                            if (lastTaskId !== draggedTaskId) {
+                                await handleTaskReorder(draggedTaskId, lastTaskId, 'after');
+                            }
+                        }
+                    }
+                });
+            };
+            
             // --- Initial Load ---
+            setupTaskListDropZone();
             renderWeek();
             renderTasks();
         });
