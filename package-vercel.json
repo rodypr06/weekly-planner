@@ -1,0 +1,27 @@
+{
+  "name": "weekly-planner",
+  "version": "2.0.0",
+  "description": "AI-Powered Weekly Planner with Supabase",
+  "main": "server-supabase.js",
+  "scripts": {
+    "start": "node server-supabase.js",
+    "dev": "node server-supabase.js",
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'Build completed'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodypr06/weekly-planner.git"
+  },
+  "keywords": ["task-management", "ai", "supabase", "pwa"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.51.0",
+    "express": "^5.1.0",
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
