@@ -19,10 +19,13 @@
   },
   "homepage": "https://github.com/rodypr06/weekly-planner#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "better-sqlite3": "^11.10.0",
     "canvas": "^3.1.0",
     "express": "^5.1.0",
+    "express-session": "^1.18.1",
     "node-fetch": "^2.7.0",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "better-sqlite3-session-store": "^0.1.0"
   }
 }

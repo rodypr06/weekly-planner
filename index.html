@@ -87,6 +87,44 @@
         }
         @keyframes move-orb1 { from { transform: translate(0, 0); } to { transform: translate(100px, 50px); } }
         @keyframes move-orb2 { from { transform: translate(0, 0); } to { transform: translate(-80px, -60px); } }
+        
+        /* Celebration Modal Animations */
+        @keyframes celebration-bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        @keyframes celebration-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6); }
+        }
+        
+        @keyframes celebration-float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
+        
+        @keyframes celebration-scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .celebration-trophy {
+            animation: celebration-bounce 2s infinite, celebration-glow 3s infinite;
+        }
+        
+        .celebration-title {
+            animation: celebration-scale 2s infinite ease-in-out;
+        }
+        
+        .celebration-stats {
+            animation: celebration-float 4s infinite ease-in-out;
+        }
+        
+        .celebration-orb {
+            animation: celebration-float 6s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
@@ -95,13 +133,115 @@
         <div id="orb2" class="background-orb"></div>
     </div>
     
-    <div class="relative z-10 w-full max-w-4xl mx-auto my-8 glass-pane rounded-2xl shadow-2xl p-6 md:p-8">
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="glass-pane rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <div class="text-center mb-8">
+                <svg class="w-16 h-16 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <h1 class="text-2xl font-bold text-gray-100 mb-2">Weekly Planner</h1>
+                <p class="text-gray-400">Sign in to access your personal planner</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-username" class="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                    <input type="text" id="login-username" name="username" required 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           placeholder="Enter your username">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <input type="password" id="login-password" name="password" required 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           placeholder="Enter your password">
+                </div>
+                <button type="submit" id="login-btn" 
+                        class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2">
+                    <span id="login-btn-text">Sign In</span>
+                    <div id="login-spinner" class="spinner h-5 w-5 rounded-full border-2 border-t-transparent hidden"></div>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-400 text-sm">Don't have an account?</p>
+                <button id="show-register-btn" class="text-indigo-400 hover:text-indigo-300 font-medium">Create Account</button>
+            </div>
+
+            <!-- Register Form (Initially Hidden) -->
+            <form id="register-form" class="space-y-4 hidden">
+                <div class="text-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-100">Create Account</h2>
+                    <p class="text-gray-400 text-sm">Join to start planning your week</p>
+                </div>
+                <div>
+                    <label for="register-username" class="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                    <input type="text" id="register-username" name="username" required 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           placeholder="Choose a username">
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <input type="password" id="register-password" name="password" required minlength="6"
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           placeholder="At least 6 characters">
+                </div>
+                <div>
+                    <label for="register-password-confirm" class="block text-sm font-medium text-gray-400 mb-2">Confirm Password</label>
+                    <input type="password" id="register-password-confirm" name="passwordConfirm" required minlength="6"
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           placeholder="Confirm your password">
+                </div>
+                <button type="submit" id="register-btn" 
+                        class="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2">
+                    <span id="register-btn-text">Create Account</span>
+                    <div id="register-spinner" class="spinner h-5 w-5 rounded-full border-2 border-t-transparent hidden"></div>
+                </button>
+            </form>
+
+            <div id="register-switch" class="mt-6 text-center hidden">
+                <p class="text-gray-400 text-sm">Already have an account?</p>
+                <button id="show-login-btn" class="text-indigo-400 hover:text-indigo-300 font-medium">Sign In</button>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="auth-message" class="mt-4 p-3 rounded-lg hidden">
+                <p id="auth-message-text" class="text-sm text-center"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App Container (Hidden until authenticated) -->
+    <div id="main-app" class="relative z-10 w-full max-w-4xl mx-auto my-8 glass-pane rounded-2xl shadow-2xl p-6 md:p-8 hidden">
 
         <!-- Header -->
-        <div class="text-center mb-6">
-            <svg class="w-20 h-20 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-100">Weekly Planner</h1>
-            <p id="current-week-display" class="text-gray-400 mt-2 text-lg"></p>
+        <div class="flex justify-between items-start mb-6">
+            <div class="flex-1"></div>
+            <div class="text-center">
+                <svg class="w-20 h-20 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-100">Weekly Planner</h1>
+                <p id="current-week-display" class="text-gray-400 mt-2 text-lg"></p>
+            </div>
+            <div class="flex-1 flex justify-end">
+                <!-- User Menu -->
+                <div class="relative">
+                    <button id="user-menu-btn" class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2 hover:bg-white/10 transition">
+                        <i class="fas fa-user-circle text-indigo-400"></i>
+                        <span id="user-display-name" class="text-sm text-gray-300">User</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                    </button>
+                    <div id="user-menu" class="absolute right-0 mt-2 w-48 glass-pane rounded-lg shadow-lg py-2 hidden z-10">
+                        <div class="px-3 py-2 border-b border-white/10">
+                            <p class="text-xs text-gray-400">Signed in as</p>
+                            <p id="user-menu-name" class="text-sm font-medium text-gray-200">User</p>
+                        </div>
+                        <button id="logout-btn" class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-white/5 transition flex items-center gap-2">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Week Navigator -->
@@ -159,8 +299,18 @@
         
         <!-- Task List Header -->
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold text-gray-300">Tasks for <span id="task-list-date"></span></h2>
-            <div class="flex items-center gap-4">
+            <h2 class="text-xl font-semibold text-gray-300">
+                Tasks for <span id="task-list-date"></span>
+                <span id="archive-indicator" class="hidden text-sm font-normal text-amber-400 ml-2">(Archive View)</span>
+            </h2>
+            <div class="flex items-center gap-3">
+                <!-- Archive Toggle Button -->
+                <button id="archive-toggle-btn" class="text-sm text-gray-400 hover:text-amber-400 transition-colors duration-300 flex items-center gap-2 bg-black/20 border border-white/10 rounded-full px-3 py-1.5 hover:bg-amber-500/10 hover:border-amber-400/30">
+                    <i class="fas fa-archive text-xs"></i>
+                    <span id="archive-toggle-text">Archive</span>
+                    <span id="archive-count" class="text-xs bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                
                  <button id="smart-plan-btn" class="hidden text-sm text-white bg-teal-500 hover:bg-teal-600 rounded-full px-4 py-2 flex items-center gap-2 transition-all duration-300 border border-teal-400">
                     <i class="fas fa-brain"></i> <span>✨ Smart Plan</span>
                  </button>
@@ -256,9 +406,276 @@
         </div>
     </div>
 
+    <!-- All Tasks Completed Celebration Modal -->
+    <div id="celebration-modal" class="modal fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 invisible opacity-0 z-60">
+        <div class="modal-content glass-pane rounded-3xl shadow-2xl w-full max-w-lg p-8 transform scale-95 text-center relative overflow-hidden">
+            <!-- Animated background elements -->
+            <div class="absolute inset-0 pointer-events-none">
+                <div class="celebration-orb absolute w-32 h-32 rounded-full opacity-20 animate-pulse" style="background: radial-gradient(circle, #fbbf24, transparent 70%); top: -10%; left: -10%;"></div>
+                <div class="celebration-orb absolute w-24 h-24 rounded-full opacity-30 animate-pulse" style="background: radial-gradient(circle, #a855f7, transparent 70%); top: 20%; right: -5%; animation-delay: 0.5s;"></div>
+                <div class="celebration-orb absolute w-20 h-20 rounded-full opacity-25 animate-pulse" style="background: radial-gradient(circle, #10b981, transparent 70%); bottom: 10%; left: 20%; animation-delay: 1s;"></div>
+            </div>
+            
+            <!-- Main content -->
+            <div class="relative z-10">
+                <!-- Trophy icon with bounce animation -->
+                <div class="celebration-trophy mb-6 animate-bounce">
+                    <i class="fas fa-trophy text-6xl text-yellow-400 drop-shadow-lg"></i>
+                </div>
+                
+                <!-- Animated title -->
+                <h2 class="celebration-title text-3xl font-bold text-white mb-4 animate-pulse">
+                    🎉 Congratulations! 🎉
+                </h2>
+                
+                <!-- Celebration message -->
+                <p class="celebration-message text-lg text-gray-200 mb-6 leading-relaxed">
+                    Amazing work! You've completed all your tasks for today. 
+                    <br>
+                    <span class="text-emerald-400 font-semibold">You're absolutely crushing it!</span>
+                </p>
+                
+                <!-- Animated stats -->
+                <div class="celebration-stats bg-white/10 rounded-2xl p-4 mb-6 border border-white/20">
+                    <div class="flex justify-center items-center gap-4">
+                        <div class="text-center">
+                            <div id="celebration-task-count" class="text-2xl font-bold text-emerald-400">0</div>
+                            <div class="text-sm text-gray-300">Tasks Completed</div>
+                        </div>
+                        <div class="w-px h-8 bg-white/20"></div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-indigo-400">100%</div>
+                            <div class="text-sm text-gray-300">Progress</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Motivational quote -->
+                <div class="celebration-quote text-center mb-6">
+                    <p class="text-gray-300 italic text-sm" id="celebration-quote">
+                        "Success is the sum of small efforts repeated day in and day out."
+                    </p>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="add-tomorrow-tasks-btn" 
+                            class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center gap-2 border border-indigo-400">
+                        <i class="fas fa-plus"></i>
+                        Plan Tomorrow
+                    </button>
+                    <button id="close-celebration-btn" 
+                            class="flex-1 bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-lg transition duration-300 border border-white/20">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- Authentication Management ---
+            let currentUser = null;
+            
+            // Auth element selectors
+            const authModal = document.getElementById('auth-modal');
+            const mainApp = document.getElementById('main-app');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const showRegisterBtn = document.getElementById('show-register-btn');
+            const showLoginBtn = document.getElementById('show-login-btn');
+            const registerSwitch = document.getElementById('register-switch');
+            const authMessage = document.getElementById('auth-message');
+            const authMessageText = document.getElementById('auth-message-text');
+            const userDisplayName = document.getElementById('user-display-name');
+            const userMenuName = document.getElementById('user-menu-name');
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userMenu = document.getElementById('user-menu');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // Check authentication status on load
+            async function checkAuth() {
+                try {
+                    const response = await fetch('/api/me');
+                    const data = await response.json();
+                    
+                    if (data.authenticated) {
+                        currentUser = data.user;
+                        showMainApp();
+                    } else {
+                        showAuthModal();
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    showAuthModal();
+                }
+            }
+            
+            function showAuthModal() {
+                authModal.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
+            
+            function showMainApp() {
+                authModal.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                updateUserDisplay();
+            }
+            
+            function updateUserDisplay() {
+                if (currentUser) {
+                    userDisplayName.textContent = currentUser.username;
+                    userMenuName.textContent = currentUser.username;
+                }
+            }
+            
+            function showMessage(message, type = 'error') {
+                authMessage.className = `mt-4 p-3 rounded-lg ${type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`;
+                authMessageText.className = `text-sm text-center ${type === 'success' ? 'text-emerald-400' : 'text-red-400'}`;
+                authMessageText.textContent = message;
+                authMessage.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    authMessage.classList.add('hidden');
+                }, 5000);
+            }
+            
+            // Form switching
+            showRegisterBtn.addEventListener('click', () => {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerSwitch.classList.remove('hidden');
+                authMessage.classList.add('hidden');
+            });
+            
+            showLoginBtn.addEventListener('click', () => {
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                registerSwitch.classList.add('hidden');
+                authMessage.classList.add('hidden');
+            });
+            
+            // User menu toggle
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userMenu.classList.toggle('hidden');
+            });
+            
+            // Close user menu when clicking outside
+            document.addEventListener('click', () => {
+                userMenu.classList.add('hidden');
+            });
+            
+            // Login form submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                const loginBtn = document.getElementById('login-btn');
+                const loginBtnText = document.getElementById('login-btn-text');
+                const loginSpinner = document.getElementById('login-spinner');
+                
+                // Show loading state
+                loginBtnText.classList.add('hidden');
+                loginSpinner.classList.remove('hidden');
+                loginBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        currentUser = data.user;
+                        showMainApp();
+                        showMessage('Welcome back!', 'success');
+                    } else {
+                        showMessage(data.error || 'Login failed');
+                    }
+                } catch (error) {
+                    showMessage('Network error. Please try again.');
+                } finally {
+                    // Reset loading state
+                    loginBtnText.classList.remove('hidden');
+                    loginSpinner.classList.add('hidden');
+                    loginBtn.disabled = false;
+                }
+            });
+            
+            // Register form submission
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                const passwordConfirm = document.getElementById('register-password-confirm').value;
+                const registerBtn = document.getElementById('register-btn');
+                const registerBtnText = document.getElementById('register-btn-text');
+                const registerSpinner = document.getElementById('register-spinner');
+                
+                if (password !== passwordConfirm) {
+                    showMessage('Passwords do not match');
+                    return;
+                }
+                
+                // Show loading state
+                registerBtnText.classList.add('hidden');
+                registerSpinner.classList.remove('hidden');
+                registerBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        currentUser = data.user;
+                        showMainApp();
+                        showMessage('Account created successfully!', 'success');
+                    } else {
+                        showMessage(data.error || 'Registration failed');
+                    }
+                } catch (error) {
+                    showMessage('Network error. Please try again.');
+                } finally {
+                    // Reset loading state
+                    registerBtnText.classList.remove('hidden');
+                    registerSpinner.classList.add('hidden');
+                    registerBtn.disabled = false;
+                }
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/logout', { method: 'POST' });
+                    currentUser = null;
+                    showAuthModal();
+                    
+                    // Reset forms
+                    loginForm.reset();
+                    registerForm.reset();
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            });
+            
+            // Initialize authentication check
+            await checkAuth();
+            
+            // Only initialize main app if authenticated
+            if (!currentUser) return;
+            
             // --- Element Selectors ---
             const taskForm = document.getElementById('add-task-form');
             const taskInput = document.getElementById('task-input');
@@ -308,12 +725,115 @@
             const cancelClearBtn = document.getElementById('cancel-clear-btn');
             const confirmClearBtn = document.getElementById('confirm-clear-btn');
             
+            // Celebration modal selectors
+            const celebrationModal = document.getElementById('celebration-modal');
+            const celebrationTaskCount = document.getElementById('celebration-task-count');
+            const celebrationQuote = document.getElementById('celebration-quote');
+            const addTomorrowTasksBtn = document.getElementById('add-tomorrow-tasks-btn');
+            const closeCelebrationBtn = document.getElementById('close-celebration-btn');
+            
+            // Archive selectors
+            const archiveToggleBtn = document.getElementById('archive-toggle-btn');
+            const archiveToggleText = document.getElementById('archive-toggle-text');
+            const archiveCount = document.getElementById('archive-count');
+            const archiveIndicator = document.getElementById('archive-indicator');
+            
             // --- State ---
             let allTasks = [];
             let currentDate = new Date();
             let selectedDate = new Date();
             let currentFilter = null;
-            const synth = new Tone.Synth().toDestination();
+            let synth = null;
+            let audioContextStarted = false;
+            let showingArchive = false;
+            
+            // Initialize audio context after user interaction
+            const initAudio = async () => {
+                if (!audioContextStarted) {
+                    try {
+                        await Tone.start();
+                        synth = new Tone.Synth().toDestination();
+                        audioContextStarted = true;
+                        console.log('Audio context started successfully');
+                    } catch (error) {
+                        console.warn('Audio initialization failed:', error);
+                    }
+                }
+            };
+
+            // --- Celebration Functions ---
+            const motivationalQuotes = [
+                "Success is the sum of small efforts repeated day in and day out.",
+                "You are what you do, not what you say you'll do.",
+                "The way to get started is to quit talking and begin doing.",
+                "Productivity is being able to do things that you were never able to do before.",
+                "Excellence is never an accident. It is always the result of high intention.",
+                "The future depends on what you do today.",
+                "Don't wait for opportunity. Create it.",
+                "Success is where preparation and opportunity meet."
+            ];
+
+            const checkAllTasksCompleted = () => {
+                const tasksForToday = allTasks.filter(task => !currentFilter || task.tags.includes(currentFilter));
+                if (tasksForToday.length > 0) {
+                    const allCompleted = tasksForToday.every(task => task.completed);
+                    return { allCompleted, totalTasks: tasksForToday.length };
+                }
+                return { allCompleted: false, totalTasks: 0 };
+            };
+
+            const triggerCelebration = async (taskCount) => {
+                // Epic confetti explosion
+                const duration = 3000;
+                const end = Date.now() + duration;
+                
+                const colors = ['#818cf8', '#c084fc', '#f472b6', '#4ade80', '#fbbf24', '#f97316'];
+                
+                (function frame() {
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: 15,
+                            angle: 60,
+                            spread: 55,
+                            origin: { x: 0 },
+                            colors: colors
+                        });
+                        confetti({
+                            particleCount: 15,
+                            angle: 120,
+                            spread: 55,
+                            origin: { x: 1 },
+                            colors: colors
+                        });
+                    }
+                    
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                })();
+                
+                // Play celebration sound sequence
+                try {
+                    if (synth && audioContextStarted) {
+                        synth.triggerAttackRelease("C5", "8n");
+                        setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
+                        setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 400);
+                        setTimeout(() => synth.triggerAttackRelease("C6", "4n"), 600);
+                    }
+                } catch (error) {
+                    console.warn('Celebration sound failed:', error);
+                }
+                
+                // Update celebration modal content
+                celebrationTaskCount.textContent = taskCount;
+                const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+                celebrationQuote.textContent = randomQuote;
+                
+                // Show celebration modal with delay for effect
+                setTimeout(() => {
+                    openModal(celebrationModal);
+                }, 800);
+            };
 
             // --- Date Formatting Helper ---
             const toISODateString = (date) => {
@@ -328,9 +848,13 @@
             copyrightEl.innerHTML = `&copy; ${today.getFullYear()} Rodytech. All Rights Reserved.`;
 
             // --- API Functions ---
-            const fetchTasks = async (date) => {
+            const fetchTasks = async (date, includeArchived = false) => {
                 try {
-                    const response = await fetch(`/api/tasks?date=${date}`);
+                    const params = new URLSearchParams({ date });
+                    if (includeArchived) {
+                        params.append('includeArchived', 'true');
+                    }
+                    const response = await fetch(`/api/tasks?${params}`);
                     if (!response.ok) throw new Error('Failed to fetch tasks');
                     return await response.json();
                 } catch (error) {
@@ -395,6 +919,67 @@
                 }
             };
 
+            // --- Archive API Functions ---
+            const archiveCompletedTasks = async (date) => {
+                try {
+                    const response = await fetch('/api/tasks/archive', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date })
+                    });
+                    if (!response.ok) throw new Error('Failed to archive tasks');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error archiving tasks:', error);
+                    throw error;
+                }
+            };
+
+            const unarchiveTasks = async (taskIds) => {
+                try {
+                    const response = await fetch('/api/tasks/unarchive', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ taskIds })
+                    });
+                    if (!response.ok) throw new Error('Failed to unarchive tasks');
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error unarchiving tasks:', error);
+                    throw error;
+                }
+            };
+
+            const updateArchiveUI = async () => {
+                try {
+                    // Get archived tasks count for current date
+                    const archivedTasks = await fetchTasks(selectedDate, true);
+                    const archivedCount = archivedTasks.filter(task => task.archived).length;
+                    
+                    if (archivedCount > 0) {
+                        archiveCount.textContent = archivedCount;
+                        archiveCount.classList.remove('hidden');
+                    } else {
+                        archiveCount.classList.add('hidden');
+                    }
+                    
+                    // Update UI based on current view
+                    if (showingArchive) {
+                        archiveToggleText.textContent = 'Active';
+                        archiveIndicator.classList.remove('hidden');
+                        archiveToggleBtn.classList.add('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
+                        archiveToggleBtn.classList.remove('bg-black/20', 'border-white/10', 'text-gray-400');
+                    } else {
+                        archiveToggleText.textContent = 'Archive';
+                        archiveIndicator.classList.add('hidden');
+                        archiveToggleBtn.classList.remove('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
+                        archiveToggleBtn.classList.add('bg-black/20', 'border-white/10', 'text-gray-400');
+                    }
+                } catch (error) {
+                    console.error('Error updating archive UI:', error);
+                }
+            };
+
             // --- Gemini API Call ---
             async function callGemini(prompt) { 
                 try {
@@ -456,10 +1041,19 @@
             };
 
             const renderTasks = async () => {
-                const tasksForSelectedDay = await fetchTasks(selectedDate);
+                const tasksForSelectedDay = await fetchTasks(selectedDate, showingArchive);
+                // Always update allTasks with the latest fetched tasks for the selected day
+                allTasks = tasksForSelectedDay;
+                
+                // Filter tasks based on archive view
+                let filteredTasks = showingArchive 
+                    ? tasksForSelectedDay.filter(task => task.archived)
+                    : tasksForSelectedDay.filter(task => !task.archived);
+                
+                // Apply tag filter if active
                 const tasksToRender = currentFilter 
-                    ? tasksForSelectedDay.filter(task => task.tags.includes(currentFilter))
-                    : tasksForSelectedDay;
+                    ? filteredTasks.filter(task => task.tags.includes(currentFilter))
+                    : filteredTasks;
 
                 const emptyState = document.getElementById('empty-state');
                 taskList.innerHTML = '';
@@ -477,9 +1071,11 @@
                     tasksToRender.sort((a,b) => (a.time || "23:59").localeCompare(b.time || "23:59")).forEach(task => {
                         const taskElement = document.createElement('div');
                         taskElement.dataset.id = task.id;
-                         const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
-                        taskElement.className = `task-item bg-black/10 p-4 rounded-lg shadow-md border-l-4 transition-all duration-300 border border-white/10 ${task.completed ? 'border-green-400' : priorityClasses[task.priority]}`;
-                        if (task.completed) taskElement.classList.add('completed');
+                        const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
+                        // Always coerce completed to boolean for robust UI
+                        const isCompleted = !!task.completed;
+                        taskElement.className = `task-item bg-black/10 p-4 rounded-lg shadow-md border-l-4 transition-all duration-300 border border-white/10 ${isCompleted ? 'border-green-400' : priorityClasses[task.priority]}`;
+                        if (isCompleted) taskElement.classList.add('completed');
                         
                         const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
                         const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${tag}</span>`).join('');
@@ -487,7 +1083,7 @@
                         taskElement.innerHTML = `
                             <div class="flex items-start justify-between">
                                 <div class="flex items-start gap-4 flex-grow">
-                                    <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${task.completed ? 'checked' : ''}>
+                                    <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
                                     <div class="flex-grow">
                                         <div class="flex items-center gap-3">
                                             <span class="text-2xl">${task.emoji}</span>
@@ -505,16 +1101,17 @@
                                 </div>
                             </div>
                         `;
-                         taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
-                         taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
-                         taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
-                         taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
+                        taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
+                        taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
+                        taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
+                        taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
                             tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
                         });
                         taskList.appendChild(taskElement);
                     });
                 }
-                updateUICounters(tasksForSelectedDay);
+                updateUICounters(filteredTasks);
+                await updateArchiveUI();
             };
 
             const updateUICounters = (currentTasks) => {
@@ -525,6 +1122,14 @@
                 progressText.textContent = `${Math.round(progressPercentage)}%`;
                 const hasUnscheduledTasks = currentTasks.some(t => !t.time);
                 smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0);
+                
+                // Check for celebration when all tasks are completed (but NOT in archive view)
+                if (!showingArchive && currentTasks.length > 0 && completedTasks === currentTasks.length && progressPercentage === 100) {
+                    // Add a small delay to let the final task animation complete
+                    setTimeout(() => {
+                        triggerCelebration(completedTasks);
+                    }, 500);
+                }
             };
 
             const addTask = async (task) => {
@@ -539,19 +1144,67 @@
             const toggleComplete = async (id, event) => {
                 try {
                     const task = allTasks.find(t => t.id === id);
-                    if (!task) return;
-                    
-                    if (!task.completed) {
-                        const rect = event.target.getBoundingClientRect();
-                        const origin = { x: (rect.left + rect.right) / 2 / window.innerWidth, y: (rect.top + rect.bottom) / 2 / window.innerHeight };
-                        confetti({ particleCount: 100, spread: 70, origin: origin, colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] });
-                        synth.triggerAttackRelease("C5", "8n");
+                    if (!task) {
+                        console.error('Task not found:', id);
+                        return;
                     }
                     
-                    await updateTask(id, { ...task, completed: !task.completed });
+                    const wasCompleted = task.completed;
+                    const newCompletedState = !wasCompleted;
+                    
+                    // Play effects when completing a task (not when uncompleting)
+                    if (newCompletedState) {
+                        // Initialize audio context on first interaction
+                        await initAudio();
+                        
+                        // Trigger confetti animation
+                        try {
+                            const rect = event.target.getBoundingClientRect();
+                            const origin = { 
+                                x: (rect.left + rect.right) / 2 / window.innerWidth, 
+                                y: (rect.top + rect.bottom) / 2 / window.innerHeight 
+                            };
+                            
+                            if (typeof confetti === 'function') {
+                                confetti({ 
+                                    particleCount: 100, 
+                                    spread: 70, 
+                                    origin: origin, 
+                                    colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] 
+                                });
+                            } else {
+                                console.warn('Confetti function not available');
+                            }
+                        } catch (confettiError) {
+                            console.warn('Confetti animation failed:', confettiError);
+                        }
+                        
+                        // Play completion sound
+                        try {
+                            if (synth && audioContextStarted) {
+                                synth.triggerAttackRelease("C5", "8n");
+                            }
+                        } catch (audioError) {
+                            console.warn('Audio playback failed:', audioError);
+                        }
+                    }
+                    
+                    // Update task completion state
+                    const updatedTask = { ...task, completed: newCompletedState };
+                    await updateTask(id, updatedTask);
+                    
+                    // Update local state immediately for better UX
+                    const taskIndex = allTasks.findIndex(t => t.id === id);
+                    if (taskIndex !== -1) {
+                        allTasks[taskIndex] = updatedTask;
+                    }
+                    
                     await renderTasks();
                 } catch (error) {
+                    console.error('Task completion toggle failed:', error);
                     alert('Failed to update task. Please try again.');
+                    // Revert checkbox state on failure
+                    event.target.checked = !event.target.checked;
                 }
             };
             
@@ -597,6 +1250,9 @@
                 e.preventDefault();
                 const taskText = taskInput.value.trim();
                 if (taskText === '') return;
+
+                // Initialize audio on first user interaction
+                await initAudio();
 
                 addTaskBtn.disabled = true;
                 addSpinner.classList.remove('hidden');
@@ -758,6 +1414,61 @@
             clearFilterBtn.addEventListener('click', () => {
                 currentFilter = null;
                 filterContainer.classList.add('hidden');
+                renderTasks();
+            });
+
+            // Celebration modal event listeners
+            closeCelebrationBtn.addEventListener('click', async () => {
+                try {
+                    // Archive completed tasks when closing celebration
+                    await archiveCompletedTasks(selectedDate);
+                    closeModal(celebrationModal);
+                    await renderTasks(); // Refresh to show archived tasks are gone
+                } catch (error) {
+                    console.error('Error archiving tasks:', error);
+                    closeModal(celebrationModal);
+                }
+            });
+
+            addTomorrowTasksBtn.addEventListener('click', async () => {
+                try {
+                    // Archive completed tasks from today before moving to tomorrow
+                    const todayDate = selectedDate;
+                    await archiveCompletedTasks(todayDate);
+                    
+                    closeModal(celebrationModal);
+                    
+                    // Navigate to tomorrow - properly parse the ISO date string
+                    const currentSelectedDate = new Date(selectedDate + 'T00:00:00');
+                    const tomorrow = new Date(currentSelectedDate);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    
+                    // Update the selected date
+                    selectedDate = toISODateString(tomorrow);
+                    
+                    // Update the current date for week navigation
+                    currentDate = new Date(tomorrow);
+                    
+                    // Re-render everything for the new date
+                    renderWeek();
+                    renderTasks();
+                    updateSelectedDateDisplay();
+                    
+                    // Focus on the task input for easy task creation
+                    setTimeout(() => {
+                        taskInput.focus();
+                    }, 300);
+                    
+                    console.log('Archived tasks from', todayDate, 'and navigated to tomorrow:', selectedDate);
+                } catch (error) {
+                    console.error('Error during tomorrow navigation:', error);
+                    closeModal(celebrationModal);
+                }
+            });
+
+            // Archive toggle functionality
+            archiveToggleBtn.addEventListener('click', () => {
+                showingArchive = !showingArchive;
                 renderTasks();
             });
 
