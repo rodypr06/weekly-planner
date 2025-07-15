@@ -312,6 +312,42 @@ const ApiClient = {
         }
     },
 
+    // Reorder tasks with auth
+    async reorderTasks(taskOrders) {
+        try {
+            console.log('Sending reorder request:', taskOrders);
+            const response = await fetch('/api/tasks/reorder', {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ taskOrders })
+            });
+            
+            const responseText = await response.text();
+            console.log('Reorder response:', response.status, responseText);
+            
+            if (!response.ok) {
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                let needsMigration = false;
+                try {
+                    const errorData = JSON.parse(responseText);
+                    errorMessage = errorData.error || errorMessage;
+                    needsMigration = errorData.needsMigration || false;
+                } catch (e) {
+                    errorMessage = responseText || errorMessage;
+                }
+                
+                const error = new Error(errorMessage);
+                error.needsMigration = needsMigration;
+                throw error;
+            }
+            
+            return JSON.parse(responseText);
+        } catch (error) {
+            console.error('Error reordering tasks:', error);
+            throw error;
+        }
+    },
+
     // Call Gemini AI with auth
     async callGemini(prompt) {
         try {
@@ -342,4 +378,8 @@ const ApiClient = {
 // Export for use in main application
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { SupabaseAuth, ApiClient };
+} else {
+    // Make ApiClient and SupabaseAuth globally available in browser
+    window.ApiClient = ApiClient;
+    window.SupabaseAuth = SupabaseAuth;
 }
