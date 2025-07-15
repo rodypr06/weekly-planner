@@ -1,13 +1,30 @@
 {
   "version": 2,
   "name": "smart-planner",
+  "buildCommand": "node vercel-build.js",
   "builds": [
     {
       "src": "server.js",
       "use": "@vercel/node"
     },
     {
-      "src": "public/**",
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "manifest.json",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sw.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "supabase-auth.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "icons/**",
       "use": "@vercel/static"
     }
   ],
@@ -17,8 +34,24 @@
       "dest": "/server.js"
     },
     {
+      "src": "/icons/(.*)",
+      "dest": "/icons/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/sw.js",
+      "dest": "/sw.js"
+    },
+    {
+      "src": "/supabase-auth.js",
+      "dest": "/supabase-auth.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/index.html"
     }
   ],
   "env": {

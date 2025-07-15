@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "node generate-icons.js",
-    "vercel-build": "node generate-icons.js"
+    "build": "echo 'No build step needed for Vercel'",
+    "vercel-build": "echo 'Icons already generated - skipping build step'"
   },
   "repository": {
     "type": "git",
@@ -19,8 +19,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.51.0",
     "express": "^5.1.0",
-    "node-fetch": "^2.7.0",
-    "canvas": "^3.1.0"
+    "node-fetch": "^2.7.0"
   },
   "engines": {
     "node": ">=18.0.0"
