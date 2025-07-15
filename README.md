@@ -256,13 +256,30 @@ The application is optimized for deployment on Vercel with automatic CI/CD from 
 3. **Deploy**
    - Push to your main branch
    - Vercel automatically builds and deploys
-   - No additional configuration needed!
+   - The build process uses `package-vercel.json` for serverless compatibility
 
 #### Deployment Features
 - **Automatic Deployments** - Every push to main branch
 - **Preview Deployments** - For pull requests
 - **Edge Network** - Global CDN distribution
 - **Serverless Functions** - Auto-scaling backend
+
+#### Troubleshooting Vercel Deployments
+
+**Build Failures:**
+- Check that environment variables are set in Vercel dashboard
+- Ensure `package-vercel.json` exists (serverless-optimized dependencies)
+- Verify Node.js version compatibility (18+)
+
+**Static File Issues:**
+- Icons and static assets are served from the root directory
+- The build process automatically handles file routing
+- Check browser developer tools for 404 errors
+
+**API Endpoint Problems:**
+- Verify Supabase credentials are correctly set
+- Check function timeout limits (default: 30 seconds)
+- Monitor Vercel function logs for server errors
 
 ### Manual Deployment
 
