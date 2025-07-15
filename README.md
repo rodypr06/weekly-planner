@@ -113,10 +113,10 @@ The application will be available at `http://localhost:2324`
 - **Tone.js** for audio effects
 
 ### DevOps & Deployment
-- **PM2** process manager
-- **GitHub Actions** for CI/CD
-- **Nginx** reverse proxy support
-- **SSL/HTTPS** ready
+- **Vercel** serverless deployment platform
+- **Automatic CI/CD** from GitHub
+- **Edge Network** global distribution
+- **SSL/HTTPS** automatic provisioning
 
 ## 📊 API Endpoints
 
@@ -169,25 +169,34 @@ CREATE TABLE tasks (
 
 ## 🚢 Production Deployment
 
-### Automated Deployment with GitHub Actions
+### Vercel Deployment (Recommended)
 
-The application includes a complete CI/CD pipeline that automatically deploys to your server when changes are pushed to the main branch.
+The application is optimized for deployment on Vercel with automatic CI/CD from GitHub.
 
-#### Required GitHub Secrets
-Add these secrets to your GitHub repository settings:
+#### Quick Vercel Setup
+1. **Connect to Vercel**
+   - Go to [vercel.com](https://vercel.com) and sign in
+   - Click "New Project" and import your GitHub repository
+   - Vercel will automatically detect the configuration
 
-```bash
-SERVER_HOST=your-server-ip-address
-SERVER_USER=your-ssh-username
-SSH_PRIVATE_KEY=your-ssh-private-key
-GEMINI_API_KEY=your-google-gemini-api-key
-```
+2. **Set Environment Variables**
+   Add these in your Vercel project settings:
+   ```bash
+   SUPABASE_URL=your-supabase-project-url
+   SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+   GEMINI_API_KEY=your-google-gemini-api-key
+   ```
 
-#### Deployment Process
-1. **Automated Testing** - Dependencies installation
-2. **Icon Generation** - PWA icons creation
-3. **Server Deployment** - SSH deployment to production
-4. **Process Restart** - PM2 application restart
+3. **Deploy**
+   - Push to your main branch
+   - Vercel automatically builds and deploys
+   - No additional configuration needed!
+
+#### Deployment Features
+- **Automatic Deployments** - Every push to main branch
+- **Preview Deployments** - For pull requests
+- **Edge Network** - Global CDN distribution
+- **Serverless Functions** - Auto-scaling backend
 
 ### Manual Deployment
 

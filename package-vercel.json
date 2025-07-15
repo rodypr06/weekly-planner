@@ -1,13 +1,13 @@
 {
-  "name": "weekly-planner",
+  "name": "smart-planner",
   "version": "2.0.0",
-  "description": "AI-Powered Weekly Planner with Supabase",
-  "main": "server-supabase.js",
+  "description": "AI-Powered Smart Planner with Supabase",
+  "main": "server.js",
   "scripts": {
-    "start": "node server-supabase.js",
-    "dev": "node server-supabase.js",
-    "build": "echo 'No build step required'",
-    "vercel-build": "echo 'Build completed'"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "node generate-icons.js",
+    "vercel-build": "node generate-icons.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.51.0",
     "express": "^5.1.0",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "canvas": "^3.1.0"
   },
   "engines": {
     "node": ">=18.0.0"
