@@ -95,6 +95,72 @@ npm start
 
 The application will be available at `http://localhost:2324`
 
+## 🔑 Getting a Free Google Gemini API Key
+
+The Smart Planner uses Google's Gemini AI for intelligent task suggestions and emoji generation. Follow these steps to get your free API key:
+
+### Step-by-Step Instructions
+
+1. **Visit Google AI Studio**
+   - Go to [aistudio.google.com](https://aistudio.google.com)
+   - Sign in with your Google account
+
+2. **Create an API Key**
+   - Click on "Get API key" in the left sidebar
+   - Click "Create API key in new project" (or select an existing project)
+   - Your API key will be generated automatically
+
+3. **Copy Your API Key**
+   - Copy the generated API key (it starts with `AIza...`)
+   - Keep this key secure and never share it publicly
+
+4. **Set Up the API Key**
+
+   **Option A: Environment Variable (Recommended)**
+   ```bash
+   # Linux/macOS
+   export GEMINI_API_KEY="your-api-key-here"
+   
+   # Windows Command Prompt
+   set GEMINI_API_KEY=your-api-key-here
+   
+   # Windows PowerShell
+   $env:GEMINI_API_KEY="your-api-key-here"
+   ```
+
+   **Option B: .env File**
+   ```bash
+   # Create a .env file in the project root
+   echo "GEMINI_API_KEY=your-api-key-here" > .env
+   ```
+
+   **Option C: Vercel Deployment**
+   - Add the environment variable in your Vercel project settings
+   - Go to Project Settings → Environment Variables
+   - Add: `GEMINI_API_KEY` with your API key value
+
+### API Key Features & Limits
+
+- ✅ **Free Tier**: 15 requests per minute, 1500 requests per day
+- ✅ **No Credit Card Required**: Completely free to get started
+- ✅ **Production Ready**: Suitable for personal and small team use
+- ✅ **Rate Limiting**: Built-in request throttling in Smart Planner
+
+### Troubleshooting
+
+**API Key Not Working?**
+- Ensure there are no extra spaces when copying the key
+- Verify the key starts with `AIza`
+- Check that you've restarted the server after setting the environment variable
+
+**Need More Requests?**
+- The free tier provides generous limits for most users
+- For higher usage, Google offers pay-as-you-go pricing
+- Monitor your usage in the Google AI Studio dashboard
+
+**Alternative Setup:**
+If you prefer not to use AI features, you can run Smart Planner without the API key - the app will work normally but won't provide AI-generated task suggestions or emoji assignments.
+
 ## 🛠️ Technology Stack
 
 ### Backend
