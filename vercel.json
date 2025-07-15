@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "name": "weekly-planner",
+  "name": "smart-planner",
   "builds": [
     {
-      "src": "server-supabase.js",
+      "src": "server.js",
       "use": "@vercel/node"
     },
     {
@@ -14,7 +14,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server-supabase.js"
+      "dest": "/server.js"
     },
     {
       "src": "/(.*)",
@@ -27,7 +27,7 @@
     "GEMINI_API_KEY": "@gemini-api-key"
   },
   "functions": {
-    "server-supabase.js": {
+    "server.js": {
       "maxDuration": 30
     }
   }
