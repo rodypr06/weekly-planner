@@ -1,10 +1,10 @@
-# 🗓️ Weekly Planner
+# 🗓️ Smart Planner
 
-> **AI-Powered Weekly Task Planner with Liquid Glass UI**
+> **AI-Powered Smart Planner**
 
-A modern, production-ready Progressive Web App (PWA) that combines elegant design with AI-powered task management. Built with vanilla JavaScript and featuring a stunning liquid glass interface with smooth animations and advanced task management capabilities.
+A modern, production-ready Progressive Web App (PWA) that combines elegant design with AI-powered task management. Built with vanilla JavaScript and featuring a stunning glassmorphism interface with smooth animations and advanced task management capabilities.
 
-![Weekly Planner](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Smart Planner](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
 ![Node.js](https://img.shields.io/badge/Node.js-22+-green)
 ![PWA](https://img.shields.io/badge/PWA-Ready-blue)
 ![AI](https://img.shields.io/badge/AI-Gemini%202.0-purple)
@@ -12,7 +12,7 @@ A modern, production-ready Progressive Web App (PWA) that combines elegant desig
 ## ✨ Features
 
 ### 🎨 **Modern Design**
-- **Liquid Glass UI** with glassmorphism effects and backdrop blur
+- **Glassmorphism UI** with modern glass effects and backdrop blur
 - **Responsive Design** optimized for mobile, tablet, and desktop
 - **Dark Theme** with indigo/purple gradient accents
 - **Smooth Animations** with 300ms transitions and micro-interactions
@@ -340,7 +340,7 @@ weekly-planner/
 - **Primary**: #4f46e5 (Indigo-500)
 - **Secondary**: #a855f7 (Purple-500)
 - **Background**: #111827 (Gray-900)
-- **Glass Elements**: rgba(255, 255, 255, 0.05) with backdrop-blur(20px)
+- **Glassmorphism Elements**: rgba(255, 255, 255, 0.05) with backdrop-blur(20px)
 - **Text Primary**: #f9fafb (Gray-50)
 - **Text Secondary**: #9ca3af (Gray-400)
 
@@ -375,6 +375,6 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by [Rodytech](https://github.com/rodypr06)**
+**Built with ❤️ by [RodyTech LLC](https://github.com/rodypr06)**
 
 *Transform your productivity with AI-powered planning and beautiful design.*

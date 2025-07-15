@@ -1,7 +1,7 @@
 {
-  "name": "Weekly Planner",
-  "short_name": "Planner",
-  "description": "AI Powered Weekly Task Planner",
+  "name": "Smart Planner",
+  "short_name": "Smart Planner",
+  "description": "AI Powered Smart Planner",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#111827",

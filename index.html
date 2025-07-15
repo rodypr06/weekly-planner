@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Powered Weekly Task Planner - Liquid Glass</title>
+    <title>Smart Planner</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#4f46e5">
-    <meta name="description" content="AI Powered Weekly Task Planner">
+    <meta name="description" content="AI Powered Smart Planner">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Weekly Planner">
+    <meta name="apple-mobile-web-app-title" content="Smart Planner">
     
     <!-- Existing Resources -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
+    
+    <!-- Supabase Integration -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="supabase-auth.js"></script>
 
     <!-- Service Worker Registration -->
     <script>
@@ -138,17 +142,17 @@
         <div class="glass-pane rounded-2xl shadow-2xl w-full max-w-md p-8">
             <div class="text-center mb-8">
                 <svg class="w-16 h-16 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <h1 class="text-2xl font-bold text-gray-100 mb-2">Weekly Planner</h1>
+                <h1 class="text-2xl font-bold text-gray-100 mb-2">Smart Planner</h1>
                 <p class="text-gray-400">Sign in to access your personal planner</p>
             </div>
 
             <!-- Login Form -->
             <form id="login-form" class="space-y-4">
                 <div>
-                    <label for="login-username" class="block text-sm font-medium text-gray-400 mb-2">Username</label>
-                    <input type="text" id="login-username" name="username" required 
+                    <label for="login-email" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="login-email" name="email" required 
                            class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
-                           placeholder="Enter your username">
+                           placeholder="Enter your email">
                 </div>
                 <div>
                     <label for="login-password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
@@ -175,10 +179,16 @@
                     <p class="text-gray-400 text-sm">Join to start planning your week</p>
                 </div>
                 <div>
-                    <label for="register-username" class="block text-sm font-medium text-gray-400 mb-2">Username</label>
-                    <input type="text" id="register-username" name="username" required 
+                    <label for="register-email" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="register-email" name="email" required 
                            class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
-                           placeholder="Choose a username">
+                           placeholder="Enter your email">
+                </div>
+                <div>
+                    <label for="register-username" class="block text-sm font-medium text-gray-400 mb-2">Username (Optional)</label>
+                    <input type="text" id="register-username" name="username" 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           placeholder="Choose a display name">
                 </div>
                 <div>
                     <label for="register-password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
@@ -219,7 +229,7 @@
             <div class="flex-1"></div>
             <div class="text-center">
                 <svg class="w-20 h-20 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-100">Weekly Planner</h1>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-100">Smart Planner</h1>
                 <p id="current-week-display" class="text-gray-400 mt-2 text-lg"></p>
             </div>
             <div class="flex-1 flex justify-end">
@@ -475,6 +485,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize Supabase
+            if (!initializeSupabase()) {
+                console.error('Failed to initialize Supabase');
+                return;
+            }
+            
             // --- Authentication Management ---
             let currentUser = null;
             
@@ -497,11 +513,10 @@
             // Check authentication status on load
             async function checkAuth() {
                 try {
-                    const response = await fetch('/api/me');
-                    const data = await response.json();
+                    const authStatus = await SupabaseAuth.checkAuth();
                     
-                    if (data.authenticated) {
-                        currentUser = data.user;
+                    if (authStatus.authenticated) {
+                        currentUser = authStatus.user;
                         showMainApp();
                     } else {
                         showAuthModal();
@@ -571,7 +586,7 @@
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const username = document.getElementById('login-username').value;
+                const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
                 const loginBtn = document.getElementById('login-btn');
                 const loginBtnText = document.getElementById('login-btn-text');
@@ -583,20 +598,14 @@
                 loginBtn.disabled = true;
                 
                 try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
+                    const result = await SupabaseAuth.login(email, password);
                     
-                    const data = await response.json();
-                    
-                    if (response.ok) {
-                        currentUser = data.user;
+                    if (result.success) {
+                        currentUser = result.user;
                         showMainApp();
                         showMessage('Welcome back!', 'success');
                     } else {
-                        showMessage(data.error || 'Login failed');
+                        showMessage(result.error || 'Login failed');
                     }
                 } catch (error) {
                     showMessage('Network error. Please try again.');
@@ -612,6 +621,7 @@
             registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                const email = document.getElementById('register-email').value;
                 const username = document.getElementById('register-username').value;
                 const password = document.getElementById('register-password').value;
                 const passwordConfirm = document.getElementById('register-password-confirm').value;
@@ -630,20 +640,18 @@
                 registerBtn.disabled = true;
                 
                 try {
-                    const response = await fetch('/api/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
+                    const result = await SupabaseAuth.register(email, password, username);
                     
-                    const data = await response.json();
-                    
-                    if (response.ok) {
-                        currentUser = data.user;
-                        showMainApp();
-                        showMessage('Account created successfully!', 'success');
+                    if (result.success) {
+                        if (result.needsConfirmation) {
+                            showMessage(result.message, 'success');
+                        } else {
+                            currentUser = result.user;
+                            showMainApp();
+                            showMessage('Account created successfully!', 'success');
+                        }
                     } else {
-                        showMessage(data.error || 'Registration failed');
+                        showMessage(result.error || 'Registration failed');
                     }
                 } catch (error) {
                     showMessage('Network error. Please try again.');
@@ -658,13 +666,15 @@
             // Logout functionality
             logoutBtn.addEventListener('click', async () => {
                 try {
-                    await fetch('/api/logout', { method: 'POST' });
-                    currentUser = null;
-                    showAuthModal();
-                    
-                    // Reset forms
-                    loginForm.reset();
-                    registerForm.reset();
+                    const result = await SupabaseAuth.logout();
+                    if (result.success) {
+                        currentUser = null;
+                        showAuthModal();
+                        
+                        // Reset forms
+                        loginForm.reset();
+                        registerForm.reset();
+                    }
                 } catch (error) {
                     console.error('Logout error:', error);
                 }
@@ -845,18 +855,12 @@
             
             // --- Initialization ---
             const today = new Date();
-            copyrightEl.innerHTML = `&copy; ${today.getFullYear()} Rodytech. All Rights Reserved.`;
+            copyrightEl.innerHTML = `&copy; ${today.getFullYear()} RodyTech LLC. All Rights Reserved.`;
 
             // --- API Functions ---
             const fetchTasks = async (date, includeArchived = false) => {
                 try {
-                    const params = new URLSearchParams({ date });
-                    if (includeArchived) {
-                        params.append('includeArchived', 'true');
-                    }
-                    const response = await fetch(`/api/tasks?${params}`);
-                    if (!response.ok) throw new Error('Failed to fetch tasks');
-                    return await response.json();
+                    return await ApiClient.fetchTasks(date, includeArchived);
                 } catch (error) {
                     console.error('Error fetching tasks:', error);
                     return [];
@@ -865,13 +869,7 @@
 
             const saveTask = async (task) => {
                 try {
-                    const response = await fetch('/api/tasks', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(task)
-                    });
-                    if (!response.ok) throw new Error('Failed to save task');
-                    return await response.json();
+                    return await ApiClient.saveTask(task);
                 } catch (error) {
                     console.error('Error saving task:', error);
                     throw error;
@@ -880,13 +878,7 @@
 
             const updateTask = async (id, updates) => {
                 try {
-                    const response = await fetch(`/api/tasks/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updates)
-                    });
-                    if (!response.ok) throw new Error('Failed to update task');
-                    return await response.json();
+                    return await ApiClient.updateTask(id, updates);
                 } catch (error) {
                     console.error('Error updating task:', error);
                     throw error;
@@ -895,11 +887,7 @@
 
             const deleteTask = async (id) => {
                 try {
-                    const response = await fetch(`/api/tasks/${id}`, {
-                        method: 'DELETE'
-                    });
-                    if (!response.ok) throw new Error('Failed to delete task');
-                    return await response.json();
+                    return await ApiClient.deleteTask(id);
                 } catch (error) {
                     console.error('Error deleting task:', error);
                     throw error;
@@ -908,11 +896,7 @@
 
             const clearAllTasks = async () => {
                 try {
-                    const response = await fetch('/api/tasks', {
-                        method: 'DELETE'
-                    });
-                    if (!response.ok) throw new Error('Failed to clear tasks');
-                    return await response.json();
+                    return await ApiClient.clearAllTasks();
                 } catch (error) {
                     console.error('Error clearing tasks:', error);
                     throw error;
@@ -922,13 +906,7 @@
             // --- Archive API Functions ---
             const archiveCompletedTasks = async (date) => {
                 try {
-                    const response = await fetch('/api/tasks/archive', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ date })
-                    });
-                    if (!response.ok) throw new Error('Failed to archive tasks');
-                    return await response.json();
+                    return await ApiClient.archiveTasks(date);
                 } catch (error) {
                     console.error('Error archiving tasks:', error);
                     throw error;
@@ -937,13 +915,7 @@
 
             const unarchiveTasks = async (taskIds) => {
                 try {
-                    const response = await fetch('/api/tasks/unarchive', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ taskIds })
-                    });
-                    if (!response.ok) throw new Error('Failed to unarchive tasks');
-                    return await response.json();
+                    return await ApiClient.unarchiveTasks(taskIds);
                 } catch (error) {
                     console.error('Error unarchiving tasks:', error);
                     throw error;
@@ -983,21 +955,7 @@
             // --- Gemini API Call ---
             async function callGemini(prompt) { 
                 try {
-                    const response = await fetch('/api/gemini', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`API request failed with status ${response.status}`);
-                    }
-                    
-                    const result = await response.json();
-                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
-                        return result.candidates[0].content.parts[0].text;
-                    }
-                    throw new Error("Invalid response structure from API.");
+                    return await ApiClient.callGemini(prompt);
                 } catch (error) {
                     console.error("Gemini API call failed:", error);
                     alert(`AI feature failed: ${error.message}`);
