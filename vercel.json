@@ -49,16 +49,14 @@
       "src": "/supabase-auth.js",
       "dest": "/supabase-auth.js"
     },
-{
-  "src": "/(.*)",
-  "dest": "/index.html"
-}
-],
-"env": {
-  "SUPABASE_URL": "@supabase-url",
-  "SUPABASE_SERVICE_ROLE_KEY": "@supabase-serv...",
-  "GEMINI_API_KEY": "@gemini-api-key"
-}
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
+  ],
+  "env": {
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
+    "GEMINI_API_KEY": "@gemini-api-key"
   }
 }
