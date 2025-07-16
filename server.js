@@ -10,8 +10,14 @@ const app = express();
 const PORT = process.env.PORT || 2324;
 
 // Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://buvzbxinbrfrfssvyagk.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1dnpieGluYnJmcmZzc3Z5YWdrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjYwNDgzNCwiZXhwIjoyMDY4MTgwODM0fQ.ydGAAMXkDEeG2nUIwtNUJ0IbwYwceX2SIHYO_7TWWys';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Validate required environment variables
+if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+    process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -59,6 +65,23 @@ app.get('/api/me', requireAuth, (req, res) => {
             email: req.user.email,
             username: req.user.user_metadata?.username || req.user.email
         }
+    });
+});
+
+// Configuration endpoint - serves public Supabase config
+app.get('/api/config', (req, res) => {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        return res.status(500).json({ 
+            error: 'Server configuration error: Missing required environment variables' 
+        });
+    }
+    
+    res.json({
+        supabaseUrl,
+        supabaseAnonKey
     });
 });
 
