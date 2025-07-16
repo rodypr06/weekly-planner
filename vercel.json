@@ -62,6 +62,6 @@
     "GEMINI_API_KEY": "gemini_api_key"
     "POSTGRES_DATABASE": "postgres_database",
     "POSTGRES_PASSWORD": "postgres_password",
-    "POSTGRES_HOST": "postgres_host",
+    "POSTGRES_HOST": "postgres_host"
   }
 }
