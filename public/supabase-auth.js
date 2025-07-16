@@ -1,23 +1,46 @@
 // Supabase Authentication Module
 // This file contains the new authentication logic for Supabase integration
 
-// Initialize Supabase client (will be loaded from CDN)
-const SUPABASE_URL = 'https://buvzbxinbrfrfssvyagk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1dnpieGluYnJmcmZzc3Z5YWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDQ4MzQsImV4cCI6MjA2ODE4MDgzNH0.3Tj-Y-EcCly8Yf2VPvEMM_NWDT6dxQuvga5vW_EATco';
-
+// Configuration will be loaded from server
+let supabaseConfig = null;
 let supabase;
 let currentUser = null;
 let currentSession = null;
 
+// Load configuration from server
+async function loadSupabaseConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (!response.ok) {
+            throw new Error('Failed to load configuration');
+        }
+        supabaseConfig = await response.json();
+        return supabaseConfig;
+    } catch (error) {
+        console.error('Error loading Supabase configuration:', error);
+        throw error;
+    }
+}
+
 // Initialize Supabase client
-function initializeSupabase() {
+async function initializeSupabase() {
     if (typeof window.supabase === 'undefined') {
         console.error('Supabase client not loaded. Make sure to include the Supabase CDN script.');
         return false;
     }
     
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    return true;
+    try {
+        // Load configuration if not already loaded
+        if (!supabaseConfig) {
+            await loadSupabaseConfig();
+        }
+        
+        supabase = window.supabase.createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey);
+        return true;
+    } catch (error) {
+        console.error('Error initializing Supabase:', error);
+        return false;
+    }
 }
 
 // Authentication Management
@@ -308,6 +331,42 @@ const ApiClient = {
             return await response.json();
         } catch (error) {
             console.error('Error unarchiving tasks:', error);
+            throw error;
+        }
+    },
+
+    // Reorder tasks with auth
+    async reorderTasks(taskOrders) {
+        try {
+            console.log('Sending reorder request:', taskOrders);
+            const response = await fetch('/api/tasks/reorder', {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ taskOrders })
+            });
+            
+            const responseText = await response.text();
+            console.log('Reorder response:', response.status, responseText);
+            
+            if (!response.ok) {
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                let needsMigration = false;
+                try {
+                    const errorData = JSON.parse(responseText);
+                    errorMessage = errorData.error || errorMessage;
+                    needsMigration = errorData.needsMigration || false;
+                } catch (e) {
+                    errorMessage = responseText || errorMessage;
+                }
+                
+                const error = new Error(errorMessage);
+                error.needsMigration = needsMigration;
+                throw error;
+            }
+            
+            return JSON.parse(responseText);
+        } catch (error) {
+            console.error('Error reordering tasks:', error);
             throw error;
         }
     },
