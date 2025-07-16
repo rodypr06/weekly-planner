@@ -59,7 +59,7 @@
     "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
     "GEMINI_API_KEY": "@gemini-api-key"
   },
-  "functions": {
+   {
     "server.js": {
       "maxDuration": 30
     }
