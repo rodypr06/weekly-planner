@@ -55,13 +55,10 @@
     }
   ],
 "env": {
-  "supabase_url": "",
-  "supabase_service_role_key": "",
-  "supabase_anon_key": "",
-  "node_env": "",
-  "gemini_api_key": "",
-  "postgres_database": "",
-  "postgres_password": "",
-  "postgres_host": ""
+  "SUPABASE_URL": "",
+  "SUPABASE_SERVICE_ROLE_KEY": "",
+  "SUPABASE_ANON_KEY": "",
+  "NODE_ENV": "",
+  "GEMINI_API_KEY": ""
 }
 }
