@@ -39,12 +39,6 @@ The Weekly Planner application is **generally ready for production deployment** 
 
 ## ⚠️ Critical Issues Requiring Attention
 
-### 1. **Security Vulnerability - Exposed API Keys**
-```javascript
-// In public/supabase-auth.js:5-6
-const SUPABASE_URL = 'https://buvzbxinbrfrfssvyagk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-```
 **Issue**: Supabase credentials are hardcoded in frontend code
 **Risk**: High - Credentials exposed to all users
 **Impact**: Potential unauthorized access to database
