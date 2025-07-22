@@ -127,7 +127,7 @@ console.log('RPC not found, trying direct SQL approach');
 
 ### Required Environment Variables:
 ```
-SUPABASE_URL=https://buvzbxinbrfrfssvyagk.supabase.co
+SUPABASE_URL=<your-supabase-url>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 SUPABASE_ANON_KEY=<your-anon-key>
 NODE_ENV=production
