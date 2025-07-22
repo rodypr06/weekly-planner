@@ -10,14 +10,20 @@ const app = express();
 const PORT = process.env.PORT || 2324;
 
 // Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://buvzbxinbrfrfssvyagk.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1dnpieGluYnJmcmZzc3Z5YWdrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjYwNDgzNCwiZXhwIjoyMDY4MTgwODM0fQ.ydGAAMXkDEeG2nUIwtNUJ0IbwYwceX2SIHYO_7TWWys';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set');
+    process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Middleware
 app.use(express.json());
-app.use(express.static(__dirname));
+// Serve static assets only from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Authentication middleware - extract user from Supabase JWT
 const requireAuth = async (req, res, next) => {

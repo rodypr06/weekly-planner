@@ -11,11 +11,7 @@ const urlsToCache = [
   '/icons/icon-192x192.png',
   '/icons/icon-384x384.png',
   '/icons/icon-512x512.png',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js',
-  'https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js'
+  // Only cache local assets to avoid supply chain risks
 ];
 
 self.addEventListener('install', event => {
