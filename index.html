@@ -515,6 +515,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // Utility to escape user provided content to prevent XSS
+            const escapeHTML = (str) => {
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            };
+
             // Debug: Check if ApiClient is available
             console.log('DOMContentLoaded - ApiClient available:', typeof ApiClient !== 'undefined');
             console.log('DOMContentLoaded - window.ApiClient available:', typeof window.ApiClient !== 'undefined');
@@ -1277,7 +1287,7 @@
                 
                 if (tasksToRender.length === 0) {
                     if (currentFilter) {
-                        emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${currentFilter}".</p>`;
+                        emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${escapeHTML(currentFilter)}".</p>`;
                     } else {
                         emptyState.innerHTML = `<i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks for this day.</p>`;
                     }
@@ -1297,7 +1307,7 @@
                         if (isCompleted) taskElement.classList.add('completed');
                         
                         const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                        const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${tag}</span>`).join('');
+                        const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHTML(tag)}</span>`).join('');
 
                         taskElement.innerHTML = `
                             <div class="flex items-start justify-between">
@@ -1308,8 +1318,8 @@
                                     <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
                                     <div class="flex-grow">
                                         <div class="flex items-center gap-3">
-                                            <span class="text-2xl">${task.emoji}</span>
-                                            <span class="task-text font-medium text-gray-200">${task.text}</span>
+                                            <span class="text-2xl">${escapeHTML(task.emoji)}</span>
+                                            <span class="task-text font-medium text-gray-200">${escapeHTML(task.text)}</span>
                                         </div>
                                         <div class="mt-2 flex items-center flex-wrap gap-y-2">
                                             ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}

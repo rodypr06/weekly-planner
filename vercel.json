@@ -20,7 +20,7 @@
       "use": "@vercel/static"
     },
     {
-      "src": "supabase-auth.js",
+      "src": "public/supabase-auth.js",
       "use": "@vercel/static"
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "src": "/supabase-auth.js",
-      "dest": "/supabase-auth.js"
+      "dest": "/public/supabase-auth.js"
     },
     {
       "src": "/(.*)",
