@@ -4,7 +4,7 @@ module.exports = {
     script: 'server.js',
     env: {
       NODE_ENV: 'production',
-      GEMINI_API_KEY: "AIzaSyDtq4eHm2Y_i8CDtCYfHMK5AtGe5cB6YO0"
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY
     },
     instances: 1,
     autorestart: true,

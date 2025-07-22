@@ -23,7 +23,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Middleware
 app.use(express.json());
-app.use(express.static(__dirname));
+// Serve static assets only from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Authentication middleware - extract user from Supabase JWT
 const requireAuth = async (req, res, next) => {
