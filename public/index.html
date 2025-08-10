@@ -485,8 +485,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize Supabase
-            if (!initializeSupabase()) {
+            // Initialize Supabase and wait for it to be ready
+            if (!(await initializeSupabase())) {
                 console.error('Failed to initialize Supabase');
                 return;
             }
