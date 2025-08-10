@@ -402,3 +402,9 @@ const ApiClient = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { SupabaseAuth, ApiClient };
 }
+
+// Expose to browser global scope
+if (typeof window !== 'undefined') {
+    window.SupabaseAuth = SupabaseAuth;
+    window.ApiClient = ApiClient;
+}

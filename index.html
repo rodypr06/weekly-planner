@@ -537,8 +537,8 @@
                 window.ApiClient = window.ApiClient; // This ensures global access
             }
             
-            // Initialize Supabase
-            if (!initializeSupabase()) {
+            // Initialize Supabase and ensure it's ready before proceeding
+            if (!(await initializeSupabase())) {
                 console.error('Failed to initialize Supabase');
                 return;
             }
