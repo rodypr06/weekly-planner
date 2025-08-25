@@ -392,6 +392,14 @@
                            class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
                            placeholder="Enter your password">
                 </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="stay-logged-in" name="stay-logged-in" 
+                           class="custom-checkbox h-4 w-4 rounded border-white/20 cursor-pointer appearance-none border-2 shrink-0" 
+                           checked>
+                    <label for="stay-logged-in" class="ml-3 text-sm text-gray-400 cursor-pointer select-none hover:text-gray-300 transition-colors">
+                        Keep me logged in (recommended)
+                    </label>
+                </div>
                 <button type="submit" id="login-btn" 
                         class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2">
                     <span id="login-btn-text">Sign In</span>
@@ -956,6 +964,7 @@
                 
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
+                const stayLoggedIn = document.getElementById('stay-logged-in').checked;
                 const loginBtn = document.getElementById('login-btn');
                 const loginBtnText = document.getElementById('login-btn-text');
                 const loginSpinner = document.getElementById('login-spinner');
@@ -966,7 +975,7 @@
                 loginBtn.disabled = true;
                 
                 try {
-                    const result = await SupabaseAuth.login(email, password);
+                    const result = await SupabaseAuth.login(email, password, stayLoggedIn);
                     
                     if (result.success) {
                         currentUser = result.user;
