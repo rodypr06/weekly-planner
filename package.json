@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "npm run build:css && node build-assets.js",
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/vendor/tailwind.min.css --minify",
+    "prebuild": "rm -rf public/vendor",
+    "postinstall": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -19,14 +23,25 @@
   },
   "homepage": "https://github.com/rodypr06/weekly-planner#readme",
   "dependencies": {
-    "@supabase/supabase-js": "^2.51.0",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@supabase/supabase-js": "^2.52.0",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^11.10.0",
     "better-sqlite3-session-store": "^0.1.0",
     "canvas": "^3.1.0",
+    "canvas-confetti": "^1.9.3",
+    "compression": "^1.7.4",
+    "dompurify": "^3.2.6",
+    "dotenv": "^17.2.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
     "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "jsdom": "^26.1.0",
     "node-fetch": "^2.7.0",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "tailwindcss": "^3.4.0",
+    "tone": "^15.1.22"
   }
 }

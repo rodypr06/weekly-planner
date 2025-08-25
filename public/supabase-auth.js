@@ -48,11 +48,15 @@ const SupabaseAuth = {
     // Check current authentication status
     async checkAuth() {
         try {
+            if (!supabase) {
+                console.error('Supabase client not initialized');
+                return { authenticated: false };
+            }
             const { data: { session }, error } = await supabase.auth.getSession();
             
             if (error) {
                 console.error('Error checking auth:', error);
-                return null;
+                return { authenticated: false, error: error.message };
             }
             
             if (session?.user) {
@@ -78,6 +82,9 @@ const SupabaseAuth = {
     // Login with email and password
     async login(email, password) {
         try {
+            if (!supabase) {
+                return { success: false, error: 'Supabase client not initialized' };
+            }
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password
@@ -106,6 +113,9 @@ const SupabaseAuth = {
     // Register new user
     async register(email, password, username) {
         try {
+            if (!supabase) {
+                return { success: false, error: 'Supabase client not initialized' };
+            }
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -148,6 +158,9 @@ const SupabaseAuth = {
     // Logout
     async logout() {
         try {
+            if (!supabase) {
+                return { success: false, error: 'Supabase client not initialized' };
+            }
             const { error } = await supabase.auth.signOut();
             
             if (error) {
@@ -172,6 +185,10 @@ const SupabaseAuth = {
 
     // Set up auth state change listener
     onAuthStateChange(callback) {
+        if (!supabase) {
+            console.error('Supabase client not initialized');
+            return null;
+        }
         return supabase.auth.onAuthStateChange((event, session) => {
             currentSession = session;
             currentUser = session?.user || null;
@@ -338,7 +355,6 @@ const ApiClient = {
     // Reorder tasks with auth
     async reorderTasks(taskOrders) {
         try {
-            console.log('Sending reorder request:', taskOrders);
             const response = await fetch('/api/tasks/reorder', {
                 method: 'PUT',
                 headers: this.getAuthHeaders(),
@@ -346,7 +362,6 @@ const ApiClient = {
             });
             
             const responseText = await response.text();
-            console.log('Reorder response:', response.status, responseText);
             
             if (!response.ok) {
                 let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -366,7 +381,7 @@ const ApiClient = {
             
             return JSON.parse(responseText);
         } catch (error) {
-            console.error('Error reordering tasks:', error);
+            // Error is already logged in the calling function
             throw error;
         }
     },
@@ -393,6 +408,26 @@ const ApiClient = {
             throw new Error("Invalid response structure from AI API.");
         } catch (error) {
             console.error("Gemini API call failed:", error);
+            throw error;
+        }
+    },
+
+    // Submit feedback
+    async submitFeedback(feedbackData) {
+        try {
+            const response = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify(feedbackData)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to submit feedback: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
             throw error;
         }
     }

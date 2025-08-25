@@ -209,29 +209,62 @@ If you prefer not to use AI features, you can run Smart Planner without the API 
 ## 🗄️ Database Schema
 
 ```sql
--- Users table
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tasks table
+-- Tasks table (Updated Supabase/PostgreSQL schema)
 CREATE TABLE tasks (
-    id INTEGER PRIMARY KEY,
-    user_id INTEGER NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     date TEXT NOT NULL,           -- YYYY-MM-DD format
     text TEXT NOT NULL,           -- Task description
     emoji TEXT NOT NULL,          -- AI-generated emoji
     time TEXT,                    -- Optional HH:MM format
-    priority TEXT NOT NULL,       -- 'low', 'medium', 'high'
+    priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
     tags TEXT,                    -- Comma-separated tags
-    completed INTEGER DEFAULT 0,  -- Boolean (0/1)
-    archived INTEGER DEFAULT 0,   -- Boolean (0/1)
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    completed BOOLEAN DEFAULT FALSE,
+    archived BOOLEAN DEFAULT FALSE,
+    position INTEGER DEFAULT 0,   -- For drag-and-drop ordering
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_tasks_user_date ON tasks(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_tasks_user_date_position ON tasks(user_id, date, position);
 ```
+
+### 🔧 Database Migration (Required for Drag & Drop)
+
+If you encounter issues with drag-and-drop task reordering, you need to run the position column migration:
+
+#### Option 1: Quick Fix (Recommended)
+Run this in your Supabase SQL Editor:
+```sql
+-- Add position column if missing
+ALTER TABLE public.tasks 
+ADD COLUMN IF NOT EXISTS position INTEGER DEFAULT 0;
+
+-- Update existing tasks with sequential positions
+UPDATE public.tasks 
+SET position = subquery.new_position
+FROM (
+    SELECT 
+        id,
+        ROW_NUMBER() OVER (PARTITION BY user_id, date ORDER BY created_at) - 1 as new_position
+    FROM public.tasks
+    WHERE position IS NULL OR position = 0
+) AS subquery
+WHERE tasks.id = subquery.id;
+
+-- Add performance index
+CREATE INDEX IF NOT EXISTS idx_tasks_user_date_position 
+ON public.tasks(user_id, date, position);
+```
+
+#### Option 2: Use Migration Files
+1. **Check the schema**: Run `check-position-column.sql` in Supabase SQL Editor
+2. **Apply migration**: Run `migrate-add-position.sql` for comprehensive migration  
+3. **Quick fix**: Run `quick-fix-position.sql` for immediate resolution
+
+> **Note**: The drag-and-drop feature will be automatically disabled if the position column is missing, showing a helpful error message to guide you through the migration.
 
 ## 🚢 Production Deployment
 

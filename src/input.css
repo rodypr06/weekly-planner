@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom glass effects and transitions */
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-pane {
+    @apply bg-white bg-opacity-5 backdrop-blur-glass border border-white border-opacity-10;
+  }
+  
+  .task-item, .day-selector {
+    transition: all 0.3s ease;
+  }
+  
+  .task-item.removing {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  
+  .task-item.dragging {
+    opacity: 0.5;
+    transform: rotate(3deg);
+    z-index: 1000;
+  }
+  
+  .task-item.drag-over {
+    border-color: #4f46e5;
+    background: rgba(79, 70, 229, 0.1);
+  }
+  
+  .loading-spinner {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .backdrop-blur-glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
