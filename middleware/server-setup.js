@@ -16,6 +16,10 @@ const { sanitizeRequestData } = require('./security');
  */
 function setupExpressApp(options = {}) {
     const app = express();
+    
+    // Enable trust proxy for proper IP detection behind Nginx
+    // Set to 1 to trust the first proxy (Nginx)
+    app.set('trust proxy', 1);
 
     // Apply general rate limiting if provided
     if (options.generalLimiter) {
