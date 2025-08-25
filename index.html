@@ -236,6 +236,129 @@
         .celebration-orb {
             animation: celebration-float 6s infinite ease-in-out;
         }
+        
+        /* Animated Title Styles */
+        .animated-title-container, .animated-title-container-large {
+            position: relative;
+            display: inline-block;
+            overflow: visible;
+        }
+        
+        .animated-title, .animated-title-large {
+            position: relative;
+            z-index: 10;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+        
+        .animated-title-container::before,
+        .animated-title-container-large::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        /* Nested squares animation */
+        @keyframes nested-magic {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(180deg);
+                opacity: 0.4;
+            }
+        }
+        
+        @keyframes title-glow {
+            0%, 100% { 
+                text-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(79, 70, 229, 0.2); 
+            }
+            50% { 
+                text-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(79, 70, 229, 0.3); 
+            }
+        }
+        
+        .animated-title {
+            animation: title-glow 3s ease-in-out infinite;
+        }
+        
+        .animated-title-large {
+            animation: title-glow 3s ease-in-out infinite;
+        }
+        
+        /* Create nested squares with CSS */
+        .nested-square {
+            position: absolute;
+            border: 1px solid;
+            border-radius: 2px;
+            animation: nested-magic 4s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        
+        .nested-square:nth-child(1) {
+            width: 20px; height: 20px;
+            border-color: rgba(168, 85, 247, 0.6);
+            animation-delay: 0s;
+            box-shadow: 0 0 5px rgba(168, 85, 247, 0.3);
+        }
+        
+        .nested-square:nth-child(2) {
+            width: 30px; height: 30px;
+            border-color: rgba(99, 102, 241, 0.5);
+            animation-delay: 0.2s;
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+        }
+        
+        .nested-square:nth-child(3) {
+            width: 40px; height: 40px;
+            border-color: rgba(79, 70, 229, 0.4);
+            animation-delay: 0.4s;
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.1);
+        }
+        
+        .nested-square:nth-child(4) {
+            width: 50px; height: 50px;
+            border-color: rgba(147, 51, 234, 0.3);
+            animation-delay: 0.6s;
+            box-shadow: 0 0 12px rgba(147, 51, 234, 0.1);
+        }
+        
+        .nested-square:nth-child(5) {
+            width: 60px; height: 60px;
+            border-color: rgba(168, 85, 247, 0.2);
+            animation-delay: 0.8s;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.05);
+        }
+        
+        /* Hover effects */
+        .animated-title-container:hover .nested-square,
+        .animated-title-container-large:hover .nested-square {
+            border-color: rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+            animation-duration: 2s;
+        }
+        
+        .animated-title-container:hover .animated-title,
+        .animated-title-container-large:hover .animated-title-large {
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 80px rgba(168, 85, 247, 0.5) !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .animated-title-container-large .nested-square {
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
@@ -249,7 +372,9 @@
         <div class="glass-pane rounded-2xl shadow-2xl w-full max-w-md p-8">
             <div class="text-center mb-8">
                 <svg class="w-16 h-16 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <h1 class="text-2xl font-bold text-gray-100 mb-2">Smart Planner</h1>
+                <div class="animated-title-container mb-2">
+                    <h1 class="animated-title text-2xl font-bold text-gray-100">Smart Planner</h1>
+                </div>
                 <p class="text-gray-400">Sign in to access your personal planner</p>
             </div>
 
@@ -346,7 +471,9 @@
             <div class="flex-1"></div>
             <div class="text-center">
                 <svg class="w-20 h-20 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-100">Smart Planner</h1>
+                <div class="animated-title-container-large">
+                    <h1 class="animated-title-large text-3xl md:text-4xl font-bold text-gray-100">Smart Planner</h1>
+                </div>
                 <p id="current-week-display" class="text-gray-400 mt-2 text-lg"></p>
             </div>
             <div class="flex-1 flex justify-end">
@@ -682,6 +809,42 @@
                 logger.error('Failed to initialize Supabase');
                 return;
             }
+            
+            // Initialize Animated Titles
+            function initializeAnimatedTitles() {
+                const containers = document.querySelectorAll('.animated-title-container, .animated-title-container-large');
+                
+                containers.forEach(container => {
+                    // Create nested squares
+                    for (let i = 1; i <= 5; i++) {
+                        const square = document.createElement('div');
+                        square.className = 'nested-square';
+                        square.style.cssText = `
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            width: ${i * 10 + 10}px;
+                            height: ${i * 10 + 10}px;
+                            transform: translate(-50%, -50%);
+                            z-index: ${-i};
+                        `;
+                        container.appendChild(square);
+                    }
+                    
+                    // Add hover interaction for enhanced effect
+                    container.addEventListener('mouseenter', () => {
+                        container.style.transform = 'scale(1.05)';
+                        container.style.transition = 'transform 0.3s ease';
+                    });
+                    
+                    container.addEventListener('mouseleave', () => {
+                        container.style.transform = 'scale(1)';
+                    });
+                });
+            }
+            
+            // Initialize the animated titles
+            initializeAnimatedTitles();
             
             // --- Authentication Management ---
             let currentUser = null;
