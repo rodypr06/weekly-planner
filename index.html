@@ -662,6 +662,16 @@
         document.addEventListener('DOMContentLoaded', async () => {
             // Production-ready initialization without debug logs
             
+            // Utility to escape user provided content to prevent XSS
+            const escapeHTML = (str) => {
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            };
+            
             // Ensure ApiClient is available globally
             if (typeof ApiClient === 'undefined' && typeof window.ApiClient !== 'undefined') {
                 window.ApiClient = window.ApiClient;
@@ -1647,7 +1657,7 @@
                     }
                     
                     if (currentFilter) {
-                        emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${currentFilter}".</p>`;
+                        emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${escapeHTML(currentFilter)}".</p>`;
                     } else {
                         emptyState.innerHTML = `<i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks for this day.</p>`;
                     }
@@ -1680,8 +1690,53 @@
                             // Update existing element
                             updateTaskElement(taskElement, task);
                         } else {
-                            // Create new element
-                            taskElement = createTaskElement(task);
+                            // Create new element - ensure we have an element to work with
+                            if (!taskElement) {
+                                taskElement = document.createElement('div');
+                                taskElement.className = 'task-item glass-pane p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-300 border border-white/20';
+                                taskElement.dataset.taskId = task.id;
+                                taskElement.style.backdropFilter = 'blur(20px)';
+                            }
+                            
+                            const isCompleted = task.completed;
+                            const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                            const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHTML(tag)}</span>`).join('');
+
+                            taskElement.innerHTML = `
+                                <div class="flex items-start justify-between">
+                                    ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </div>` : ''}
+                                    <div class="flex items-start gap-4 flex-grow">
+                                        <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
+                                        <div class="flex-grow">
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-2xl">${escapeHTML(task.emoji)}</span>
+                                                <span class="task-text font-medium text-gray-200">${escapeHTML(task.text)}</span>
+                                            </div>
+                                            <div class="mt-2 flex items-center flex-wrap gap-y-2">
+                                                ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
+                                                <div class="flex flex-wrap">${tagsHTML}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0 ml-2">
+                                        <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
+                                        <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </div>
+                            `;
+                            taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
+                            taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
+                            taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
+                            taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
+                                tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
+                            });
+                            
+                            // Add drag and drop event listeners if not in archive view and position column exists
+                            if (!showingArchive && positionColumnExists) {
+                                setupDragAndDrop(taskElement);
+                            }
                         }
                         
                         fragment.appendChild(taskElement);

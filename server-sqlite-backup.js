@@ -58,10 +58,16 @@ try {
 
 // Middleware
 app.use(express.json());
-app.use(express.static(__dirname));
+// Serve static assets from the public directory only
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Create sessions database
 const sessionsDb = new Database('sessions.db');
+
+if (!process.env.SESSION_SECRET) {
+    console.error('SESSION_SECRET environment variable is required');
+    process.exit(1);
+}
 
 // Session configuration with persistent storage
 app.use(session({
@@ -72,11 +78,12 @@ app.use(session({
             intervalMs: 900000 // Clear expired sessions every 15 minutes
         }
     }),
-    secret: process.env.SESSION_SECRET || 'weekly-planner-secret-key-change-in-production',
+    // Require a strong session secret in production
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Set to true in production with HTTPS
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     }
