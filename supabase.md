@@ -8,17 +8,17 @@
 - Ensure the app is secure
 
 ## Supabase Database Information
-POSTGRES_URL="postgres://postgres.buvzbxinbrfrfssvyagk:nHExun3FX3YbBQAT@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&supa=base-pooler.x"
+POSTGRES_URL="postgres://<user>:<password>@<host>:6543/postgres?sslmode=require&supa=base-pooler.x"
 POSTGRES_USER="postgres"
-POSTGRES_HOST="db.buvzbxinbrfrfssvyagk.supabase.co"
-SUPABASE_JWT_SECRET="cIVmAPkl36aHvmrUCP06D6eD7eKLnfqX4ZXoLaDn7xAu8ZQUquBdti/ObUEMvhR1H6UF0IwLGi/4yNtwDqi22g=="
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1dnpieGluYnJmcmZzc3Z5YWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDQ4MzQsImV4cCI6MjA2ODE4MDgzNH0.3Tj-Y-EcCly8Yf2VPvEMM_NWDT6dxQuvga5vW_EATco"
-POSTGRES_PRISMA_URL="postgres://postgres.buvzbxinbrfrfssvyagk:nHExun3FX3YbBQAT@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true"
-POSTGRES_PASSWORD="nHExun3FX3YbBQAT"
+POSTGRES_HOST="db.<your-instance>.supabase.co"
+SUPABASE_JWT_SECRET="<your-jwt-secret>"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-anon-key>"
+POSTGRES_PRISMA_URL="postgres://<user>:<password>@<host>:6543/postgres?sslmode=require&pgbouncer=true"
+POSTGRES_PASSWORD="<your-db-password>"
 POSTGRES_DATABASE="postgres"
-SUPABASE_URL="https://buvzbxinbrfrfssvyagk.supabase.co"
-SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1dnpieGluYnJmcmZzc3Z5YWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2MDQ4MzQsImV4cCI6MjA2ODE4MDgzNH0.3Tj-Y-EcCly8Yf2VPvEMM_NWDT6dxQuvga5vW_EATco"
-NEXT_PUBLIC_SUPABASE_URL="https://buvzbxinbrfrfssvyagk.supabase.co"
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1dnpieGluYnJmcmZzc3Z5YWdrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjYwNDgzNCwiZXhwIjoyMDY4MTgwODM0fQ.ydGAAMXkDEeG2nUIwtNUJ0IbwYwceX2SIHYO_7TWWys"
-POSTGRES_URL_NON_POOLING="postgres://postgres.buvzbxinbrfrfssvyagk:nHExun3FX3YbBQAT@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require"
+SUPABASE_URL="https://<your-instance>.supabase.co"
+SUPABASE_ANON_KEY="<your-anon-key>"
+NEXT_PUBLIC_SUPABASE_URL="https://<your-instance>.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="<your-service-role-key>"
+POSTGRES_URL_NON_POOLING="postgres://<user>:<password>@<host>:5432/postgres?sslmode=require"
 
