@@ -59,6 +59,7 @@ const SupabaseAuth = {
                 return { authenticated: false, error: error.message };
             }
             
+            // Check for active session from Supabase
             if (session?.user) {
                 currentUser = session.user;
                 currentSession = session;
@@ -72,6 +73,36 @@ const SupabaseAuth = {
                 };
             }
             
+            // Check if user chose not to stay logged in and has a temporary session
+            const stayLoggedIn = localStorage.getItem('supabase-stay-logged-in');
+            if (stayLoggedIn === 'false') {
+                const tempSession = sessionStorage.getItem('supabase-temp-session');
+                if (tempSession) {
+                    try {
+                        const parsedSession = JSON.parse(tempSession);
+                        // Check if session is still valid (not expired)
+                        if (parsedSession.expires_at && new Date(parsedSession.expires_at) > new Date()) {
+                            currentUser = parsedSession.user;
+                            currentSession = parsedSession;
+                            return {
+                                authenticated: true,
+                                user: {
+                                    id: parsedSession.user.id,
+                                    email: parsedSession.user.email,
+                                    username: parsedSession.user.user_metadata?.username || parsedSession.user.email
+                                }
+                            };
+                        } else {
+                            // Session expired, clean up
+                            sessionStorage.removeItem('supabase-temp-session');
+                        }
+                    } catch (error) {
+                        console.error('Error parsing temporary session:', error);
+                        sessionStorage.removeItem('supabase-temp-session');
+                    }
+                }
+            }
+            
             return { authenticated: false };
         } catch (error) {
             console.error('Auth check failed:', error);
@@ -80,11 +111,12 @@ const SupabaseAuth = {
     },
 
     // Login with email and password
-    async login(email, password) {
+    async login(email, password, stayLoggedIn = true) {
         try {
             if (!supabase) {
                 return { success: false, error: 'Supabase client not initialized' };
             }
+            
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password
@@ -97,13 +129,34 @@ const SupabaseAuth = {
             currentUser = data.user;
             currentSession = data.session;
             
+            // Handle session persistence based on stayLoggedIn preference
+            if (stayLoggedIn) {
+                // Store preference for persistent session (default Supabase behavior)
+                localStorage.setItem('supabase-stay-logged-in', 'true');
+                // Set session refresh to keep user logged in
+                if (data.session?.refresh_token) {
+                    localStorage.setItem('supabase-refresh-token', data.session.refresh_token);
+                }
+            } else {
+                // User chose not to stay logged in - use session storage instead
+                localStorage.setItem('supabase-stay-logged-in', 'false');
+                // Move session to sessionStorage for browser session only
+                if (data.session) {
+                    sessionStorage.setItem('supabase-temp-session', JSON.stringify(data.session));
+                    // Remove from localStorage to prevent persistence
+                    const storageKey = `sb-${supabaseConfig.supabaseUrl.split('//')[1].split('.')[0]}-auth-token`;
+                    localStorage.removeItem(storageKey);
+                }
+            }
+            
             return {
                 success: true,
                 user: {
                     id: data.user.id,
                     email: data.user.email,
                     username: data.user.user_metadata?.username || data.user.email
-                }
+                },
+                stayLoggedIn: stayLoggedIn
             };
         } catch (error) {
             return { success: false, error: error.message };
@@ -170,6 +223,11 @@ const SupabaseAuth = {
             
             currentUser = null;
             currentSession = null;
+            
+            // Clean up session preferences and temporary sessions
+            localStorage.removeItem('supabase-stay-logged-in');
+            localStorage.removeItem('supabase-refresh-token');
+            sessionStorage.removeItem('supabase-temp-session');
             
             return { success: true };
         } catch (error) {
