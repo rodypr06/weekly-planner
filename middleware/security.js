@@ -266,7 +266,7 @@ const aiPromptValidationRules = () => {
             .trim()
             .isLength({ min: 1, max: 2000 })
             .withMessage('Prompt must be between 1 and 2000 characters')
-            .matches(/^[a-zA-Z0-9\s\-_.,!?():'"@#$%&+=\u00C0-\u017F\u0100-\u017F\u1E00-\u1EFF\u2000-\u206F\u2070-\u209F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\n\r]*$/)
+            .matches(/^[a-zA-Z0-9\s\-_.,!?():'"@#$%&+={}[\]\\/`~*^|<>\u00C0-\u017F\u0100-\u017F\u1E00-\u1EFF\u2000-\u206F\u2070-\u209F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F700-\u1F77F\u1F780-\u1F7FF\u1F800-\u1F8FF\u2600-\u26FF\u2700-\u27BF\n\r]*$/)
             .withMessage('Prompt contains invalid characters')
     ];
 };
