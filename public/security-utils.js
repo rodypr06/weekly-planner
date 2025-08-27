@@ -35,7 +35,7 @@ class SecurityUtils {
         this.validationRules = {
             taskText: {
                 maxLength: 500,
-                allowedChars: /^[a-zA-Z0-9\s\-_.,!?():'"@#$%&+=\u00C0-\u017F\u0100-\u017F\u1E00-\u1EFF\u2000-\u206F\u2070-\u209F\u20A0-\u20CF\u2100-\u214F\u2150-\u218F]*$/
+                dangerousChars: /<script|<iframe|javascript:|vbscript:|onload=|onerror=/i
             },
             tags: {
                 maxLength: 20,
@@ -117,8 +117,8 @@ class SecurityUtils {
             return { isValid: false, error: `Task text must be ${this.validationRules.taskText.maxLength} characters or less` };
         }
         
-        if (!this.validationRules.taskText.allowedChars.test(text)) {
-            return { isValid: false, error: 'Task text contains invalid characters' };
+        if (this.validationRules.taskText.dangerousChars.test(text)) {
+            return { isValid: false, error: 'Task text contains potentially dangerous content' };
         }
         
         return { isValid: true };

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weekly-planner-v1';
+const CACHE_NAME = 'weekly-planner-v2';
 const urlsToCache = [
   '/',
   '/index.html',
