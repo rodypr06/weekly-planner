@@ -84,6 +84,63 @@ window.debugAuth = {
             return false;
         }
     },
+
+    // Test AI endpoint specifically
+    async testAI() {
+        this.log('Starting AI endpoint test...');
+        
+        try {
+            if (!window.ApiClient || !window.ApiClient.callGemini) {
+                this.error('ApiClient.callGemini not available');
+                return false;
+            }
+            
+            this.log('Testing AI with simple prompt...');
+            const result = await window.ApiClient.callGemini('Hello, respond with just "OK"');
+            this.log('AI test successful, response:', result ? result.substring(0, 50) : 'No response');
+            return true;
+            
+        } catch (error) {
+            this.error('AI test failed:', error);
+            return false;
+        }
+    },
+
+    // Test task creation
+    async testTaskCreation() {
+        this.log('Starting task creation test...');
+        
+        try {
+            if (!window.ApiClient || !window.ApiClient.saveTask) {
+                this.error('ApiClient.saveTask not available');
+                return false;
+            }
+            
+            const testTask = {
+                date: '2025-01-27',
+                text: 'Debug test task',
+                emoji: '🔧',
+                priority: 'low',
+                completed: false
+            };
+            
+            this.log('Creating test task...');
+            const result = await window.ApiClient.saveTask(testTask);
+            this.log('Task creation successful:', result.id || 'Task created');
+            
+            // Clean up - delete the test task
+            if (result.id && window.ApiClient.deleteTask) {
+                await window.ApiClient.deleteTask(result.id);
+                this.log('Test task cleaned up');
+            }
+            
+            return true;
+            
+        } catch (error) {
+            this.error('Task creation test failed:', error);
+            return false;
+        }
+    },
     
     // Full system test
     async fullTest() {
@@ -100,9 +157,46 @@ window.debugAuth = {
             this.error('API test failed');
             return false;
         }
-        
+
+        const taskTest = await this.testTaskCreation();
+        if (!taskTest) {
+            this.error('Task creation test failed');
+            return false;
+        }
+
         this.log('Full system test PASSED ✅');
         return true;
+    },
+
+    // Quick diagnostic
+    async quickDiag() {
+        this.log('=== QUICK DIAGNOSTIC ===');
+        
+        // Check if all required objects are available
+        const checks = [
+            { name: 'Supabase client', check: () => typeof window.supabase !== 'undefined' },
+            { name: 'SupabaseAuth module', check: () => typeof window.SupabaseAuth !== 'undefined' },
+            { name: 'ApiClient module', check: () => typeof window.ApiClient !== 'undefined' },
+            { name: 'callGemini method', check: () => window.ApiClient && typeof window.ApiClient.callGemini === 'function' },
+            { name: 'saveTask method', check: () => window.ApiClient && typeof window.ApiClient.saveTask === 'function' },
+            { name: 'getAuthHeaders method', check: () => window.ApiClient && typeof window.ApiClient.getAuthHeaders === 'function' }
+        ];
+        
+        let allPassed = true;
+        for (const { name, check } of checks) {
+            const passed = check();
+            this.log(`${name}: ${passed ? '✅' : '❌'}`);
+            if (!passed) allPassed = false;
+        }
+        
+        if (allPassed) {
+            this.log('All modules loaded correctly! 🎉');
+            this.log('Run window.debugAuth.fullTest() to test functionality');
+        } else {
+            this.error('Some modules are missing or not loaded properly');
+        }
+        
+        return allPassed;
     },
     
     // Get debug info
@@ -132,13 +226,17 @@ window.addEventListener('load', () => {
         console.log(window.debugAuth.getDebugInfo());
         console.log('===================================');
         
+        // Run quick diagnostic
+        window.debugAuth.quickDiag();
+        
         // Auto-test if user is authenticated
         if (window.SupabaseAuth) {
             window.SupabaseAuth.checkAuth().then(auth => {
                 if (auth && auth.authenticated) {
-                    console.log('🚀 Run window.debugAuth.testAPI() to test authenticated endpoints');
+                    console.log('🚀 User authenticated! Run window.debugAuth.fullTest() to test all functionality');
                 } else {
-                    console.log('🔒 User not authenticated - login required for API tests');
+                    console.log('🔒 User not authenticated - login required for full testing');
+                    console.log('🔧 Run window.debugAuth.quickDiag() to check module loading');
                 }
             });
         }

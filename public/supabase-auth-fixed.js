@@ -466,6 +466,69 @@ const ApiClient = {
         }
     },
 
+    // Clear all tasks with auth
+    async clearAllTasks() {
+        try {
+            const response = await this.authenticatedFetch('/api/tasks', {
+                method: 'DELETE'
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error clearing tasks:', error);
+            throw error;
+        }
+    },
+
+    // Archive tasks with auth
+    async archiveTasks(date) {
+        try {
+            const response = await this.authenticatedFetch('/api/tasks/archive', {
+                method: 'POST',
+                body: JSON.stringify({ date })
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error archiving tasks:', error);
+            throw error;
+        }
+    },
+
+    // Unarchive tasks with auth
+    async unarchiveTasks(taskIds) {
+        try {
+            const response = await this.authenticatedFetch('/api/tasks/unarchive', {
+                method: 'POST',
+                body: JSON.stringify({ taskIds })
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error unarchiving tasks:', error);
+            throw error;
+        }
+    },
+
+    // Reorder tasks with auth
+    async reorderTasks(taskOrders) {
+        try {
+            const response = await this.authenticatedFetch('/api/tasks/reorder', {
+                method: 'PUT',
+                body: JSON.stringify({ taskOrders })
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error reordering tasks:', error);
+            // Check if it's a migration error
+            if (error.message.includes('column "position" does not exist')) {
+                error.needsMigration = true;
+            }
+            throw error;
+        }
+    },
+
     // Generate AI suggestions with auth
     async generateAISuggestions(goal, date) {
         try {
@@ -492,6 +555,44 @@ const ApiClient = {
             return await response.json();
         } catch (error) {
             console.error('Error with smart planning:', error);
+            throw error;
+        }
+    },
+
+    // Call Gemini AI with auth
+    async callGemini(prompt) {
+        try {
+            console.log('Calling Gemini API with prompt length:', prompt.length);
+            const response = await this.authenticatedFetch('/api/gemini', {
+                method: 'POST',
+                body: JSON.stringify({ prompt })
+            });
+            
+            const result = await response.json();
+            console.log('Gemini API response received');
+            
+            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            }
+            
+            throw new Error("Invalid response structure from AI API.");
+        } catch (error) {
+            console.error("Gemini API call failed:", error);
+            throw error;
+        }
+    },
+
+    // Submit feedback with auth
+    async submitFeedback(feedbackData) {
+        try {
+            const response = await this.authenticatedFetch('/api/feedback', {
+                method: 'POST',
+                body: JSON.stringify(feedbackData)
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
             throw error;
         }
     }
