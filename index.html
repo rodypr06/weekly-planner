@@ -55,7 +55,7 @@
         // Load Supabase with CDN fallback
         loadScript('/public/vendor/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2');
     </script>
-    <script src="/public/supabase-auth.js?v=1.3" defer></script>
+    <script src="/public/supabase-auth-fixed.js?v=1.4" defer></script>
     
     <!-- Non-critical libraries (lazy load) -->
     <script>
@@ -815,11 +815,27 @@
                 window.ApiClient = window.ApiClient;
             }
             
-            // Initialize Supabase
-            if (!(await initializeSupabase())) {
-                logger.error('Failed to initialize Supabase');
+            // Initialize Supabase with retry logic
+            let supabaseInitialized = false;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    supabaseInitialized = await initializeSupabase();
+                    if (supabaseInitialized) break;
+                    
+                    logger.log(`Supabase initialization attempt ${i + 1} failed, retrying...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    logger.error(`Supabase initialization attempt ${i + 1} error:`, error);
+                    if (i === 2) throw error;
+                }
+            }
+            
+            if (!supabaseInitialized) {
+                logger.error('Failed to initialize Supabase after 3 attempts');
                 return;
             }
+            
+            logger.log('Supabase initialized successfully');
             
             // Initialize Animated Titles
             function initializeAnimatedTitles() {
@@ -2427,5 +2443,8 @@
     
     <!-- MagicUI Effects and Animations -->
     <script src="/public/magicui-effects.js" defer></script>
+    
+    <!-- Debug Helper (only in development) -->
+    <script src="/debug-helper.js" defer></script>
 </body>
 </html>
