@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Smart Planner Pro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="description" content="AI Powered Smart Planner with MagicUI">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Smart Planner Pro">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/public/vendor/tailwind.min.css">
+    <link rel="stylesheet" href="/public/vendor/fontawesome.min.css">
+    
+    <style>
+        :root {
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --blur-amount: 40px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Premium Glassmorphism */
+        .glass-premium {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-premium::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.05) 50%, rgba(59, 130, 246, 0.05) 100%);
+            pointer-events: none;
+        }
+        
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(ellipse at bottom, #1a0033 0%, #050505 100%);
+        }
+        
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: -200px;
+            left: -200px;
+            animation-duration: 25s;
+        }
+        
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            bottom: -100px;
+            right: -100px;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+        
+        .orb-3 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-duration: 35s;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.9); }
+            75% { transform: translate(-50px, -30px) scale(1.05); }
+        }
+        
+        /* Particle Effect */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            animation: particle-float 15s infinite linear;
+        }
+        
+        @keyframes particle-float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        /* Magnetic Button */
+        .magnetic-button {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px -10px rgba(102, 126, 234, 0.5);
+            overflow: hidden;
+        }
+        
+        .magnetic-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .magnetic-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -15px rgba(102, 126, 234, 0.7);
+        }
+        
+        .magnetic-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Bento Grid */
+        .bento-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            padding: 20px 0;
+        }
+        
+        .bento-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .bento-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.3);
+        }
+        
+        .bento-card:hover::before {
+            transform: translateX(100%);
+        }
+        
+        /* Floating Navigation */
+        .floating-nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 8px;
+            display: flex;
+            gap: 4px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .nav-item {
+            padding: 10px 20px;
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            background: rgba(139, 92, 246, 0.2);
+            color: white;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* Glowing Input */
+        .glowing-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .glowing-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .glowing-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Priority Badge */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .priority-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 12px -2px rgba(239, 68, 68, 0.4);
+        }
+        
+        .priority-medium {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 12px -2px rgba(245, 158, 11, 0.4);
+        }
+        
+        .priority-low {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Shimmer Effect */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .shimmer {
+            animation: shimmer 3s infinite linear;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-size: 1000px 100%;
+        }
+        
+        /* Modal Backdrop */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-backdrop.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-backdrop.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Hover Glow */
+        .hover-glow {
+            position: relative;
+            isolation: isolate;
+        }
+        
+        .hover-glow::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .hover-glow:hover::after {
+            opacity: 1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .floating-nav {
+                width: calc(100% - 40px);
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+    
+    <!-- Particles -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Floating Navigation -->
+    <nav class="floating-nav">
+        <div class="nav-item active">Dashboard</div>
+        <div class="nav-item">Calendar</div>
+        <div class="nav-item">Analytics</div>
+        <div class="nav-item">AI Assistant</div>
+        <div class="nav-item">Settings</div>
+    </nav>
+    
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 pt-24 pb-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl md:text-6xl font-black mb-4">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">
+                    Smart Planner Pro
+                </span>
+            </h1>
+            <p class="text-gray-400 text-lg">AI-powered task management with stunning visuals</p>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="flex flex-wrap gap-4 justify-center mb-12">
+            <button class="magnetic-button">
+                <i class="fas fa-plus mr-2"></i>Add Task
+            </button>
+            <button class="magnetic-button" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <i class="fas fa-magic mr-2"></i>AI Suggestions
+            </button>
+            <button class="magnetic-button" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <i class="fas fa-calendar mr-2"></i>Week View
+            </button>
+        </div>
+        
+        <!-- Date Selector -->
+        <div class="glass-premium rounded-2xl p-6 mb-8 hover-glow">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold">January 2025</h2>
+                <div class="flex gap-2">
+                    <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-2">
+                <!-- Calendar days would go here -->
+                <div class="text-center text-gray-500 text-sm">Sun</div>
+                <div class="text-center text-gray-500 text-sm">Mon</div>
+                <div class="text-center text-gray-500 text-sm">Tue</div>
+                <div class="text-center text-gray-500 text-sm">Wed</div>
+                <div class="text-center text-gray-500 text-sm">Thu</div>
+                <div class="text-center text-gray-500 text-sm">Fri</div>
+                <div class="text-center text-gray-500 text-sm">Sat</div>
+            </div>
+        </div>
+        
+        <!-- Task Input Section -->
+        <div class="glass-premium rounded-2xl p-6 mb-8">
+            <div class="flex gap-4">
+                <input type="text" placeholder="What needs to be done?" class="glowing-input flex-1">
+                <input type="time" class="glowing-input w-32">
+                <select class="glowing-input w-32">
+                    <option>High</option>
+                    <option>Medium</option>
+                    <option>Low</option>
+                </select>
+                <button class="magnetic-button">Add</button>
+            </div>
+        </div>
+        
+        <!-- Tasks Grid -->
+        <div class="bento-grid">
+            <!-- Task Card 1 -->
+            <div class="bento-card">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="text-3xl">🎯</div>
+                    <span class="priority-badge priority-high">High</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Complete Project Proposal</h3>
+                <p class="text-gray-400 text-sm mb-4">Finalize the Q1 2025 project proposal and send to stakeholders</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">
+                        <i class="far fa-clock mr-1"></i>2:00 PM
+                    </span>
+                    <div class="flex gap-2">
+                        <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                            <i class="fas fa-check text-green-400"></i>
+                        </button>
+                        <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                            <i class="fas fa-edit text-blue-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Task Card 2 -->
+            <div class="bento-card">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="text-3xl">💼</div>
+                    <span class="priority-badge priority-medium">Medium</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Team Meeting</h3>
+                <p class="text-gray-400 text-sm mb-4">Weekly sync with the development team to discuss progress</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">
+                        <i class="far fa-clock mr-1"></i>10:00 AM
+                    </span>
+                    <div class="flex gap-2">
+                        <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                            <i class="fas fa-check text-green-400"></i>
+                        </button>
+                        <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                            <i class="fas fa-edit text-blue-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Task Card 3 -->
+            <div class="bento-card">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="text-3xl">📚</div>
+                    <span class="priority-badge priority-low">Low</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Read Documentation</h3>
+                <p class="text-gray-400 text-sm mb-4">Review the new API documentation for upcoming integration</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">
+                        <i class="far fa-clock mr-1"></i>4:00 PM
+                    </span>
+                    <div class="flex gap-2">
+                        <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                            <i class="fas fa-check text-green-400"></i>
+                        </button>
+                        <button class="p-2 rounded-lg hover:bg-white/10 transition">
+                            <i class="fas fa-edit text-blue-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Suggestion Card -->
+            <div class="bento-card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="text-3xl">✨</div>
+                    <span class="text-xs text-purple-400 font-semibold">AI Suggested</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Take a Break</h3>
+                <p class="text-gray-400 text-sm mb-4">You've been productive! Time for a 15-minute refresh</p>
+                <div class="shimmer h-2 rounded-full bg-white/5 mb-4"></div>
+                <button class="w-full py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition">
+                    Accept Suggestion
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div class="glass-premium rounded-2xl p-6 text-center hover-glow">
+                <div class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-400">
+                    12
+                </div>
+                <p class="text-gray-400 mt-2">Tasks Completed</p>
+            </div>
+            <div class="glass-premium rounded-2xl p-6 text-center hover-glow">
+                <div class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+                    85%
+                </div>
+                <p class="text-gray-400 mt-2">Productivity Score</p>
+            </div>
+            <div class="glass-premium rounded-2xl p-6 text-center hover-glow">
+                <div class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-400">
+                    3
+                </div>
+                <p class="text-gray-400 mt-2">Streaks This Week</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Example -->
+    <div class="modal-backdrop" id="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4">Add New Task</h2>
+            <div class="space-y-4">
+                <input type="text" placeholder="Task title" class="glowing-input">
+                <textarea placeholder="Description" class="glowing-input" rows="3"></textarea>
+                <div class="flex gap-4">
+                    <input type="date" class="glowing-input">
+                    <input type="time" class="glowing-input">
+                </div>
+                <select class="glowing-input">
+                    <option>Select Priority</option>
+                    <option>High Priority</option>
+                    <option>Medium Priority</option>
+                    <option>Low Priority</option>
+                </select>
+                <div class="flex gap-4 justify-end">
+                    <button class="px-6 py-2 rounded-lg hover:bg-white/10 transition">Cancel</button>
+                    <button class="magnetic-button">Create Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Generate particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+        
+        // Magnetic button effect
+        document.querySelectorAll('.magnetic-button').forEach(button => {
+            button.addEventListener('mousemove', (e) => {
+                const rect = button.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                button.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = '';
+            });
+        });
+        
+        // Initialize
+        createParticles();
+        
+        // Nav item interactions
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Smooth scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.bento-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s, transform 0.6s';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
