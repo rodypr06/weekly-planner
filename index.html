@@ -25,6 +25,9 @@
     <!-- MagicUI Premium Styles -->
     <link rel="stylesheet" href="/public/magicui-styles.css">
     
+    <!-- Theme Switcher Styles -->
+    <link rel="stylesheet" href="/public/theme-switcher.css">
+    
     <!-- Preload critical JavaScript resources -->
     <link rel="preload" href="/public/vendor/dompurify.min.js" as="script">
     <link rel="preload" href="/public/security-utils.js" as="script">
@@ -376,6 +379,11 @@
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle" id="theme-toggle">
+        <div class="theme-toggle-slider"></div>
+    </div>
+    
     <div class="background-container">
         <div id="orb1" class="background-orb"></div>
         <div id="orb2" class="background-orb"></div>
@@ -548,27 +556,26 @@
 
         <!-- Add Task Form -->
         <form id="add-task-form" class="bg-white/5 p-4 rounded-lg shadow-inner mb-6 border border-white/10">
-            <div class="flex flex-col md:flex-row items-end gap-4">
-                 <div class="flex-grow w-full">
+            <div class="flex flex-col gap-3">
+                <div class="w-full">
                     <label class="text-sm font-medium text-gray-400 mb-2 block">New Task for <span id="new-task-date" class="font-bold"></span></label>
-                    <input type="text" id="task-input" placeholder="What's your next task?" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" required>
+                    <div class="relative">
+                        <input type="text" id="task-input" 
+                               placeholder="Try: 'Clean room at 11am high priority' or 'Meeting with John 2pm #work' or 'Buy groceries tomorrow morning'" 
+                               class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 pr-24 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500/70 text-sm" 
+                               required>
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                            <span class="hidden md:inline bg-purple-500/20 px-2 py-1 rounded">✨ AI</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        💡 Just type naturally! Include time (3pm, tomorrow, next week), priority (high/med/low), and #tags
+                    </p>
                 </div>
-                 <div class="w-full md:w-auto">
-                    <label class="text-sm font-medium text-gray-400 mb-2 block">Time <span class="opacity-75">(optional)</span></label>
-                    <input type="time" id="time-input" class="w-full h-12 bg-black/20 border border-white/10 rounded-lg p-3 text-gray-400 focus:ring-indigo-400 focus:border-indigo-400 transition" style="color-scheme: dark;">
-                </div>
-                 <div class="w-full md:w-auto">
-                    <label for="priority-input" class="text-sm font-medium text-gray-400 mb-2 block">Priority</label>
-                    <select id="priority-input" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg px-3 focus:ring-indigo-400 focus:border-indigo-400 transition">
-                        <option value="low" selected>Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-3">
-                 <label class="text-sm font-medium text-gray-400 mb-2 block">Tags <span class="text-xs">(comma separated)</span></label>
-                 <input type="text" id="tags-input" placeholder="e.g. work, personal" class="w-full bg-black/20 border border-white/10 text-gray-200 text-sm rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500">
+                <!-- Hidden inputs for backwards compatibility -->
+                <input type="hidden" id="time-input" value="">
+                <input type="hidden" id="priority-input" value="medium">
+                <input type="hidden" id="tags-input" value="">
             </div>
              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button type="submit" id="add-task-btn" class="add-btn w-full text-white font-medium rounded-xl px-6 py-3 transition duration-300 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-white/30">
@@ -821,6 +828,43 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // Theme Switcher Logic
+            const initTheme = () => {
+                const savedTheme = localStorage.getItem('theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                
+                // Update theme color meta tag for PWA
+                const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+                if (themeColorMeta) {
+                    themeColorMeta.content = savedTheme === 'light' ? '#e0e7ff' : '#4f46e5';
+                }
+            };
+            
+            // Initialize theme
+            initTheme();
+            
+            // Theme toggle handler
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    // Apply new theme
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    
+                    // Update theme color meta tag
+                    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+                    if (themeColorMeta) {
+                        themeColorMeta.content = newTheme === 'light' ? '#e0e7ff' : '#4f46e5';
+                    }
+                    
+                    // Optional: Add a smooth transition effect
+                    document.body.style.transition = 'background 0.3s ease, color 0.3s ease';
+                });
+            }
+            
             // Production-ready initialization without debug logs
             
             // Utility to escape user provided content to prevent XSS
@@ -2221,10 +2265,95 @@
             };
 
             // --- Event Listeners ---
+            // Natural Language Task Parser
+            const parseNaturalLanguageTask = async (input) => {
+                const now = new Date();
+                const currentHours = String(now.getHours()).padStart(2, '0');
+                const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+                const currentTime = `${currentHours}:${currentMinutes}`;
+                
+                // Create a comprehensive prompt for Gemini to parse the natural language
+                const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
+                
+Task: "${input}"
+
+Extract and return a JSON object with these fields:
+- text: The main task description (clean, without time/priority/tags)
+- time: Time in HH:MM format (24-hour). Convert natural language like "3pm", "tomorrow morning", "in 2 hours" to specific times. If no time mentioned, return null.
+- priority: Either "high", "medium", or "low". Look for words like urgent, important, ASAP (high), normal (medium), whenever, later (low). Default to "medium" if not specified.
+- tags: Array of tags. Look for hashtags (#work, #personal) or context words that could be tags (meeting->work, shopping->personal). Return empty array if none.
+- emoji: A single relevant emoji for this task.
+
+Examples:
+"Clean room at 3pm high priority #home" -> {"text": "Clean room", "time": "15:00", "priority": "high", "tags": ["home"], "emoji": "🧹"}
+"Meeting with John tomorrow 2pm" -> {"text": "Meeting with John", "time": "14:00", "priority": "medium", "tags": ["work"], "emoji": "👥"}
+"Buy groceries" -> {"text": "Buy groceries", "time": null, "priority": "medium", "tags": ["personal"], "emoji": "🛒"}
+
+Return only the JSON object.`;
+
+                try {
+                    const response = await callGemini(parsePrompt);
+                    if (response) {
+                        const parsed = JSON.parse(response.replace(/```json/g, '').replace(/```/g, ''));
+                        return {
+                            text: parsed.text || input,
+                            time: parsed.time || '',
+                            priority: parsed.priority || 'medium',
+                            tags: parsed.tags || [],
+                            emoji: parsed.emoji || '📝'
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error parsing natural language:', error);
+                }
+                
+                // Fallback: Simple parsing if AI fails
+                let text = input;
+                let time = '';
+                let priority = 'medium';
+                let tags = [];
+                
+                // Extract hashtags
+                const hashtagMatches = input.match(/#\w+/g);
+                if (hashtagMatches) {
+                    tags = hashtagMatches.map(tag => tag.slice(1));
+                    text = text.replace(/#\w+/g, '').trim();
+                }
+                
+                // Extract priority
+                if (/\b(high|urgent|important|asap)\b/i.test(input)) {
+                    priority = 'high';
+                    text = text.replace(/\b(high|urgent|important|asap)\s*(priority|pri)?\b/gi, '').trim();
+                } else if (/\b(low|later|whenever)\b/i.test(input)) {
+                    priority = 'low';
+                    text = text.replace(/\b(low|later|whenever)\s*(priority|pri)?\b/gi, '').trim();
+                } else if (/\b(medium|normal|med)\b/i.test(input)) {
+                    priority = 'medium';
+                    text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
+                }
+                
+                // Extract time (basic patterns)
+                const timeMatch = input.match(/\b(\d{1,2}):?(\d{2})?\s*(am|pm)?\b|\bat\s+(\d{1,2})\s*(am|pm)\b/i);
+                if (timeMatch) {
+                    // Convert to 24-hour format
+                    let hours = parseInt(timeMatch[1] || timeMatch[4]);
+                    let minutes = timeMatch[2] || '00';
+                    const isPM = /pm/i.test(timeMatch[3] || timeMatch[5] || '');
+                    
+                    if (isPM && hours < 12) hours += 12;
+                    if (!isPM && hours === 12) hours = 0;
+                    
+                    time = `${String(hours).padStart(2, '0')}:${minutes}`;
+                    text = text.replace(timeMatch[0], '').replace(/\bat\s+/i, '').trim();
+                }
+                
+                return { text, time, priority, tags, emoji: '📝' };
+            };
+
             taskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const taskText = taskInput.value.trim();
-                if (taskText === '') return;
+                const inputText = taskInput.value.trim();
+                if (inputText === '') return;
 
                 // Initialize audio on first user interaction
                 await initAudio();
@@ -2233,9 +2362,10 @@
                 addSpinner.classList.remove('hidden');
                 addBtnText.classList.add('hidden');
                 
-                const emojiPrompt = `Based on the task "${taskText}", suggest one single, relevant emoji. Only return the emoji itself.`;
-                const emoji = await callGemini(emojiPrompt) || '📝';
+                // Parse the natural language input
+                const parsedTask = await parseNaturalLanguageTask(inputText);
                 
+                // If no time was extracted, use current time
                 const now = new Date();
                 const hours = String(now.getHours()).padStart(2, '0');
                 const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -2243,18 +2373,23 @@
 
                 const task = {
                     id: Date.now(),
-                    date: selectedDate, // Assign to the selected date
-                    text: taskText,
-                    emoji: emoji.trim(),
-                    time: timeInput.value || currentTime,
-                    priority: priorityInput.value,
-                    tags: tagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
+                    date: selectedDate,
+                    text: parsedTask.text,
+                    emoji: parsedTask.emoji,
+                    time: parsedTask.time || currentTime,
+                    priority: parsedTask.priority,
+                    tags: parsedTask.tags,
                     completed: false
                 };
+                
+                // Update hidden inputs for compatibility
+                timeInput.value = task.time;
+                priorityInput.value = task.priority;
+                tagsInput.value = task.tags.join(', ');
+                
                 addTask(task);
                 
                 taskForm.reset();
-                priorityInput.value = 'low';
                 addTaskBtn.disabled = false;
                 addSpinner.classList.add('hidden');
                 addBtnText.classList.remove('hidden');

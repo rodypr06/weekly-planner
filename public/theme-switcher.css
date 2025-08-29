@@ -1,0 +1,273 @@
+/* Theme Variables and Light/Dark Mode Styles */
+
+/* Default Dark Theme Variables */
+:root {
+    /* Main Colors */
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: rgba(0, 0, 0, 0.2);
+    
+    /* Text Colors */
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    
+    /* Glass Effects */
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-hover: rgba(255, 255, 255, 0.15);
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-secondary: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    --gradient-bg: var(--gradient-primary);
+    
+    /* Input/Form Colors */
+    --input-bg: rgba(0, 0, 0, 0.2);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-focus: rgba(255, 255, 255, 0.3);
+    
+    /* Shadow Colors */
+    --shadow-sm: rgba(0, 0, 0, 0.1);
+    --shadow-md: rgba(0, 0, 0, 0.15);
+    --shadow-lg: rgba(0, 0, 0, 0.25);
+    
+    /* Shape opacity for floating elements */
+    --shape-opacity: 0.1;
+    
+    /* Orb opacity */
+    --orb-opacity: 0.2;
+}
+
+/* Light Theme Variables */
+[data-theme="light"] {
+    /* Main Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: rgba(255, 255, 255, 0.8);
+    
+    /* Text Colors */
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-tertiary: #6b7280;
+    
+    /* Glass Effects - Adjusted for light theme */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-hover: rgba(255, 255, 255, 0.85);
+    
+    /* Gradients - Softer for light theme */
+    --gradient-primary: linear-gradient(135deg, #ddd6fe 0%, #fbbf24 100%);
+    --gradient-secondary: linear-gradient(135deg, #fca5a5 0%, #fbbf24 100%);
+    --gradient-bg: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #fae8ff 100%);
+    
+    /* Input/Form Colors */
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-border: rgba(0, 0, 0, 0.1);
+    --input-focus: rgba(99, 102, 241, 0.3);
+    
+    /* Shadow Colors */
+    --shadow-sm: rgba(0, 0, 0, 0.05);
+    --shadow-md: rgba(0, 0, 0, 0.1);
+    --shadow-lg: rgba(0, 0, 0, 0.15);
+    
+    /* Shape opacity for floating elements */
+    --shape-opacity: 0.05;
+    
+    /* Orb opacity */
+    --orb-opacity: 0.1;
+}
+
+/* Theme Toggle Button Styles */
+.theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 30px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px var(--shadow-md);
+}
+
+.theme-toggle:hover {
+    background: var(--glass-hover);
+}
+
+.theme-toggle-slider {
+    width: 26px;
+    height: 26px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px var(--shadow-md);
+}
+
+.theme-toggle-slider::before {
+    content: '🌙';
+    font-size: 14px;
+}
+
+[data-theme="light"] .theme-toggle-slider {
+    transform: translateX(30px);
+    background: #fbbf24;
+}
+
+[data-theme="light"] .theme-toggle-slider::before {
+    content: '☀️';
+}
+
+/* Body Background Updates */
+body {
+    background: var(--gradient-bg) !important;
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="light"] body {
+    background: var(--gradient-bg) !important;
+}
+
+/* Update glass pane for theme */
+.glass-pane, .glass-card {
+    background: var(--glass-bg) !important;
+    border-color: var(--glass-border) !important;
+    transition: all 0.3s ease;
+}
+
+/* Update text colors */
+.text-gray-100 { color: var(--text-primary) !important; }
+.text-gray-200 { color: var(--text-primary) !important; }
+.text-gray-300 { color: var(--text-secondary) !important; }
+.text-gray-400 { color: var(--text-secondary) !important; }
+.text-gray-500 { color: var(--text-tertiary) !important; }
+
+/* Update background colors */
+.bg-gray-900 { background-color: var(--bg-primary) !important; }
+.bg-black\/20 { background-color: var(--input-bg) !important; }
+.bg-black\/10 { background-color: var(--glass-bg) !important; }
+.bg-white\/5 { background-color: var(--glass-bg) !important; }
+.bg-white\/10 { background-color: var(--glass-bg) !important; }
+
+/* Update border colors */
+.border-white\/10 { border-color: var(--glass-border) !important; }
+.border-white\/20 { border-color: var(--glass-border) !important; }
+
+/* Input field updates */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="time"],
+input[type="date"],
+textarea,
+select {
+    background: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+/* Floating shapes opacity */
+.shape {
+    opacity: var(--shape-opacity) !important;
+}
+
+/* Background orbs opacity */
+.background-orb {
+    opacity: var(--orb-opacity) !important;
+}
+
+/* Modal backgrounds */
+[data-theme="light"] .modal-content {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.9) 100%) !important;
+}
+
+/* Priority colors adjustment for light theme */
+[data-theme="light"] .priority-high {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+[data-theme="light"] .priority-medium {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+[data-theme="light"] .priority-low {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+/* Task item adjustments for light theme */
+[data-theme="light"] .task-item {
+    background: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 2px 8px var(--shadow-sm) !important;
+}
+
+[data-theme="light"] .task-item:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 4px 12px var(--shadow-md) !important;
+}
+
+/* Button adjustments */
+[data-theme="light"] .add-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+}
+
+[data-theme="light"] button:hover {
+    box-shadow: 0 10px 25px var(--shadow-md) !important;
+}
+
+/* Scrollbar for light theme */
+[data-theme="light"] ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+/* Authentication modal for light theme */
+[data-theme="light"] #auth-modal {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] #auth-modal .glass-pane {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Theme indicator in UI */
+.theme-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .theme-toggle {
+        bottom: 80px;
+        right: 10px;
+    }
+}
