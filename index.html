@@ -32,7 +32,7 @@
     <link rel="preload" href="/public/vendor/dompurify.min.js" as="script">
     <link rel="preload" href="/public/security-utils.js" as="script">
     <link rel="preload" href="/public/vendor/supabase.js" as="script">
-    <link rel="preload" href="/public/supabase-auth.js" as="script">
+    <link rel="preload" href="/public/supabase-auth-fixed.js" as="script">
     
     <!-- Security Libraries (load early, non-blocking) -->
     <script src="/public/vendor/dompurify.min.js" defer></script>
@@ -2038,10 +2038,7 @@
                                 tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
                             });
                             
-                            // Add drag and drop event listeners if not in archive view and position column exists
-                            if (!showingArchive && positionColumnExists) {
-                                setupDragAndDrop(taskElement);
-                            }
+                            // Drag and drop is handled by event delegation above - no individual setup needed
                         }
                         
                         fragment.appendChild(taskElement);
@@ -2352,7 +2349,9 @@ Return only the JSON object.`;
                     const timeMatch = input.match(pattern);
                     if (timeMatch) {
                         let hours = parseInt(timeMatch[1]);
-                        let minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+                        let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
+                        // Ensure minutes is not NaN
+                        if (isNaN(minutes)) minutes = 0;
                         const period = timeMatch[3];
                         
                         // Convert to 24-hour format

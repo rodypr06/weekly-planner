@@ -85,13 +85,16 @@ self.addEventListener('fetch', event => {
             // Clone the response
             const responseToCache = response.clone();
 
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              })
-              .catch(err => {
-                console.warn('Failed to cache response:', err);
-              });
+            // Only cache HTTP/HTTPS requests, not chrome-extension or other schemes
+            if (event.request.url.startsWith('http')) {
+              caches.open(CACHE_NAME)
+                .then(cache => {
+                  cache.put(event.request, responseToCache);
+                })
+                .catch(err => {
+                  console.warn('Failed to cache response:', err);
+                });
+            }
 
             return response;
           })
