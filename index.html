@@ -2272,9 +2272,12 @@
                 const currentMinutes = String(now.getMinutes()).padStart(2, '0');
                 const currentTime = `${currentHours}:${currentMinutes}`;
                 
-                // Create a comprehensive prompt for Gemini to parse the natural language
-                const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
-                
+                // First try AI parsing with proper error handling
+                try {
+                    // Check if AI is available
+                    if (window.ApiClient && typeof window.ApiClient.callGemini === 'function') {
+                        const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
+                        
 Task: "${input}"
 
 Extract and return a JSON object with these fields:
@@ -2291,20 +2294,25 @@ Examples:
 
 Return only the JSON object.`;
 
-                try {
-                    const response = await callGemini(parsePrompt);
-                    if (response) {
-                        const parsed = JSON.parse(response.replace(/```json/g, '').replace(/```/g, ''));
-                        return {
-                            text: parsed.text || input,
-                            time: parsed.time || '',
-                            priority: parsed.priority || 'medium',
-                            tags: parsed.tags || [],
-                            emoji: parsed.emoji || '📝'
-                        };
+                        const response = await callGemini(parsePrompt);
+                        if (response) {
+                            const cleaned = response.replace(/```json/g, '').replace(/```/g, '').trim();
+                            const parsed = JSON.parse(cleaned);
+                            
+                            // Validate and clean the parsed response
+                            return {
+                                text: parsed.text || input,
+                                time: parsed.time || '',
+                                priority: ['high', 'medium', 'low'].includes(parsed.priority) ? parsed.priority : 'medium',
+                                tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+                                emoji: parsed.emoji || '📝'
+                            };
+                        }
+                    } else {
+                        console.log('AI not available, using fallback parser');
                     }
                 } catch (error) {
-                    console.error('Error parsing natural language:', error);
+                    console.error('AI parsing failed, using fallback:', error);
                 }
                 
                 // Fallback: Simple parsing if AI fails
@@ -2332,22 +2340,51 @@ Return only the JSON object.`;
                     text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
                 }
                 
-                // Extract time (basic patterns)
-                const timeMatch = input.match(/\b(\d{1,2}):?(\d{2})?\s*(am|pm)?\b|\bat\s+(\d{1,2})\s*(am|pm)\b/i);
-                if (timeMatch) {
-                    // Convert to 24-hour format
-                    let hours = parseInt(timeMatch[1] || timeMatch[4]);
-                    let minutes = timeMatch[2] || '00';
-                    const isPM = /pm/i.test(timeMatch[3] || timeMatch[5] || '');
-                    
-                    if (isPM && hours < 12) hours += 12;
-                    if (!isPM && hours === 12) hours = 0;
-                    
-                    time = `${String(hours).padStart(2, '0')}:${minutes}`;
-                    text = text.replace(timeMatch[0], '').replace(/\bat\s+/i, '').trim();
+                // Extract time (enhanced patterns)
+                const timePatterns = [
+                    /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
+                    /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
+                    /\bat\s+(\d{1,2}):?(\d{2})?\s*(am|pm)?\b/i,   // at 3pm, at 3:30
+                    /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
+                ];
+                
+                for (const pattern of timePatterns) {
+                    const timeMatch = input.match(pattern);
+                    if (timeMatch) {
+                        let hours = parseInt(timeMatch[1]);
+                        let minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+                        const period = timeMatch[3];
+                        
+                        // Convert to 24-hour format
+                        if (period) {
+                            const isPM = /pm/i.test(period);
+                            if (isPM && hours < 12) hours += 12;
+                            if (!isPM && hours === 12) hours = 0;
+                        }
+                        
+                        time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        text = text.replace(timeMatch[0], '').replace(/\bat\s+/i, '').trim();
+                        break;
+                    }
                 }
                 
-                return { text, time, priority, tags, emoji: '📝' };
+                // Simple emoji assignment based on keywords
+                let emoji = '📝';
+                const emojiMap = {
+                    'clean': '🧹', 'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
+                    'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
+                    'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
+                    'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗'
+                };
+                
+                for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
+                    if (new RegExp(`\\b${keyword}`, 'i').test(input)) {
+                        emoji = emojiChar;
+                        break;
+                    }
+                }
+                
+                return { text, time, priority, tags, emoji };
             };
 
             taskForm.addEventListener('submit', async (e) => {
