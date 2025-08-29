@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3-optimized';
+const CACHE_VERSION = 'v5-suggest-fix';
 const CACHE_NAME = `weekly-planner-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',

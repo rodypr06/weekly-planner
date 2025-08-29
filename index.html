@@ -29,10 +29,7 @@
     <link rel="stylesheet" href="/public/theme-switcher.css">
     
     <!-- Preload critical JavaScript resources -->
-    <link rel="preload" href="/public/vendor/dompurify.min.js" as="script">
-    <link rel="preload" href="/public/security-utils.js" as="script">
-    <link rel="preload" href="/public/vendor/supabase.js" as="script">
-    <link rel="preload" href="/public/supabase-auth-fixed.js" as="script">
+    <!-- Removed preload hints to prevent unused resource warnings -->
     
     <!-- Security Libraries (load early, non-blocking) -->
     <script src="/public/vendor/dompurify.min.js" defer></script>
@@ -1640,6 +1637,13 @@
                     
                     const taskId = parseInt(taskElement.dataset.id);
                     
+                    // Check if taskId is valid
+                    if (isNaN(taskId)) {
+                        console.error('Invalid task ID:', taskElement.dataset.id, 'Element:', taskElement);
+                        console.error('Task element attributes:', [...taskElement.attributes].map(a => `${a.name}=${a.value}`));
+                        return;
+                    }
+                    
                     // Handle delete button
                     if (e.target.closest('.delete-btn')) {
                         await removeTask(taskId);
@@ -1997,9 +2001,13 @@
                         } else {
                             // Create new element - ensure we have an element to work with
                             if (!taskElement) {
+                                if (!task || !task.id || isNaN(task.id)) {
+                                    console.error('Invalid task data in renderTasks:', task);
+                                    return; // Skip this task
+                                }
                                 taskElement = document.createElement('div');
                                 taskElement.className = 'task-item glass-pane p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-300 border border-white/20';
-                                taskElement.dataset.taskId = task.id;
+                                taskElement.dataset.id = task.id;
                                 taskElement.style.backdropFilter = 'blur(20px)';
                             }
                             
@@ -2053,6 +2061,10 @@
             
             // Performance optimization: Separate function to create task elements
             const createTaskElement = (task) => {
+                if (!task || !task.id || isNaN(task.id)) {
+                    console.error('Invalid task data when creating element:', task);
+                    return null;
+                }
                 const taskElement = document.createElement('div');
                 taskElement.dataset.id = task.id;
                 taskElement.dataset.position = task.position || 0;
@@ -2229,7 +2241,14 @@
                     await deleteTask(id);
                     await renderTasks();
                 } catch (error) {
-                    alert('Failed to delete task. Please try again.');
+                    // If task not found (404), it might already be deleted - refresh the view
+                    if (error.message.includes('404') || error.message.includes('not found')) {
+                        console.log('Task not found on server, refreshing view...');
+                        await renderTasks();
+                    } else {
+                        console.error('Delete task error:', error);
+                        alert('Failed to delete task. Please try again.');
+                    }
                 }
             };
 
@@ -2278,7 +2297,7 @@
 Task: "${input}"
 
 Extract and return a JSON object with these fields:
-- text: The main task description (clean, without time/priority/tags)
+- text: The main task description (clean, without time/priority/tags). IMPORTANT: Keep the full task description together (e.g., "clean bathroom" should remain as "clean bathroom", not split into separate words)
 - time: Time in HH:MM format (24-hour). Convert natural language like "3pm", "tomorrow morning", "in 2 hours" to specific times. If no time mentioned, return null.
 - priority: Either "high", "medium", or "low". Look for words like urgent, important, ASAP (high), normal (medium), whenever, later (low). Default to "medium" if not specified.
 - tags: Array of tags. Look for hashtags (#work, #personal) or context words that could be tags (meeting->work, shopping->personal). Return empty array if none.
@@ -2286,6 +2305,7 @@ Extract and return a JSON object with these fields:
 
 Examples:
 "Clean room at 3pm high priority #home" -> {"text": "Clean room", "time": "15:00", "priority": "high", "tags": ["home"], "emoji": "🧹"}
+"clean bathroom at 1pm" -> {"text": "clean bathroom", "time": "13:00", "priority": "medium", "tags": [], "emoji": "🚿"}
 "Meeting with John tomorrow 2pm" -> {"text": "Meeting with John", "time": "14:00", "priority": "medium", "tags": ["work"], "emoji": "👥"}
 "Buy groceries" -> {"text": "Buy groceries", "time": null, "priority": "medium", "tags": ["personal"], "emoji": "🛒"}
 
@@ -2339,14 +2359,15 @@ Return only the JSON object.`;
                 
                 // Extract time (enhanced patterns)
                 const timePatterns = [
+                    /\bat\s+(\d{1,2}):(\d{2})\s*(am|pm)\b/i,      // at 3:30pm
+                    /\bat\s+(\d{1,2})\s*(am|pm)\b/i,              // at 3pm
                     /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
                     /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
-                    /\bat\s+(\d{1,2}):?(\d{2})?\s*(am|pm)?\b/i,   // at 3pm, at 3:30
                     /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
                 ];
                 
                 for (const pattern of timePatterns) {
-                    const timeMatch = input.match(pattern);
+                    const timeMatch = text.match(pattern);
                     if (timeMatch) {
                         let hours = parseInt(timeMatch[1]);
                         let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
@@ -2362,7 +2383,8 @@ Return only the JSON object.`;
                         }
                         
                         time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                        text = text.replace(timeMatch[0], '').replace(/\bat\s+/i, '').trim();
+                        // Remove the entire matched time pattern including "at" if present
+                        text = text.replace(timeMatch[0], '').trim();
                         break;
                     }
                 }
@@ -2370,10 +2392,12 @@ Return only the JSON object.`;
                 // Simple emoji assignment based on keywords
                 let emoji = '📝';
                 const emojiMap = {
-                    'clean': '🧹', 'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
+                    'clean': '🧹', 'bathroom': '🚿', 'shower': '🚿', 'bath': '🛁',
+                    'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
                     'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
                     'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
-                    'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗'
+                    'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗',
+                    'laundry': '👔', 'wash': '🧼', 'kitchen': '🍳', 'bedroom': '🛏️'
                 };
                 
                 for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
@@ -2472,7 +2496,7 @@ Return only the JSON object.`;
                                 date: selectedDate,
                                 text: taskText,
                                 emoji: emoji.trim(),
-                                time: '',
+                                time: null,
                                 priority: 'medium',
                                 tags: ['suggested', goal.split(' ')[0].toLowerCase()],
                                 completed: false
@@ -2689,6 +2713,6 @@ Return only the JSON object.`;
     <script src="/public/magicui-effects.js" defer></script>
     
     <!-- Debug Helper (only in development) -->
-    <script src="/debug-helper.js" defer></script>
+    <!-- Debug helper removed - was causing console errors -->
 </body>
 </html>
