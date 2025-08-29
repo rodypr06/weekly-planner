@@ -2401,6 +2401,7 @@ Return only the JSON object.`;
                 
                 // Parse the natural language input
                 const parsedTask = await parseNaturalLanguageTask(inputText);
+                logger.log('Parsed task data:', parsedTask);
                 
                 // If no time was extracted, use current time
                 const now = new Date();
@@ -2408,22 +2409,24 @@ Return only the JSON object.`;
                 const minutes = String(now.getMinutes()).padStart(2, '0');
                 const currentTime = `${hours}:${minutes}`;
 
+                // Validate and prepare task data for API
                 const task = {
                     id: Date.now(),
                     date: selectedDate,
-                    text: parsedTask.text,
-                    emoji: parsedTask.emoji,
+                    text: parsedTask.text.trim(),
+                    emoji: parsedTask.emoji || '📝',
                     time: parsedTask.time || currentTime,
-                    priority: parsedTask.priority,
-                    tags: parsedTask.tags,
+                    priority: ['high', 'medium', 'low'].includes(parsedTask.priority) ? parsedTask.priority : 'medium',
+                    tags: Array.isArray(parsedTask.tags) ? parsedTask.tags : [],
                     completed: false
                 };
                 
                 // Update hidden inputs for compatibility
                 timeInput.value = task.time;
                 priorityInput.value = task.priority;
-                tagsInput.value = task.tags.join(', ');
+                tagsInput.value = Array.isArray(task.tags) ? task.tags.join(', ') : '';
                 
+                logger.log('Final task data being sent:', task);
                 addTask(task);
                 
                 taskForm.reset();
