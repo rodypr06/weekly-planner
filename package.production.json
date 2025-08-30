@@ -1,0 +1,36 @@
+{
+  "name": "weekly-planner",
+  "version": "1.0.0",
+  "description": "AI-Powered Smart Planner by RodyTech LLC",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm run build:css && node build-assets.js",
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/vendor/tailwind.min.css --minify",
+    "prebuild": "rm -rf public/vendor",
+    "postinstall": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodypr06/weekly-planner.git"
+  },
+  "keywords": ["task-management", "ai", "supabase", "pwa"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@supabase/supabase-js": "^2.52.0",
+    "compression": "^1.7.4",
+    "dompurify": "^3.2.6",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "node-fetch": "^2.7.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
