@@ -619,9 +619,10 @@
                     <span id="archive-count" class="text-xs bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full hidden">0</span>
                 </button>
                 
-                 <button id="smart-plan-btn" class="hidden text-sm text-white bg-teal-500 hover:bg-teal-600 rounded-full px-4 py-2 flex items-center gap-2 transition-all duration-300 border border-teal-400">
+                 <!-- Smart Plan feature temporarily disabled -->
+                 <!-- <button id="smart-plan-btn" class="hidden text-sm text-white bg-teal-500 hover:bg-teal-600 rounded-full px-4 py-2 flex items-center gap-2 transition-all duration-300 border border-teal-400">
                     <i class="fas fa-brain"></i> <span>✨ Smart Plan</span>
-                 </button>
+                 </button> -->
                 <div id="task-counter" class="text-sm font-medium text-gray-300 bg-black/20 border border-white/10 rounded-full px-3 py-1">0 tasks</div>
             </div>
         </div>
@@ -1289,7 +1290,7 @@
             const filterContainer = document.getElementById('filter-container');
             const activeFilterTag = document.getElementById('active-filter-tag');
             const clearFilterBtn = document.getElementById('clear-filter-btn');
-            const smartPlanBtn = document.getElementById('smart-plan-btn');
+            // const smartPlanBtn = document.getElementById('smart-plan-btn'); // Smart Plan disabled
             const clearAllBtn = document.getElementById('clear-all-btn');
             
             // Modal Selectors
@@ -2148,7 +2149,7 @@
                 progressBar.style.width = `${progressPercentage}%`;
                 progressText.textContent = `${Math.round(progressPercentage)}%`;
                 const hasUnscheduledTasks = currentTasks.some(t => !t.time);
-                smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0);
+                // smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0); // Smart Plan disabled
                 
                 // Check for celebration when all tasks are completed (but NOT in archive view)
                 if (!showingArchive && currentTasks.length > 0 && completedTasks === currentTasks.length && progressPercentage === 100) {
@@ -2530,7 +2531,8 @@ Return only the JSON object.`;
                 generateTasksBtn.disabled = false;
             });
             
-            smartPlanBtn.addEventListener('click', async () => {
+            // Smart Plan feature temporarily disabled
+            /* smartPlanBtn.addEventListener('click', async () => {
                 const tasksForDay = allTasks.filter(t => t.date === selectedDate && !t.time);
                 if (tasksForDay.length === 0) return;
                 
@@ -2592,7 +2594,7 @@ Return only the JSON object.`;
 
                 smartPlanBtn.innerHTML = `<i class="fas fa-brain"></i> <span>✨ Smart Plan</span>`;
                 smartPlanBtn.disabled = false;
-            });
+            }); */
 
             editTaskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
