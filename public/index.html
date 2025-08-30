@@ -536,6 +536,10 @@
                 authModal.classList.add('hidden');
                 mainApp.classList.remove('hidden');
                 updateUserDisplay();
+                
+                // Load initial data when showing the main app
+                renderWeek();
+                renderTasks();
             }
             
             function updateUserDisplay() {
