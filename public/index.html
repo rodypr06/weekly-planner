@@ -1229,7 +1229,7 @@
                     date: selectedDate, // Assign to the selected date
                     text: taskText,
                     emoji: emoji.trim(),
-                    time: timeInput.value || currentTime,
+                    time: timeInput.value || null,
                     priority: priorityInput.value,
                     tags: tagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
                     completed: false
@@ -1281,7 +1281,7 @@
                                 date: selectedDate,
                                 text: taskText,
                                 emoji: emoji.trim(),
-                                time: '',
+                                time: null,
                                 priority: 'medium',
                                 tags: ['suggested', goal.split(' ')[0].toLowerCase()],
                                 completed: false
@@ -1289,7 +1289,9 @@
                         });
 
                         const newTasks = await Promise.all(taskPromises);
-                        newTasks.forEach(task => addTask(task));
+                        for (const task of newTasks) {
+                            await addTask(task);
+                        }
                         
                         closeModal(suggestModal);
                         goalInput.value = '';
@@ -1344,7 +1346,7 @@
                     await updateTask(id, {
                         ...task,
                         text: editTaskText.value,
-                        time: editTaskTime.value,
+                        time: editTaskTime.value || null,
                         priority: editTaskPriority.value,
                         tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
                     });
