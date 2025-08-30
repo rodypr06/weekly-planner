@@ -34,3 +34,7 @@ Thumbs.db
 
 # Nginx config (should be in /etc/nginx/sites-available)
 weekly-planner.conf tasks.db
+
+# Vercel
+.vercel
+*.vercel.app
