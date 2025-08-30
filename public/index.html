@@ -1318,22 +1318,37 @@
                 const responseText = await callGemini(prompt);
 
                 if (responseText) {
+                    console.log('🤖 Smart Plan AI Response:', responseText);
                     try {
-                        const schedule = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
+                        const cleanResponse = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+                        console.log('📝 Cleaned AI Response:', cleanResponse);
+                        const schedule = JSON.parse(cleanResponse);
+                        console.log('⏰ Parsed Schedule:', schedule);
+                        console.log('📋 Tasks for Day:', tasksForDay);
                         
                         // Update tasks with suggested times and persist to database
                         const updatePromises = [];
                         for (const task of tasksForDay) {
+                            console.log(`🔍 Checking task "${task.text}" for schedule match...`);
                             if (schedule[task.text]) {
-                                const updatedTask = { ...task, time: schedule[task.text] };
+                                const suggestedTime = schedule[task.text];
+                                console.log(`⏱️ Found time "${suggestedTime}" for task "${task.text}"`);
+                                const updatedTask = { ...task, time: suggestedTime };
                                 updatePromises.push(updateTask(task.id, updatedTask));
+                            } else {
+                                console.log(`❌ No time found for task "${task.text}"`);
+                                console.log('Available schedule keys:', Object.keys(schedule));
                             }
                         }
                         
+                        console.log(`🔄 Updating ${updatePromises.length} tasks...`);
                         await Promise.all(updatePromises);
+                        console.log('✅ All task updates completed');
                         await renderTasks();
                     } catch (e) {
-                         alert("The AI returned an unexpected schedule format. Please try again.");
+                        console.error('❌ Smart Plan Error:', e);
+                        console.error('🔍 Failed Response:', responseText);
+                        alert("The AI returned an unexpected schedule format. Please try again.");
                     }
                 }
 
