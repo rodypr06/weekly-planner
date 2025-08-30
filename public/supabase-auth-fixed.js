@@ -544,20 +544,20 @@ const ApiClient = {
         }
     },
 
-    // Smart planning with auth
-    async smartPlanning(tasks, date) {
-        try {
-            const response = await this.authenticatedFetch('/api/smart-plan', {
-                method: 'POST',
-                body: JSON.stringify({ tasks, date })
-            });
+    // Smart planning with auth - temporarily disabled
+    // async smartPlanning(tasks, date) {
+    //     try {
+    //         const response = await this.authenticatedFetch('/api/smart-plan', {
+    //             method: 'POST',
+    //             body: JSON.stringify({ tasks, date })
+    //         });
             
-            return await response.json();
-        } catch (error) {
-            console.error('Error with smart planning:', error);
-            throw error;
-        }
-    },
+    //         return await response.json();
+    //     } catch (error) {
+    //         console.error('Error with smart planning:', error);
+    //         throw error;
+    //     }
+    // },
 
     // Call Gemini AI with auth
     async callGemini(prompt) {
