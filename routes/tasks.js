@@ -4,6 +4,7 @@
 const express = require('express');
 const { param } = require('express-validator');
 const logger = require('../utils/logger');
+const taskCache = require('../middleware/cache');
 const {
     handleValidationErrors,
     taskValidationRules,
@@ -29,13 +30,27 @@ function createTaskRoutes(dbAdapter, authAdapter, rateLimiters) {
     router.get('/', dateQueryValidationRules(), handleValidationErrors, requireAuth, async (req, res) => {
         try {
             const { date, includeArchived } = req.query;
+            const userId = req.user.id;
+            const includeArchivedBool = includeArchived === 'true';
             
-            const result = await dbAdapter.getTasks(req.user.id, date, includeArchived === 'true');
+            // Try cache first
+            const cachedTasks = taskCache.get(userId, date, includeArchivedBool);
+            if (cachedTasks) {
+                logger.debug('Serving tasks from cache', { userId, date, count: cachedTasks.length });
+                return res.json(cachedTasks);
+            }
+            
+            // Fetch from database
+            const result = await dbAdapter.getTasks(userId, date, includeArchivedBool);
             
             if (result.error) {
                 logger.error('Database error:', result.error);
                 return res.status(500).json({ error: 'Failed to fetch tasks' });
             }
+            
+            // Cache the results
+            taskCache.set(userId, date, result.data, includeArchivedBool);
+            logger.debug('Tasks fetched and cached', { userId, date, count: result.data.length });
             
             res.json(result.data);
         } catch (error) {
@@ -59,6 +74,9 @@ function createTaskRoutes(dbAdapter, authAdapter, rateLimiters) {
                 logger.error('Database error:', result.error);
                 return res.status(500).json({ error: 'Failed to create task' });
             }
+            
+            // Invalidate cache for this user and date
+            taskCache.invalidateUser(req.user.id, date);
             
             res.json(result.data);
         } catch (error) {
@@ -122,6 +140,9 @@ function createTaskRoutes(dbAdapter, authAdapter, rateLimiters) {
                 return res.status(404).json({ error: 'Task not found or not authorized' });
             }
             
+            // Invalidate cache for this user (all dates since we don't know which date the task belongs to)
+            taskCache.invalidateUser(req.user.id);
+            
             res.json({ success: true });
         } catch (error) {
             logger.error('Error updating task:', error);
@@ -145,6 +166,9 @@ function createTaskRoutes(dbAdapter, authAdapter, rateLimiters) {
                 return res.status(404).json({ error: 'Task not found or not authorized' });
             }
             
+            // Invalidate cache for this user
+            taskCache.invalidateUser(req.user.id);
+            
             res.json({ success: true });
         } catch (error) {
             logger.error('Error deleting task:', error);
@@ -161,6 +185,9 @@ function createTaskRoutes(dbAdapter, authAdapter, rateLimiters) {
                 logger.error('Database error:', result.error);
                 return res.status(500).json({ error: 'Failed to clear tasks' });
             }
+            
+            // Clear all cache for this user
+            taskCache.invalidateUser(req.user.id);
             
             res.json({ success: true });
         } catch (error) {
