@@ -2537,24 +2537,57 @@ Return only the JSON object.`;
                 smartPlanBtn.innerHTML = `<div class="spinner h-5 w-5 rounded-full border-2 border-t-transparent"></div><span>Planning...</span>`;
                 smartPlanBtn.disabled = true;
 
-                const taskDescriptions = tasksForDay.map(t => `text: ${t.text}, priority: ${t.priority}`).join('; ');
-                const prompt = `Here is a list of tasks for today with priorities: ${taskDescriptions}. Suggest a logical schedule starting from the current time. Assign a time (HH:mm format) for each task, considering the priority. Return a JSON object where keys are task descriptions and values are suggested times. Example: {"Task 1": "14:30", "Task 2": "16:00"}`;
-                
-                const responseText = await callGemini(prompt);
+                try {
+                    // Use the proper smartPlanning method with authentication
+                    const response = await auth.smartPlanning(tasksForDay, selectedDate);
+                    logger.log('🤖 Smart Plan Response:', response);
 
-                if (responseText) {
-                    try {
-                        const schedule = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
-                        allTasks = allTasks.map(task => {
-                            if (task.date === selectedDate && schedule[task.text]) {
-                                return { ...task, time: schedule[task.text] };
+                    if (response.schedule) {
+                        logger.log('⏰ Parsed Schedule:', response.schedule);
+                        logger.log('📋 Tasks for Day:', tasksForDay);
+                        
+                        // Update tasks with suggested times and persist to database
+                        const updatePromises = [];
+                        for (const task of tasksForDay) {
+                            logger.log(`🔍 Checking task "${task.text}" for schedule match...`);
+                            if (response.schedule[task.text]) {
+                                const suggestedTime = response.schedule[task.text];
+                                logger.log(`⏱️ Found time "${suggestedTime}" for task "${task.text}"`);
+                                const updatedTask = { ...task, time: suggestedTime };
+                                updatePromises.push(updateTask(task.id, updatedTask));
+                            } else {
+                                logger.log(`❌ No time found for task "${task.text}"`);
+                                logger.log('Available schedule keys:', Object.keys(response.schedule));
                             }
-                            return task;
-                        });
+                        }
+                        
+                        logger.log(`🔄 Updating ${updatePromises.length} tasks...`);
+                        await Promise.all(updatePromises);
+                        logger.log('✅ All task updates completed');
                         await renderTasks();
-                    } catch (e) {
-                         alert("The AI returned an unexpected schedule format. Please try again.");
+                    } else if (response.rawResponse) {
+                        // Fallback to parsing raw response if schedule parsing failed
+                        logger.log('📝 Fallback: parsing raw AI response');
+                        const cleanResponse = response.rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const schedule = JSON.parse(cleanResponse);
+                        logger.log('⏰ Parsed Schedule from raw:', schedule);
+                        
+                        // Same update logic
+                        const updatePromises = [];
+                        for (const task of tasksForDay) {
+                            if (schedule[task.text]) {
+                                const updatedTask = { ...task, time: schedule[task.text] };
+                                updatePromises.push(updateTask(task.id, updatedTask));
+                            }
+                        }
+                        await Promise.all(updatePromises);
+                        await renderTasks();
+                    } else {
+                        throw new Error('No schedule data in response');
                     }
+                } catch (e) {
+                    logger.error('❌ Smart Plan Error:', e);
+                    alert("Smart planning failed. Please try again.");
                 }
 
                 smartPlanBtn.innerHTML = `<i class="fas fa-brain"></i> <span>✨ Smart Plan</span>`;
