@@ -1320,12 +1320,17 @@
                 if (responseText) {
                     try {
                         const schedule = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
-                        allTasks = allTasks.map(task => {
-                            if (task.date === selectedDate && schedule[task.text]) {
-                                return { ...task, time: schedule[task.text] };
+                        
+                        // Update tasks with suggested times and persist to database
+                        const updatePromises = [];
+                        for (const task of tasksForDay) {
+                            if (schedule[task.text]) {
+                                const updatedTask = { ...task, time: schedule[task.text] };
+                                updatePromises.push(updateTask(task.id, updatedTask));
                             }
-                            return task;
-                        });
+                        }
+                        
+                        await Promise.all(updatePromises);
                         await renderTasks();
                     } catch (e) {
                          alert("The AI returned an unexpected schedule format. Please try again.");
