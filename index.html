@@ -53,9 +53,13 @@
         }
         
         // Load Supabase with CDN fallback
-        loadScript('/public/vendor/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2');
+        loadScript('/public/vendor/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2', () => {
+            // Load auth script after Supabase is loaded
+            const authScript = document.createElement('script');
+            authScript.src = '/public/supabase-auth-fixed.js?v=1.4';
+            document.head.appendChild(authScript);
+        });
     </script>
-    <script src="/public/supabase-auth-fixed.js?v=1.4"></script>
     
     <!-- Non-critical libraries (lazy load) -->
     <script>
