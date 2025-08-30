@@ -354,12 +354,20 @@
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.05);
         }
         
-        /* Hover effects */
+        /* Hover effects - Updated for purple theme */
         .animated-title-container:hover .nested-square,
         .animated-title-container-large:hover .nested-square {
             border-color: rgba(168, 85, 247, 0.9) !important;
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.4) !important;
             animation-duration: 2s;
+        }
+        
+        /* Force purple color on all nested squares - override any other styles */
+        .nested-square:hover,
+        .animated-title-container:hover .nested-square,
+        .animated-title-container-large:hover .nested-square {
+            border-color: rgba(168, 85, 247, 0.9) !important;
+            background-color: transparent !important;
         }
         
         .animated-title-container:hover .animated-title,
