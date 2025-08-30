@@ -122,9 +122,18 @@ const taskValidationRules = () => {
             .withMessage('Emoji must be 10 characters or less'),
             
         body('time')
-            .optional()
-            .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
-            .withMessage('Time must be in HH:MM format (24-hour)'),
+            .custom((value) => {
+                // Allow null, undefined, empty string, or missing field
+                if (value === null || value === undefined || value === '') {
+                    return true;
+                }
+                // Validate time format if provided
+                const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+                if (!timeRegex.test(value)) {
+                    throw new Error('Time must be in HH:MM format (24-hour)');
+                }
+                return true;
+            }),
             
         body('priority')
             .isIn(['low', 'medium', 'high'])
@@ -185,9 +194,18 @@ const taskUpdateValidationRules = () => {
             }),
             
         body('time')
-            .optional()
-            .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
-            .withMessage('Time must be in HH:MM format (24-hour)'),
+            .custom((value) => {
+                // Allow null, undefined, empty string, or missing field
+                if (value === null || value === undefined || value === '') {
+                    return true;
+                }
+                // Validate time format if provided
+                const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+                if (!timeRegex.test(value)) {
+                    throw new Error('Time must be in HH:MM format (24-hour)');
+                }
+                return true;
+            }),
             
         body('priority')
             .optional()
