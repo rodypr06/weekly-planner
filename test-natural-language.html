@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natural Language Task Parser Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">Natural Language Task Parser Test</h1>
+        
+        <div class="mb-6">
+            <label for="testInput" class="block mb-2">Test Input:</label>
+            <input 
+                type="text" 
+                id="testInput" 
+                class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded"
+                placeholder="Enter task like: clean bathroom at 1pm"
+                value="clean bathroom at 1pm"
+            >
+            <button 
+                onclick="testParsing()" 
+                class="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded"
+            >
+                Test Parse
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <h2 class="text-xl font-semibold mb-4">AI Parsing Result:</h2>
+                <pre id="aiResult" class="bg-gray-800 p-4 rounded overflow-auto"></pre>
+            </div>
+            
+            <div>
+                <h2 class="text-xl font-semibold mb-4">Fallback Parsing Result:</h2>
+                <pre id="fallbackResult" class="bg-gray-800 p-4 rounded overflow-auto"></pre>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-4">Test Cases:</h2>
+            <div id="testCases" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+        const testCases = [
+            "clean bathroom at 1pm",
+            "clean bathroom at 1:00pm",
+            "clean bathroom at 13:00",
+            "clean the bathroom at 1pm",
+            "bathroom cleaning at 1pm",
+            "Clean room at 3pm high priority #home",
+            "Meeting with John tomorrow 2pm",
+            "Buy groceries",
+            "workout at gym 6am #fitness high",
+            "read book tonight low priority"
+        ];
+
+        // Fallback parser from the main code
+        function fallbackParse(input) {
+            let text = input;
+            let time = '';
+            let priority = 'medium';
+            let tags = [];
+            
+            // Extract hashtags
+            const hashtagMatches = input.match(/#\w+/g);
+            if (hashtagMatches) {
+                tags = hashtagMatches.map(tag => tag.slice(1));
+                text = text.replace(/#\w+/g, '').trim();
+            }
+            
+            // Extract priority
+            if (/\b(high|urgent|important|asap)\b/i.test(input)) {
+                priority = 'high';
+                text = text.replace(/\b(high|urgent|important|asap)\s*(priority|pri)?\b/gi, '').trim();
+            } else if (/\b(low|later|whenever)\b/i.test(input)) {
+                priority = 'low';
+                text = text.replace(/\b(low|later|whenever)\s*(priority|pri)?\b/gi, '').trim();
+            } else if (/\b(medium|normal|med)\b/i.test(input)) {
+                priority = 'medium';
+                text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
+            }
+            
+            // Extract time (enhanced patterns)
+            const timePatterns = [
+                /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
+                /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
+                /\bat\s+(\d{1,2}):?(\d{2})?\s*(am|pm)?\b/i,   // at 3pm, at 3:30
+                /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
+            ];
+            
+            for (const pattern of timePatterns) {
+                const timeMatch = input.match(pattern);
+                if (timeMatch) {
+                    let hours = parseInt(timeMatch[1]);
+                    let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
+                    // Ensure minutes is not NaN
+                    if (isNaN(minutes)) minutes = 0;
+                    const period = timeMatch[3];
+                    
+                    // Convert to 24-hour format
+                    if (period) {
+                        const isPM = /pm/i.test(period);
+                        if (isPM && hours < 12) hours += 12;
+                        if (!isPM && hours === 12) hours = 0;
+                    }
+                    
+                    time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                    text = text.replace(timeMatch[0], '').replace(/\bat\s+/i, '').trim();
+                    break;
+                }
+            }
+            
+            // Simple emoji assignment based on keywords
+            let emoji = '📝';
+            const emojiMap = {
+                'clean': '🧹', 'bathroom': '🚿', 'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
+                'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
+                'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
+                'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗'
+            };
+            
+            for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
+                if (new RegExp(`\\b${keyword}`, 'i').test(input)) {
+                    emoji = emojiChar;
+                    break;
+                }
+            }
+            
+            return { text, time, priority, tags, emoji };
+        }
+
+        async function testParsing() {
+            const input = document.getElementById('testInput').value;
+            
+            // Test fallback parsing
+            const fallbackResult = fallbackParse(input);
+            document.getElementById('fallbackResult').textContent = JSON.stringify(fallbackResult, null, 2);
+            
+            // Create AI prompt
+            const now = new Date();
+            const currentHours = String(now.getHours()).padStart(2, '0');
+            const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${currentHours}:${currentMinutes}`;
+            const selectedDate = now.toISOString().split('T')[0];
+            
+            const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
+                        
+Task: "${input}"
+
+Extract and return a JSON object with these fields:
+- text: The main task description (clean, without time/priority/tags)
+- time: Time in HH:MM format (24-hour). Convert natural language like "3pm", "tomorrow morning", "in 2 hours" to specific times. If no time mentioned, return null.
+- priority: Either "high", "medium", or "low". Look for words like urgent, important, ASAP (high), normal (medium), whenever, later (low). Default to "medium" if not specified.
+- tags: Array of tags. Look for hashtags (#work, #personal) or context words that could be tags (meeting->work, shopping->personal). Return empty array if none.
+- emoji: A single relevant emoji for this task.
+
+Examples:
+"Clean room at 3pm high priority #home" -> {"text": "Clean room", "time": "15:00", "priority": "high", "tags": ["home"], "emoji": "🧹"}
+"Meeting with John tomorrow 2pm" -> {"text": "Meeting with John", "time": "14:00", "priority": "medium", "tags": ["work"], "emoji": "👥"}
+"Buy groceries" -> {"text": "Buy groceries", "time": null, "priority": "medium", "tags": ["personal"], "emoji": "🛒"}
+
+IMPORTANT: For "clean bathroom at 1pm", the correct response is:
+{"text": "Clean bathroom", "time": "13:00", "priority": "medium", "tags": [], "emoji": "🚿"}
+
+Return only the JSON object.`;
+
+            document.getElementById('aiResult').textContent = "AI Prompt:\n\n" + parsePrompt;
+        }
+
+        // Load test cases
+        function loadTestCases() {
+            const container = document.getElementById('testCases');
+            testCases.forEach(testCase => {
+                const button = document.createElement('button');
+                button.className = 'px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded text-sm';
+                button.textContent = testCase;
+                button.onclick = () => {
+                    document.getElementById('testInput').value = testCase;
+                    testParsing();
+                };
+                container.appendChild(button);
+            });
+        }
+
+        // Initialize
+        loadTestCases();
+        testParsing();
+    </script>
+</body>
+</html>
