@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Natural Language Parsing Fix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">Natural Language Parsing Test - Fixed Version</h1>
+        
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Test Results:</h2>
+            <div id="results" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        // Fixed fallback parser
+        function parseTask(input) {
+            let text = input;
+            let time = '';
+            let priority = 'medium';
+            let tags = [];
+            
+            // Extract hashtags
+            const hashtagMatches = input.match(/#\w+/g);
+            if (hashtagMatches) {
+                tags = hashtagMatches.map(tag => tag.slice(1));
+                text = text.replace(/#\w+/g, '').trim();
+            }
+            
+            // Extract priority
+            if (/\b(high|urgent|important|asap)\b/i.test(input)) {
+                priority = 'high';
+                text = text.replace(/\b(high|urgent|important|asap)\s*(priority|pri)?\b/gi, '').trim();
+            } else if (/\b(low|later|whenever)\b/i.test(input)) {
+                priority = 'low';
+                text = text.replace(/\b(low|later|whenever)\s*(priority|pri)?\b/gi, '').trim();
+            } else if (/\b(medium|normal|med)\b/i.test(input)) {
+                priority = 'medium';
+                text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
+            }
+            
+            // Extract time (enhanced patterns) - FIXED ORDER
+            const timePatterns = [
+                /\bat\s+(\d{1,2}):(\d{2})\s*(am|pm)\b/i,      // at 3:30pm
+                /\bat\s+(\d{1,2})\s*(am|pm)\b/i,              // at 3pm
+                /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
+                /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
+                /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
+            ];
+            
+            for (const pattern of timePatterns) {
+                const timeMatch = text.match(pattern);
+                if (timeMatch) {
+                    let hours = parseInt(timeMatch[1]);
+                    let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
+                    if (isNaN(minutes)) minutes = 0;
+                    const period = timeMatch[3];
+                    
+                    // Convert to 24-hour format
+                    if (period) {
+                        const isPM = /pm/i.test(period);
+                        if (isPM && hours < 12) hours += 12;
+                        if (!isPM && hours === 12) hours = 0;
+                    }
+                    
+                    time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                    // Remove the entire matched time pattern including "at" if present
+                    text = text.replace(timeMatch[0], '').trim();
+                    break;
+                }
+            }
+            
+            // Enhanced emoji assignment based on keywords
+            let emoji = '📝';
+            const emojiMap = {
+                'clean': '🧹', 'bathroom': '🚿', 'shower': '🚿', 'bath': '🛁',
+                'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
+                'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
+                'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
+                'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗',
+                'laundry': '👔', 'wash': '🧼', 'kitchen': '🍳', 'bedroom': '🛏️'
+            };
+            
+            for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
+                if (new RegExp(`\\b${keyword}`, 'i').test(input)) {
+                    emoji = emojiChar;
+                    break;
+                }
+            }
+            
+            return { text, time, priority, tags, emoji };
+        }
+
+        // Test cases
+        const testCases = [
+            {
+                input: "clean bathroom at 1pm",
+                expected: { text: "clean bathroom", time: "13:00", emoji: "🚿" }
+            },
+            {
+                input: "clean bathroom at 1:00pm",
+                expected: { text: "clean bathroom", time: "13:00", emoji: "🚿" }
+            },
+            {
+                input: "Clean room at 3pm high priority #home",
+                expected: { text: "Clean room", time: "15:00", priority: "high", tags: ["home"], emoji: "🧹" }
+            },
+            {
+                input: "Meeting with John at 2pm",
+                expected: { text: "Meeting with John", time: "14:00", emoji: "👥" }
+            },
+            {
+                input: "Buy groceries",
+                expected: { text: "Buy groceries", emoji: "🛒" }
+            },
+            {
+                input: "workout at gym 6am #fitness high",
+                expected: { text: "workout gym", time: "06:00", priority: "high", tags: ["fitness"], emoji: "🏋️" }
+            },
+            {
+                input: "read book tonight low priority",
+                expected: { text: "read book tonight", priority: "low", emoji: "📚" }
+            },
+            {
+                input: "wash laundry at 10am",
+                expected: { text: "wash laundry", time: "10:00", emoji: "🧼" }
+            }
+        ];
+
+        // Run tests
+        function runTests() {
+            const resultsDiv = document.getElementById('results');
+            
+            testCases.forEach((testCase, index) => {
+                const result = parseTask(testCase.input);
+                const passed = checkResult(result, testCase.expected);
+                
+                const div = document.createElement('div');
+                div.className = `p-4 rounded ${passed ? 'bg-green-900' : 'bg-red-900'}`;
+                
+                div.innerHTML = `
+                    <div class="font-semibold mb-2">Test ${index + 1}: ${passed ? '✅ PASSED' : '❌ FAILED'}</div>
+                    <div class="text-sm mb-1">Input: "${testCase.input}"</div>
+                    <div class="text-sm mb-1">Expected: ${JSON.stringify(testCase.expected)}</div>
+                    <div class="text-sm">Got: ${JSON.stringify(result)}</div>
+                    ${!passed ? `<div class="text-sm mt-2 text-yellow-300">Issue: ${getIssue(result, testCase.expected)}</div>` : ''}
+                `;
+                
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        function checkResult(result, expected) {
+            for (const key in expected) {
+                if (Array.isArray(expected[key])) {
+                    if (JSON.stringify(result[key]) !== JSON.stringify(expected[key])) {
+                        return false;
+                    }
+                } else if (result[key] !== expected[key]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function getIssue(result, expected) {
+            const issues = [];
+            for (const key in expected) {
+                if (Array.isArray(expected[key])) {
+                    if (JSON.stringify(result[key]) !== JSON.stringify(expected[key])) {
+                        issues.push(`${key}: expected ${JSON.stringify(expected[key])}, got ${JSON.stringify(result[key])}`);
+                    }
+                } else if (result[key] !== expected[key]) {
+                    issues.push(`${key}: expected "${expected[key]}", got "${result[key]}"`);
+                }
+            }
+            return issues.join(', ');
+        }
+
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+</html>

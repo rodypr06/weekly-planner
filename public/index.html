@@ -486,14 +486,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize Supabase and wait for it to be ready
-            if (!(await initializeSupabase())) {
-                console.error('Failed to initialize Supabase');
-                return;
-            }
-            
             // --- Authentication Management ---
             let currentUser = null;
+            let supabaseInitialized = false;
             
             // Auth element selectors
             const authModal = document.getElementById('auth-modal');
@@ -561,35 +556,56 @@
                 }, 5000);
             }
             
-            // Form switching
-            showRegisterBtn.addEventListener('click', () => {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                registerSwitch.classList.remove('hidden');
-                authMessage.classList.add('hidden');
-            });
+            // Initialize UI Event Listeners (works regardless of Supabase status)
+            function initializeUIEventListeners() {
+                // Form switching
+                if (showRegisterBtn) {
+                    showRegisterBtn.addEventListener('click', () => {
+                        console.log('Create Account button clicked');
+                        loginForm.classList.add('hidden');
+                        registerForm.classList.remove('hidden');
+                        registerSwitch.classList.remove('hidden');
+                        authMessage.classList.add('hidden');
+                    });
+                }
+                
+                if (showLoginBtn) {
+                    showLoginBtn.addEventListener('click', () => {
+                        console.log('Back to login clicked');
+                        registerForm.classList.add('hidden');
+                        loginForm.classList.remove('hidden');
+                        registerSwitch.classList.add('hidden');
+                        authMessage.classList.add('hidden');
+                    });
+                }
+            }
             
-            showLoginBtn.addEventListener('click', () => {
-                registerForm.classList.add('hidden');
-                loginForm.classList.remove('hidden');
-                registerSwitch.classList.add('hidden');
-                authMessage.classList.add('hidden');
-            });
+            // Initialize UI immediately
+            initializeUIEventListeners();
             
             // User menu toggle
-            userMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userMenu.classList.toggle('hidden');
-            });
+            if (userMenuBtn) {
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('hidden');
+                });
+            }
             
             // Close user menu when clicking outside
-            document.addEventListener('click', () => {
-                userMenu.classList.add('hidden');
-            });
+            if (userMenu) {
+                document.addEventListener('click', () => {
+                    userMenu.classList.add('hidden');
+                });
+            }
             
             // Login form submission
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                if (!supabaseInitialized) {
+                    showMessage('Authentication service is not ready. Please refresh the page.');
+                    return;
+                }
                 
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
@@ -625,6 +641,11 @@
             // Register form submission
             registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                if (!supabaseInitialized) {
+                    showMessage('Authentication service is not ready. Please refresh the page.');
+                    return;
+                }
                 
                 const email = document.getElementById('register-email').value;
                 const username = document.getElementById('register-username').value;
@@ -669,27 +690,50 @@
             });
             
             // Logout functionality
-            logoutBtn.addEventListener('click', async () => {
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    try {
+                        const result = await SupabaseAuth.logout();
+                        if (result.success) {
+                            currentUser = null;
+                            showAuthModal();
+                            
+                            // Reset forms
+                            loginForm.reset();
+                            registerForm.reset();
+                        }
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                });
+            }
+            
+            // Initialize Supabase asynchronously
+            async function initializeSupabaseAsync() {
                 try {
-                    const result = await SupabaseAuth.logout();
-                    if (result.success) {
-                        currentUser = null;
+                    supabaseInitialized = await initializeSupabase();
+                    if (supabaseInitialized) {
+                        console.log('Supabase initialized successfully');
+                        // Check authentication status after Supabase is ready
+                        await checkAuth();
+                    } else {
+                        console.error('Supabase initialization failed');
+                        showMessage('Authentication service is unavailable. Some features may not work.');
+                        // Show auth modal anyway to allow UI interaction
                         showAuthModal();
-                        
-                        // Reset forms
-                        loginForm.reset();
-                        registerForm.reset();
                     }
                 } catch (error) {
-                    console.error('Logout error:', error);
+                    console.error('Error during Supabase initialization:', error);
+                    showMessage('Authentication service error. Please refresh the page.');
+                    showAuthModal();
                 }
-            });
+            }
             
-            // Initialize authentication check
-            await checkAuth();
+            // Start Supabase initialization (don't await, let it run async)
+            initializeSupabaseAsync();
             
-            // Only initialize main app if authenticated
-            if (!currentUser) return;
+            // Continue with app initialization regardless of auth status
+            // This ensures UI is responsive even if Supabase fails
             
             // --- Element Selectors ---
             const taskForm = document.getElementById('add-task-form');
