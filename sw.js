@@ -123,3 +123,139 @@ self.addEventListener('activate', event => {
     .then(() => self.clients.claim())
   );
 });
+
+// Notification handling
+self.addEventListener('push', event => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const options = {
+    body: data.body || 'You have a task reminder',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    vibrate: [200, 100, 200],
+    tag: data.tag || 'task-reminder',
+    requireInteraction: true,
+    actions: [
+      { action: 'complete', title: 'Mark Complete' },
+      { action: 'snooze', title: 'Snooze 10 min' },
+      { action: 'dismiss', title: 'Dismiss' }
+    ],
+    data: {
+      taskId: data.taskId,
+      url: data.url || '/',
+      timestamp: new Date().toISOString()
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Task Reminder', options)
+  );
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', event => {
+  const notification = event.notification;
+  const action = event.action;
+  const taskId = notification.data?.taskId;
+
+  notification.close();
+
+  if (action === 'complete' && taskId) {
+    // Send message to complete task
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clientList => {
+          // Send to all clients to update task
+          clientList.forEach(client => {
+            client.postMessage({
+              type: 'complete-task',
+              taskId: taskId
+            });
+          });
+          
+          // If no client is open, open one
+          if (clientList.length === 0) {
+            return clients.openWindow(notification.data.url);
+          }
+          
+          // Focus on existing client
+          const client = clientList[0];
+          if (client && 'focus' in client) {
+            return client.focus();
+          }
+        })
+    );
+  } else if (action === 'snooze' && taskId) {
+    // Send message to snooze reminder
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clientList => {
+          clientList.forEach(client => {
+            client.postMessage({
+              type: 'snooze-reminder',
+              taskId: taskId,
+              minutes: 10
+            });
+          });
+        })
+    );
+  } else if (!action) {
+    // Click on notification body - open/focus app
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(clientList => {
+          for (const client of clientList) {
+            if ('focus' in client) {
+              return client.focus();
+            }
+          }
+          if (clients.openWindow) {
+            return clients.openWindow(notification.data.url);
+          }
+        })
+    );
+  }
+});
+
+// Background sync for offline reminder scheduling
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-reminders') {
+    event.waitUntil(syncReminders());
+  }
+});
+
+async function syncReminders() {
+  try {
+    // Get all pending reminders from IndexedDB or cache
+    const cache = await caches.open(CACHE_NAME);
+    const response = await cache.match('/api/reminders/pending');
+    
+    if (response) {
+      const reminders = await response.json();
+      
+      // Schedule notifications for each reminder
+      for (const reminder of reminders) {
+        const timeDiff = new Date(reminder.reminder_time).getTime() - Date.now();
+        
+        if (timeDiff > 0 && timeDiff < 24 * 60 * 60 * 1000) { // Within 24 hours
+          // Schedule notification
+          setTimeout(() => {
+            self.registration.showNotification(
+              `${reminder.task_emoji} Task Reminder`,
+              {
+                body: reminder.task_text,
+                icon: '/icons/icon-192x192.png',
+                badge: '/icons/icon-72x72.png',
+                tag: `reminder-${reminder.reminder_id}`,
+                data: { taskId: reminder.task_id }
+              }
+            );
+          }, timeDiff);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error syncing reminders:', error);
+  }
+}

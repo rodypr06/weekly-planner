@@ -81,6 +81,11 @@ app.use('/api', createAuthRoutes(authAdapter, rateLimiters));
 app.use('/api/tasks', createTaskRoutes(dbAdapter, authAdapter, rateLimiters));
 app.use('/api', createAIRoutes(authAdapter, rateLimiters));
 
+// Reminder routes
+const { createReminderRoutes } = require('./routes/reminders');
+app.use('/api/reminders', createReminderRoutes(dbAdapter, authAdapter));
+app.use('/api/notification-preferences', createReminderRoutes(dbAdapter, authAdapter));
+
 // Database migration endpoint to add position column if needed
 app.post('/api/migrate/add-position', authLimiter, authAdapter.requireAuth(), async (req, res) => {
     try {

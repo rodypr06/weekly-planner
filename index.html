@@ -82,6 +82,10 @@
         };
     </script>
     <!-- ApiClient loaded from supabase-auth.js -->
+    
+    <!-- Notification Manager -->
+    <script src="/public/notification-manager.js" defer></script>
+    <script src="/public/reminder-ui.js" defer></script>
 
     <!-- Production-safe Logger -->
     <script>
@@ -2055,6 +2059,15 @@
                             taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
                             taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
                             taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
+                            
+                            // Add reminder button listener if it exists (tasks with time)
+                            const reminderBtn = taskElement.querySelector('.reminder-btn');
+                            if (reminderBtn && window.reminderUI) {
+                                reminderBtn.addEventListener('click', () => {
+                                    window.reminderUI.openModal(task);
+                                });
+                            }
+                            
                             taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
                                 tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
                             });
@@ -2127,6 +2140,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0 ml-2">
+                                ${task.time ? `<button class="reminder-btn ${task.reminder_enabled ? 'text-indigo-400' : 'text-gray-400'} hover:text-indigo-400 transition" data-task-id="${task.id}" title="${task.reminder_enabled ? `Reminder set for ${task.reminder_minutes} minutes before` : 'Set reminder'}"><i class="fas fa-bell${task.reminder_enabled ? '' : '-slash'}"></i></button>` : ''}
                                 <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
                                 <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
                             </div>
@@ -2752,6 +2766,90 @@ Return only the JSON object.`;
             setupTaskListDropZone();
             setupEventDelegation();
             renderWeek();
+            // Initialize notification manager
+            let notificationManager;
+            let reminderUI;
+            
+            try {
+                // Initialize notification manager
+                if (window.NotificationManager) {
+                    notificationManager = new NotificationManager();
+                    window.notificationManager = notificationManager;
+                    
+                    // Initialize reminder UI
+                    if (window.ReminderUI) {
+                        reminderUI = new ReminderUI(notificationManager);
+                        window.reminderUI = reminderUI;
+                        reminderUI.init();
+                        
+                        // Sync reminders on startup
+                        if (notificationManager.isEnabled()) {
+                            await notificationManager.syncReminders();
+                        }
+                    }
+                    
+                    // Make task manager accessible for notifications
+                    window.taskManager = {
+                        allTasks: allTasks,
+                        toggleComplete: toggleComplete
+                    };
+                    
+                    // Request notification permission if not already granted
+                    if (notificationManager.permission === 'default') {
+                        // Show a friendly prompt after user has interacted with the app
+                        setTimeout(() => {
+                            const shouldAsk = localStorage.getItem('askForNotifications') !== 'false';
+                            if (shouldAsk && allTasks.some(t => t.time)) {
+                                // Only ask if there are tasks with times
+                                showNotificationPrompt();
+                            }
+                        }, 5000);
+                    }
+                }
+            } catch (error) {
+                logger.error('Failed to initialize notification system:', error);
+            }
+            
+            // Function to show notification permission prompt
+            const showNotificationPrompt = () => {
+                const prompt = document.createElement('div');
+                prompt.className = 'fixed top-4 right-4 glass-pane p-4 rounded-xl z-50 max-w-sm';
+                prompt.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-bell text-2xl text-indigo-400"></i>
+                        <div class="flex-grow">
+                            <h3 class="font-semibold mb-1">Enable Reminders?</h3>
+                            <p class="text-sm text-gray-300 mb-3">Get notified before your scheduled tasks</p>
+                            <div class="flex gap-2">
+                                <button id="enableNotifications" class="btn-primary text-sm py-1 px-3">Enable</button>
+                                <button id="dismissNotifications" class="btn-secondary text-sm py-1 px-3">Not Now</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(prompt);
+                
+                document.getElementById('enableNotifications').addEventListener('click', async () => {
+                    const granted = await notificationManager.requestPermission();
+                    if (granted) {
+                        await notificationManager.syncReminders();
+                    }
+                    prompt.remove();
+                });
+                
+                document.getElementById('dismissNotifications').addEventListener('click', () => {
+                    localStorage.setItem('askForNotifications', 'false');
+                    prompt.remove();
+                });
+                
+                // Auto-dismiss after 10 seconds
+                setTimeout(() => {
+                    if (prompt.parentNode) {
+                        prompt.remove();
+                    }
+                }, 10000);
+            };
+            
             renderTasks();
         });
     </script>
