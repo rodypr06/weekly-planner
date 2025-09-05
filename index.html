@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>📋 Smart Planner</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
     
@@ -27,6 +27,9 @@
     
     <!-- Theme Switcher Styles -->
     <link rel="stylesheet" href="/public/theme-switcher.css">
+    
+    <!-- Mobile-First Responsive Styles -->
+    <link rel="stylesheet" href="/public/mobile-responsive.css">
     
     <!-- Preload critical JavaScript resources -->
     <!-- Removed preload hints to prevent unused resource warnings -->
@@ -95,6 +98,12 @@
     <!-- Notification Manager -->
     <script src="/public/notification-manager.js" defer></script>
     <script src="/public/reminder-ui.js" defer></script>
+    
+    <!-- Mobile Navigation -->
+    <script src="/public/mobile-navigation.js" defer></script>
+    
+    <!-- Touch Optimization -->
+    <script src="/public/touch-optimization.js" defer></script>
 
     <!-- Production-safe Logger -->
     <script>
@@ -392,21 +401,89 @@
             text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 80px rgba(168, 85, 247, 0.5) !important;
         }
         
-        /* Responsive adjustments */
+        /* Mobile-first responsive adjustments */
         @media (max-width: 640px) {
             .animated-title-container-large .nested-square {
                 transform: translate(-50%, -50%) scale(0.8);
             }
+            
+            /* Mobile-optimized spacing */
+            .main-container {
+                padding: 12px 16px;
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
+            
+            /* Touch-friendly buttons */
+            .btn, button {
+                min-height: 48px;
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+            
+            /* Responsive modals */
+            .modal {
+                margin: 16px;
+                max-height: calc(100vh - 32px);
+                border-radius: 16px;
+            }
+            
+            /* Mobile form inputs */
+            input[type="text"], 
+            input[type="email"], 
+            input[type="password"],
+            textarea, 
+            select {
+                min-height: 48px;
+                font-size: 16px;
+                padding: 12px 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Very small mobile adjustments */
+            .main-container {
+                padding: 8px 12px;
+            }
+            
+            .modal {
+                margin: 8px;
+                border-radius: 12px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            /* Tablet adjustments */
+            .main-container {
+                padding: 24px;
+                max-width: 720px;
+                margin: 0 auto;
+            }
+            
+            .modal {
+                max-width: 500px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            /* Desktop adjustments */
+            .main-container {
+                max-width: 960px;
+                padding: 32px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body class="bg-gray-900 text-gray-200 no-scroll-x">
+    <!-- Mobile Header will be injected by mobile-navigation.js -->
+    
     <!-- Theme Toggle Button -->
-    <div class="theme-toggle" id="theme-toggle">
+    <div class="theme-toggle desktop-only" id="theme-toggle">
         <div class="theme-toggle-slider"></div>
     </div>
     
-    <div class="background-container">
+    <div class="background-container safe-area-inset">
         <div id="orb1" class="background-orb"></div>
         <div id="orb2" class="background-orb"></div>
     </div>
@@ -528,7 +605,7 @@
     </div>
     
     <!-- Main App Container (Hidden until authenticated) -->
-    <div id="main-app" class="relative z-10 w-full max-w-4xl mx-auto my-8 glass-pane rounded-2xl shadow-2xl p-6 md:p-8 hidden">
+    <div id="main-app" class="relative z-10 w-full mobile-container glass-pane rounded-2xl shadow-2xl p-mobile-md md:p-8 hidden main-content safe-area-inset-top" style="margin-top: calc(20px + env(safe-area-inset-top)); max-width: min(95vw, 1024px);">
 
         <!-- Header -->
         <div class="flex justify-between items-start mb-6">
