@@ -56,7 +56,16 @@
         loadScript('/public/vendor/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2', () => {
             // Load auth script after Supabase is loaded
             const authScript = document.createElement('script');
-            authScript.src = '/public/supabase-auth-fixed.js?v=1.4';
+            authScript.src = '/public/supabase-auth-fixed.js?v=1.5';
+            authScript.onload = () => {
+                // Set a flag to indicate auth script is loaded
+                window.supabaseAuthLoaded = true;
+                // Dispatch a custom event
+                window.dispatchEvent(new Event('supabaseAuthReady'));
+            };
+            authScript.onerror = () => {
+                console.error('Failed to load supabase-auth-fixed.js');
+            };
             document.head.appendChild(authScript);
         });
     </script>
@@ -921,11 +930,44 @@
                 window.ApiClient = window.ApiClient;
             }
             
+            // Wait for auth script to be loaded
+            const waitForAuthScript = async () => {
+                if (window.supabaseAuthLoaded && typeof window.initializeSupabase === 'function') {
+                    return true;
+                }
+                
+                return new Promise((resolve) => {
+                    // If already loaded, resolve immediately
+                    if (window.supabaseAuthLoaded && typeof window.initializeSupabase === 'function') {
+                        resolve(true);
+                        return;
+                    }
+                    
+                    // Otherwise wait for the event
+                    window.addEventListener('supabaseAuthReady', () => {
+                        resolve(true);
+                    });
+                    
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        logger.error('Timeout waiting for supabase auth script');
+                        resolve(false);
+                    }, 10000);
+                });
+            };
+            
+            // Wait for auth script to load
+            const authScriptLoaded = await waitForAuthScript();
+            if (!authScriptLoaded) {
+                logger.error('Failed to load supabase auth script');
+                return;
+            }
+            
             // Initialize Supabase with retry logic
             let supabaseInitialized = false;
             for (let i = 0; i < 3; i++) {
                 try {
-                    supabaseInitialized = await initializeSupabase();
+                    supabaseInitialized = await window.initializeSupabase();
                     if (supabaseInitialized) break;
                     
                     logger.log(`Supabase initialization attempt ${i + 1} failed, retrying...`);

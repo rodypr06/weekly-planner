@@ -711,15 +711,39 @@
             // Initialize Supabase asynchronously
             async function initializeSupabaseAsync() {
                 try {
-                    supabaseInitialized = await initializeSupabase();
-                    if (supabaseInitialized) {
-                        console.log('Supabase initialized successfully');
-                        // Check authentication status after Supabase is ready
-                        await checkAuth();
+                    // Wait for the function to be available
+                    if (typeof initializeSupabase === 'undefined') {
+                        console.log('Waiting for initializeSupabase function to be available...');
+                        await new Promise((resolve) => {
+                            const checkInterval = setInterval(() => {
+                                if (typeof initializeSupabase === 'function') {
+                                    clearInterval(checkInterval);
+                                    resolve();
+                                }
+                            }, 100);
+                            // Timeout after 10 seconds
+                            setTimeout(() => {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }, 10000);
+                        });
+                    }
+                    
+                    if (typeof initializeSupabase === 'function') {
+                        supabaseInitialized = await initializeSupabase();
+                        if (supabaseInitialized) {
+                            console.log('Supabase initialized successfully');
+                            // Check authentication status after Supabase is ready
+                            await checkAuth();
+                        } else {
+                            console.error('Supabase initialization failed');
+                            showMessage('Authentication service is unavailable. Some features may not work.');
+                            // Show auth modal anyway to allow UI interaction
+                            showAuthModal();
+                        }
                     } else {
-                        console.error('Supabase initialization failed');
+                        console.error('initializeSupabase function not found');
                         showMessage('Authentication service is unavailable. Some features may not work.');
-                        // Show auth modal anyway to allow UI interaction
                         showAuthModal();
                     }
                 } catch (error) {
