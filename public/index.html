@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Smart Planner</title>
     
     <!-- PWA Meta Tags -->
@@ -21,9 +21,16 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
     
+    <!-- Mobile-First CSS Framework -->
+    <link rel="stylesheet" href="/public/mobile-responsive.css">
+    
     <!-- Supabase Integration -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="supabase-auth.js"></script>
+    
+    <!-- Mobile Navigation and Touch Optimization -->
+    <script src="/public/mobile-navigation.js" defer></script>
+    <script src="/public/touch-optimization.js" defer></script>
 
     <!-- Service Worker Registration -->
     <script>
@@ -131,7 +138,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body class="bg-gray-900 text-gray-200 no-scroll-x safe-area-inset touch-optimized">
     <div class="background-container">
         <div id="orb1" class="background-orb"></div>
         <div id="orb2" class="background-orb"></div>
