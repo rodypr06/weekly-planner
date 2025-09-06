@@ -73,6 +73,9 @@
         /**
          * Create mobile header with hamburger menu
          */
+        /**
+         * Create mobile header with hamburger menu
+         */
         createMobileHeader() {
             const header = document.createElement('div');
             header.className = 'mobile-header';
@@ -83,16 +86,8 @@
                         <div class="hamburger-line"></div>
                         <div class="hamburger-line"></div>
                     </div>
-                    <h1 class="text-responsive-lg font-semibold">Smart Planner</h1>
-                    <div class="flex items-center gap-2">
-                        <button class="touch-target" id="mobile-search">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        <button class="touch-target" id="mobile-notifications">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge hidden"></span>
-                        </button>
-                    </div>
+                    <h1 class="text-responsive-lg font-semibold">Weekly Planner</h1>
+                    <div class="w-10"></div>
                 </div>
             `;
             
@@ -139,6 +134,9 @@
         /**
          * Create sidebar menu
          */
+        /**
+         * Create sidebar menu
+         */
         createSidebar() {
             const sidebar = document.createElement('div');
             sidebar.className = 'mobile-sidebar';
@@ -160,14 +158,6 @@
                 </div>
                 
                 <nav class="sidebar-nav">
-                    <a href="#dashboard" class="sidebar-item">
-                        <i class="fas fa-th-large mr-3"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="#analytics" class="sidebar-item">
-                        <i class="fas fa-chart-bar mr-3"></i>
-                        <span>Analytics</span>
-                    </a>
                     <a href="#settings" class="sidebar-item">
                         <i class="fas fa-cog mr-3"></i>
                         <span>Settings</span>
