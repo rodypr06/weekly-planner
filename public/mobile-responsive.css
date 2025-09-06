@@ -25,14 +25,25 @@ html {
     font-size: 16px; /* Prevent zoom on iOS */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
+    /* Dynamic viewport height support for iOS */
+    height: 100%;
 }
 
 body {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
+    /* Modern viewport height with fallbacks */
+    min-height: 100vh; /* fallback for older browsers */
+    min-height: 100dvh; /* dynamic viewport height - preferred for 2024+ */
+    min-height: -webkit-fill-available; /* WebKit legacy fallback */
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Support for dynamic viewport units */
+@supports (height: 100dvh) {
+    body {
+        min-height: 100dvh;
+    }
 }
 
 /* Responsive Typography Scale */
@@ -216,7 +227,8 @@ select {
     left: -100%;
     width: 85%;
     max-width: 320px;
-    height: 100vh;
+    height: 100vh; /* fallback */
+    height: 100dvh; /* dynamic viewport height */
     background: rgba(17, 24, 39, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -609,4 +621,119 @@ select {
 /* Remove focus for touch/mouse */
 *:focus:not(:focus-visible) {
     outline: none;
+}
+
+/* ====================================
+   iPhone 15 Pro Max Specific Optimizations
+   ==================================== */
+
+/* iPhone 15 Pro Max (430px × 932px CSS pixels) */
+@media only screen and (width: 430px) and (height: 932px) and (-webkit-device-pixel-ratio: 3) {
+    /* Enhanced touch targets for large display */
+    .touch-target {
+        min-height: 48px;
+        min-width: 48px;
+    }
+    
+    /* Optimized typography for large screen */
+    .text-responsive-base {
+        font-size: clamp(1rem, 3.2vw, 1.2rem);
+    }
+    
+    /* Better spacing for large screens */
+    .mobile-container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+/* All large iPhones (iPhone 14 Pro Max, 15 Pro Max) */
+@media only screen and (min-width: 428px) and (max-width: 430px) and (-webkit-device-pixel-ratio: 3) {
+    /* Ensure content doesn't feel cramped on large displays */
+    .mobile-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    /* Better task card sizing */
+    .task-item {
+        min-height: 60px;
+    }
+}
+
+/* Dynamic Viewport Height Support for All iOS Devices */
+@supports (height: 100dvh) {
+    .full-height,
+    .mobile-container,
+    #app {
+        min-height: 100dvh;
+    }
+    
+    .mobile-sidebar {
+        height: 100dvh;
+    }
+}
+
+/* JavaScript-controlled viewport height (fallback for problematic browsers) */
+.full-height {
+    height: calc(var(--vh, 1vh) * 100);
+}
+
+.mobile-container,
+#app {
+    min-height: calc(var(--vh, 1vh) * 100);
+    min-height: var(--app-height, 100vh);
+}
+
+.mobile-sidebar {
+    height: calc(var(--vh, 1vh) * 100);
+    height: var(--app-height, 100vh);
+}
+
+/* iPhone 15 Pro Max specific class optimizations */
+html.iphone-15-pro-max {
+    /* Enhanced safe area handling for large screen */
+    --safe-area-multiplier: 1.2;
+}
+
+html.iphone-15-pro-max .mobile-container {
+    padding-left: max(20px, calc(env(safe-area-inset-left) * var(--safe-area-multiplier, 1)));
+    padding-right: max(20px, calc(env(safe-area-inset-right) * var(--safe-area-multiplier, 1)));
+}
+
+html.has-safe-area {
+    /* Ensure proper safe area support */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Enhanced Safe Area Support */
+@supports (padding: max(0px)) {
+    .safe-area-enhanced {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        padding-top: max(20px, env(safe-area-inset-top));
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Fix for iOS Safari Address Bar Issues */
+@media screen and (max-width: 430px) {
+    html {
+        height: -webkit-fill-available;
+    }
+    
+    body {
+        min-height: -webkit-fill-available;
+    }
+    
+    /* Prevent zoom on inputs (iOS Safari fix) */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: max(16px, 1rem); /* Prevent zoom */
+        transform: translateZ(0); /* Force hardware acceleration */
+    }
 }
