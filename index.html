@@ -2978,5 +2978,11 @@ Return only the JSON object.`;
     
     <!-- Debug Helper (only in development) -->
     <!-- Debug helper removed - was causing console errors -->
+    
+    <!-- Vercel Analytics -->
+    <script type="module">
+        import { inject } from '@vercel/analytics';
+        inject();
+    </script>
 </body>
 </html>
