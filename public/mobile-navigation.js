@@ -48,17 +48,10 @@
         /**
          * Create mobile navigation elements
          */
+        /**
+         * Create mobile navigation elements
+         */
         createMobileElements() {
-            // Create mobile header if not exists
-            if (!document.querySelector('.mobile-header')) {
-                this.createMobileHeader();
-            }
-            
-            // Create mobile bottom navigation
-            if (!document.querySelector('.mobile-nav') && this.isMobile) {
-                this.createBottomNav();
-            }
-            
             // Create sidebar
             if (!document.querySelector('.mobile-sidebar')) {
                 this.createSidebar();
@@ -212,12 +205,10 @@
         /**
          * Attach event listeners
          */
+        /**
+         * Attach event listeners
+         */
         attachEventListeners() {
-            // Hamburger menu
-            if (this.hamburger) {
-                this.hamburger.addEventListener('click', () => this.toggleSidebar());
-            }
-            
             // Close sidebar
             const closeSidebar = document.getElementById('close-sidebar');
             if (closeSidebar) {
@@ -227,13 +218,6 @@
             // Overlay click
             if (this.overlay) {
                 this.overlay.addEventListener('click', () => this.closeSidebar());
-            }
-            
-            // Bottom nav items
-            if (this.mobileNav) {
-                this.mobileNav.querySelectorAll('.mobile-nav-item').forEach(item => {
-                    item.addEventListener('click', (e) => this.handleNavClick(e));
-                });
             }
             
             // Window resize
@@ -363,6 +347,9 @@
         /**
          * Toggle sidebar
          */
+        /**
+         * Toggle sidebar
+         */
         toggleSidebar() {
             if (this.sidebar.classList.contains('active')) {
                 this.closeSidebar();
@@ -374,10 +361,12 @@
         /**
          * Open sidebar
          */
+        /**
+         * Open sidebar
+         */
         openSidebar() {
             this.sidebar.classList.add('active');
             this.overlay.classList.add('active');
-            this.hamburger.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
         
@@ -387,7 +376,6 @@
         closeSidebar() {
             this.sidebar.classList.remove('active');
             this.overlay.classList.remove('active');
-            this.hamburger.classList.remove('active');
             document.body.style.overflow = '';
         }
         
@@ -416,22 +404,14 @@
         /**
          * Handle window resize
          */
+        /**
+         * Handle window resize
+         */
         handleResize() {
             const newIsMobile = window.innerWidth < 768;
             const newIsTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
             
-            if (newIsMobile !== this.isMobile) {
-                this.isMobile = newIsMobile;
-                
-                if (this.isMobile && !this.mobileNav) {
-                    this.createBottomNav();
-                } else if (!this.isMobile && this.mobileNav) {
-                    this.mobileNav.remove();
-                    this.mobileNav = null;
-                    document.body.style.paddingBottom = '';
-                }
-            }
-            
+            this.isMobile = newIsMobile;
             this.isTablet = newIsTablet;
         }
         
