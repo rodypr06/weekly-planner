@@ -48,10 +48,17 @@
         /**
          * Create mobile navigation elements
          */
-        /**
-         * Create mobile navigation elements
-         */
         createMobileElements() {
+            // Create mobile header with hamburger menu
+            if (!document.querySelector('.mobile-header') && this.isMobile) {
+                this.createMobileHeader();
+            }
+            
+            // Create floating menu button as fallback
+            if (!document.querySelector('.floating-menu-btn') && this.isMobile && !this.hamburger) {
+                this.createFloatingMenuButton();
+            }
+            
             // Create sidebar
             if (!document.querySelector('.mobile-sidebar')) {
                 this.createSidebar();
@@ -64,8 +71,41 @@
         }
         
         /**
-         * Create mobile header with hamburger menu
+         * Create floating menu button as fallback
          */
+        createFloatingMenuButton() {
+            const floatingBtn = document.createElement('button');
+            floatingBtn.className = 'floating-menu-btn';
+            floatingBtn.innerHTML = `
+                <i class="fas fa-bars"></i>
+            `;
+            floatingBtn.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1000;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: rgba(79, 70, 229, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                cursor: pointer;
+                transition: all 0.3s ease;
+            `;
+            
+            document.body.appendChild(floatingBtn);
+            
+            floatingBtn.addEventListener('click', () => this.toggleSidebar());
+            this.floatingMenuBtn = floatingBtn;
+        }
+        
         /**
          * Create mobile header with hamburger menu
          */
@@ -79,7 +119,7 @@
                         <div class="hamburger-line"></div>
                         <div class="hamburger-line"></div>
                     </div>
-                    <h1 class="text-responsive-lg font-semibold">Weekly Planner</h1>
+                    <h1 class="text-responsive-lg font-semibold">Smart Planner</h1>
                     <div class="w-10"></div>
                 </div>
             `;
@@ -205,10 +245,12 @@
         /**
          * Attach event listeners
          */
-        /**
-         * Attach event listeners
-         */
         attachEventListeners() {
+            // Hamburger menu
+            if (this.hamburger) {
+                this.hamburger.addEventListener('click', () => this.toggleSidebar());
+            }
+            
             // Close sidebar
             const closeSidebar = document.getElementById('close-sidebar');
             if (closeSidebar) {
@@ -361,12 +403,16 @@
         /**
          * Open sidebar
          */
-        /**
-         * Open sidebar
-         */
         openSidebar() {
-            this.sidebar.classList.add('active');
-            this.overlay.classList.add('active');
+            if (this.sidebar) {
+                this.sidebar.classList.add('active');
+            }
+            if (this.overlay) {
+                this.overlay.classList.add('active');
+            }
+            if (this.hamburger) {
+                this.hamburger.classList.add('active');
+            }
             document.body.style.overflow = 'hidden';
         }
         
@@ -374,8 +420,15 @@
          * Close sidebar
          */
         closeSidebar() {
-            this.sidebar.classList.remove('active');
-            this.overlay.classList.remove('active');
+            if (this.sidebar) {
+                this.sidebar.classList.remove('active');
+            }
+            if (this.overlay) {
+                this.overlay.classList.remove('active');
+            }
+            if (this.hamburger) {
+                this.hamburger.classList.remove('active');
+            }
             document.body.style.overflow = '';
         }
         
@@ -544,4 +597,11 @@
     } else {
         window.mobileNav = new MobileNavigation();
     }
+    
+    // Re-initialize when authentication state changes
+    window.addEventListener('authStateChanged', () => {
+        if (window.mobileNav) {
+            window.mobileNav.handleResize();
+        }
+    });
 })();
