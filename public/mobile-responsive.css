@@ -220,6 +220,17 @@ select {
     transform: rotate(-45deg) translateY(-6px);
 }
 
+/* Adjust main content for mobile header */
+@media (max-width: 767px) {
+    #main-app {
+        margin-top: calc(60px + env(safe-area-inset-top)) !important;
+    }
+    
+    body.authenticated #main-app {
+        margin-top: calc(60px + env(safe-area-inset-top)) !important;
+    }
+}
+
 /* Mobile Sidebar */
 .mobile-sidebar {
     position: fixed;
