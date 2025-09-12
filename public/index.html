@@ -1283,6 +1283,171 @@
                 renderTasks();
             };
 
+            // --- Natural Language Date/Time Parser ---
+            const parseNaturalLanguage = (text) => {
+                const result = {
+                    cleanText: text,
+                    date: selectedDate, // Default to selected date
+                    time: null
+                };
+
+                // Convert to lowercase for easier parsing
+                const lowerText = text.toLowerCase();
+
+                // Time extraction patterns
+                const timePatterns = [
+                    /\bat\s+(\d{1,2}):?(\d{2})?\s*(am|pm|a\.m\.|p\.m\.)/gi,
+                    /\bat\s+(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)/gi,
+                    /\bat\s+(\d{1,2}):(\d{2})/gi,
+                    /(\d{1,2}):(\d{2})\s*(am|pm|a\.m\.|p\.m\.)/gi,
+                    /(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)/gi
+                ];
+
+                // Extract time
+                let timeMatch = null;
+                let timeString = '';
+                for (const pattern of timePatterns) {
+                    timeMatch = lowerText.match(pattern);
+                    if (timeMatch) {
+                        timeString = timeMatch[0];
+                        break;
+                    }
+                }
+
+                if (timeMatch) {
+                    // Parse time components
+                    const cleanTimeString = timeString.replace(/\bat\s+/gi, '').trim();
+                    let hour, minute;
+                    
+                    if (cleanTimeString.includes(':')) {
+                        const parts = cleanTimeString.split(':');
+                        hour = parseInt(parts[0]);
+                        minute = parseInt(parts[1].replace(/[^\d]/g, ''));
+                    } else {
+                        hour = parseInt(cleanTimeString.replace(/[^\d]/g, ''));
+                        minute = 0;
+                    }
+
+                    // Handle AM/PM
+                    if (cleanTimeString.includes('pm') || cleanTimeString.includes('p.m.')) {
+                        if (hour !== 12) hour += 12;
+                    } else if (cleanTimeString.includes('am') || cleanTimeString.includes('a.m.')) {
+                        if (hour === 12) hour = 0;
+                    }
+
+                    // Format time as HH:MM
+                    result.time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    
+                    // Remove time from text
+                    result.cleanText = text.replace(new RegExp(timeString, 'gi'), '').trim();
+                }
+
+                // Date parsing - get today's date for relative calculations
+                const today = new Date();
+                const todayISO = toISODateString(today);
+
+                // Date patterns and their corresponding logic
+                const datePatterns = {
+                    'tomorrow': () => {
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return toISODateString(tomorrow);
+                    },
+                    'today': () => todayISO,
+                    'next week': () => {
+                        const nextWeek = new Date(today);
+                        nextWeek.setDate(nextWeek.getDate() + 7);
+                        return toISODateString(nextWeek);
+                    },
+                    'next monday': () => {
+                        const nextMonday = new Date(today);
+                        const daysUntilMonday = (1 - nextMonday.getDay() + 7) % 7 || 7;
+                        nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
+                        return toISODateString(nextMonday);
+                    },
+                    'next tuesday': () => {
+                        const nextTuesday = new Date(today);
+                        const daysUntilTuesday = (2 - nextTuesday.getDay() + 7) % 7 || 7;
+                        nextTuesday.setDate(nextTuesday.getDate() + daysUntilTuesday);
+                        return toISODateString(nextTuesday);
+                    },
+                    'next wednesday': () => {
+                        const nextWednesday = new Date(today);
+                        const daysUntilWednesday = (3 - nextWednesday.getDay() + 7) % 7 || 7;
+                        nextWednesday.setDate(nextWednesday.getDate() + daysUntilWednesday);
+                        return toISODateString(nextWednesday);
+                    },
+                    'next thursday': () => {
+                        const nextThursday = new Date(today);
+                        const daysUntilThursday = (4 - nextThursday.getDay() + 7) % 7 || 7;
+                        nextThursday.setDate(nextThursday.getDate() + daysUntilThursday);
+                        return toISODateString(nextThursday);
+                    },
+                    'next friday': () => {
+                        const nextFriday = new Date(today);
+                        const daysUntilFriday = (5 - nextFriday.getDay() + 7) % 7 || 7;
+                        nextFriday.setDate(nextFriday.getDate() + daysUntilFriday);
+                        return toISODateString(nextFriday);
+                    },
+                    'next saturday': () => {
+                        const nextSaturday = new Date(today);
+                        const daysUntilSaturday = (6 - nextSaturday.getDay() + 7) % 7 || 7;
+                        nextSaturday.setDate(nextSaturday.getDate() + daysUntilSaturday);
+                        return toISODateString(nextSaturday);
+                    },
+                    'next sunday': () => {
+                        const nextSunday = new Date(today);
+                        const daysUntilSunday = (7 - nextSunday.getDay()) % 7 || 7;
+                        nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
+                        return toISODateString(nextSunday);
+                    }
+                };
+
+                // Check for date patterns in the text
+                for (const [pattern, dateFunc] of Object.entries(datePatterns)) {
+                    if (lowerText.includes(pattern)) {
+                        result.date = dateFunc();
+                        // Remove the date phrase from the text
+                        const regex = new RegExp(pattern, 'gi');
+                        result.cleanText = result.cleanText.replace(regex, '').trim();
+                        break;
+                    }
+                }
+
+                // Clean up extra whitespace and common words
+                result.cleanText = result.cleanText
+                    .replace(/\s+/g, ' ')
+                    .replace(/\b(remind me to|reminder to|reminder)\b/gi, '')
+                    .replace(/\b(on|at)\b\s*/gi, '')
+                    .trim();
+
+                return result;
+            };
+
+            // --- Test Natural Language Parser (for debugging) ---
+            const testNaturalLanguageParser = () => {
+                const testCases = [
+                    "Remind me to create email filters for RodyTech emails tomorrow at 1pm",
+                    "Meeting with John next Monday at 9:30am", 
+                    "Buy groceries today at 5pm",
+                    "Call mom next Friday",
+                    "Dentist appointment next Tuesday at 2:00 PM"
+                ];
+
+                console.log("🧪 Natural Language Parser Tests:");
+                testCases.forEach((testCase, index) => {
+                    const result = parseNaturalLanguage(testCase);
+                    console.log(`${index + 1}. "${testCase}"`);
+                    console.log(`   → Date: ${result.date}`);
+                    console.log(`   → Time: ${result.time || 'none'}`);
+                    console.log(`   → Clean Text: "${result.cleanText}"`);
+                    console.log("");
+                });
+            };
+
+            // Run tests (remove this line after testing)
+            // testNaturalLanguageParser();
+
             // --- Event Listeners ---
             taskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -1296,20 +1461,18 @@
                 addSpinner.classList.remove('hidden');
                 addBtnText.classList.add('hidden');
                 
-                const emojiPrompt = `Based on the task "${taskText}", suggest one single, relevant emoji. Only return the emoji itself.`;
-                const emoji = await callGemini(emojiPrompt) || '📝';
+                // Parse natural language for date and time
+                const parsedInput = parseNaturalLanguage(taskText);
                 
-                const now = new Date();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const currentTime = `${hours}:${minutes}`;
+                const emojiPrompt = `Based on the task "${parsedInput.cleanText}", suggest one single, relevant emoji. Only return the emoji itself.`;
+                const emoji = await callGemini(emojiPrompt) || '📝';
 
                 const task = {
                     id: Date.now(),
-                    date: selectedDate, // Assign to the selected date
-                    text: taskText,
+                    date: parsedInput.date, // Use parsed date instead of selectedDate
+                    text: parsedInput.cleanText, // Use cleaned text without date/time phrases
                     emoji: emoji.trim(),
-                    time: timeInput.value || null,
+                    time: timeInput.value || parsedInput.time, // Prefer manual time input, fallback to parsed time
                     priority: priorityInput.value,
                     tags: tagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
                     completed: false
