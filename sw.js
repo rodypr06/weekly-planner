@@ -63,6 +63,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Allow non-GET requests (like Supabase auth) to bypass the service worker entirely
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
