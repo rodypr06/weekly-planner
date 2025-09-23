@@ -17,9 +17,20 @@ const { createAuthRoutes } = require('./routes/auth');
 const PORT = process.env.PORT || 2324;
 
 // Validate required environment variables
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const sanitizeSupabaseUrl = (value) => {
+    if (!value) return '';
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    const hasProtocol = /^https?:\/\//i.test(trimmed);
+    const withProtocol = hasProtocol ? trimmed : `https://${trimmed}`;
+    return withProtocol.replace(/\/+$/, '');
+};
+
+const sanitizeKey = (value) => (typeof value === 'string' ? value.trim() : value || '');
+
+const supabaseUrl = sanitizeSupabaseUrl(process.env.SUPABASE_URL);
+const supabaseServiceKey = sanitizeKey(process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabaseAnonKey = sanitizeKey(process.env.SUPABASE_ANON_KEY);
 
 if (!supabaseUrl || !supabaseServiceKey) {
     logger.error('Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');

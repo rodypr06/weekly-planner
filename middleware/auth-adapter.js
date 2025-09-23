@@ -198,6 +198,7 @@ class JWTAuthAdapter {
         this.type = 'jwt';
         this.config = config;
         this.supabase = config.supabase;
+        this.normalizedConfig = this.normalizeClientConfig(config);
     }
 
     /**
@@ -296,9 +297,26 @@ class JWTAuthAdapter {
      * Get Supabase configuration for client-side
      */
     getClientConfig() {
+        return this.normalizedConfig;
+    }
+
+    /**
+     * Normalize Supabase client configuration values
+     */
+    normalizeClientConfig(config) {
+        const sanitizeUrl = (value) => {
+            if (typeof value !== 'string') return '';
+            const trimmed = value.trim();
+            if (!trimmed) return '';
+            const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+            return withProtocol.replace(/\/+$/, '');
+        };
+
+        const sanitizeKey = (value) => (typeof value === 'string' ? value.trim() : '');
+
         return {
-            supabaseUrl: this.config.supabaseUrl,
-            supabaseAnonKey: this.config.supabaseAnonKey
+            supabaseUrl: sanitizeUrl(config.supabaseUrl),
+            supabaseAnonKey: sanitizeKey(config.supabaseAnonKey)
         };
     }
 }

@@ -1103,6 +1103,9 @@
             
             // --- Authentication Management ---
             let currentUser = null;
+            let appInitialized = false;
+            let renderTasks;
+            let renderWeek;
             
             // Auth element selectors
             const authModal = document.getElementById('auth-modal');
@@ -1173,10 +1176,28 @@
                 authMessageText.className = `text-sm text-center ${type === 'success' ? 'text-emerald-400' : 'text-red-400'}`;
                 authMessageText.textContent = message;
                 authMessage.classList.remove('hidden');
-                
+
                 setTimeout(() => {
                     authMessage.classList.add('hidden');
                 }, 5000);
+            }
+
+            function openModal(modalEl) {
+                if (!modalEl) return;
+                modalEl.classList.remove('invisible', 'opacity-0');
+                const modalContent = modalEl.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95');
+                }
+            }
+
+            function closeModal(modalEl) {
+                if (!modalEl) return;
+                modalEl.classList.add('invisible', 'opacity-0');
+                const modalContent = modalEl.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.classList.add('scale-95');
+                }
             }
             
             // Form switching
@@ -1227,6 +1248,7 @@
                     if (result.success) {
                         currentUser = result.user;
                         showMainApp();
+                        await initializeMainApp();
                         showMessage('Welcome back!', 'success');
                     } else {
                         showMessage(result.error || 'Login failed');
@@ -1272,6 +1294,7 @@
                         } else {
                             currentUser = result.user;
                             showMainApp();
+                            await initializeMainApp();
                             showMessage('Account created successfully!', 'success');
                         }
                     } else {
@@ -1379,1600 +1402,1596 @@
             // Initialize authentication check
             await checkAuth();
             
-            // Only initialize main app if authenticated
-            if (!currentUser) return;
-            
-            // Wait for ApiClient to be ready before initializing UI that uses AI
-            try {
-                await waitForApiClient();
-                logger.log('All dependencies loaded, initializing main app...');
-            } catch (error) {
-                logger.error('ApiClient failed to load:', error);
-                // Continue anyway, but AI features may not work
-            }
-            
-            // --- Element Selectors ---
-            const taskForm = document.getElementById('add-task-form');
-            const taskInput = document.getElementById('task-input');
-            const timeInput = document.getElementById('time-input');
-            const priorityInput = document.getElementById('priority-input');
-            const tagsInput = document.getElementById('tags-input');
-            const taskList = document.getElementById('task-list');
-            const taskCounter = document.getElementById('task-counter');
-            const addTaskBtn = document.getElementById('add-task-btn');
-            const addBtnText = document.getElementById('add-btn-text');
-            const addSpinner = document.getElementById('add-spinner');
-            const suggestTasksBtn = document.getElementById('suggest-tasks-btn');
-            const weekDaysContainer = document.getElementById('week-days-container');
-            const prevWeekBtn = document.getElementById('prev-week-btn');
-            const nextWeekBtn = document.getElementById('next-week-btn');
-            const currentWeekDisplay = document.getElementById('current-week-display');
-            const newTaskDate = document.getElementById('new-task-date');
-            const taskListDate = document.getElementById('task-list-date');
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            const copyrightEl = document.getElementById('copyright');
+            async function initializeMainApp() {
+                if (appInitialized) {
+                    if (typeof renderWeek === 'function') {
+                        renderWeek();
+                    }
+                    if (typeof renderTasks === 'function') {
+                        await renderTasks();
+                    }
+                    return;
+                }
 
-            const filterContainer = document.getElementById('filter-container');
-            const activeFilterTag = document.getElementById('active-filter-tag');
-            const clearFilterBtn = document.getElementById('clear-filter-btn');
-            // const smartPlanBtn = document.getElementById('smart-plan-btn'); // Smart Plan disabled
-            const clearAllBtn = document.getElementById('clear-all-btn');
-            
-            // Modal Selectors
-            const suggestModal = document.getElementById('suggest-modal');
-            const generateTasksBtn = document.getElementById('generate-tasks-btn');
-            const generateBtnText = document.getElementById('generate-btn-text');
-            const generateSpinner = document.getElementById('generate-spinner');
-            const goalInput = document.getElementById('goal-input');
-            const cancelSuggestBtn = document.getElementById('cancel-suggest-btn');
+                appInitialized = true;
 
-            const editModal = document.getElementById('edit-modal');
-            const editTaskForm = document.getElementById('edit-task-form');
-            const editTaskId = document.getElementById('edit-task-id');
-            const editTaskText = document.getElementById('edit-task-text');
-            const editTaskTime = document.getElementById('edit-task-time');
-            const editTaskPriority = document.getElementById('edit-task-priority');
-            const editTaskTags = document.getElementById('edit-task-tags');
-            const cancelEditBtn = document.getElementById('cancel-edit-btn');
-            
-            const confirmClearModal = document.getElementById('confirm-clear-modal');
-            const cancelClearBtn = document.getElementById('cancel-clear-btn');
-            const confirmClearBtn = document.getElementById('confirm-clear-btn');
-            
-            // Celebration modal selectors
-            const celebrationModal = document.getElementById('celebration-modal');
-            const celebrationTaskCount = document.getElementById('celebration-task-count');
-            const celebrationQuote = document.getElementById('celebration-quote');
-            const addTomorrowTasksBtn = document.getElementById('add-tomorrow-tasks-btn');
-            const closeCelebrationBtn = document.getElementById('close-celebration-btn');
-            
-            // Archive selectors
-            const archiveToggleBtn = document.getElementById('archive-toggle-btn');
-            const archiveToggleText = document.getElementById('archive-toggle-text');
-            const archiveCount = document.getElementById('archive-count');
-            const archiveIndicator = document.getElementById('archive-indicator');
-            
-            // --- State ---
-            let allTasks = [];
-            let currentDate = new Date();
-            let selectedDate = new Date();
-            let currentFilter = null;
-            let synth = null;
-            let audioContextStarted = false;
-            let showingArchive = false;
-            let positionColumnExists = true; // Assume it exists until we find out otherwise
-            
-            // Initialize audio context after user interaction
-            const initAudio = async () => {
-                if (!audioContextStarted) {
-                    try {
-                        // Load Tone.js if not already loaded
-                        if (!window.Tone) {
-                            window.loadTone();
-                            // Wait for Tone.js to load
-                            await new Promise(resolve => {
-                                const checkTone = () => {
-                                    if (window.Tone) resolve();
-                                    else setTimeout(checkTone, 50);
-                                };
-                                checkTone();
+                
+                // Wait for ApiClient to be ready before initializing UI that uses AI
+                try {
+                    await waitForApiClient();
+                    logger.log('All dependencies loaded, initializing main app...');
+                } catch (error) {
+                    logger.error('ApiClient failed to load:', error);
+                    // Continue anyway, but AI features may not work
+                }
+                
+                // --- Element Selectors ---
+                const taskForm = document.getElementById('add-task-form');
+                const taskInput = document.getElementById('task-input');
+                const timeInput = document.getElementById('time-input');
+                const priorityInput = document.getElementById('priority-input');
+                const tagsInput = document.getElementById('tags-input');
+                const taskList = document.getElementById('task-list');
+                const taskCounter = document.getElementById('task-counter');
+                const addTaskBtn = document.getElementById('add-task-btn');
+                const addBtnText = document.getElementById('add-btn-text');
+                const addSpinner = document.getElementById('add-spinner');
+                const suggestTasksBtn = document.getElementById('suggest-tasks-btn');
+                const weekDaysContainer = document.getElementById('week-days-container');
+                const prevWeekBtn = document.getElementById('prev-week-btn');
+                const nextWeekBtn = document.getElementById('next-week-btn');
+                const currentWeekDisplay = document.getElementById('current-week-display');
+                const newTaskDate = document.getElementById('new-task-date');
+                const taskListDate = document.getElementById('task-list-date');
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                const copyrightEl = document.getElementById('copyright');
+
+                const filterContainer = document.getElementById('filter-container');
+                const activeFilterTag = document.getElementById('active-filter-tag');
+                const clearFilterBtn = document.getElementById('clear-filter-btn');
+                // const smartPlanBtn = document.getElementById('smart-plan-btn'); // Smart Plan disabled
+                const clearAllBtn = document.getElementById('clear-all-btn');
+                
+                // Modal Selectors
+                const suggestModal = document.getElementById('suggest-modal');
+                const generateTasksBtn = document.getElementById('generate-tasks-btn');
+                const generateBtnText = document.getElementById('generate-btn-text');
+                const generateSpinner = document.getElementById('generate-spinner');
+                const goalInput = document.getElementById('goal-input');
+                const cancelSuggestBtn = document.getElementById('cancel-suggest-btn');
+
+                const editModal = document.getElementById('edit-modal');
+                const editTaskForm = document.getElementById('edit-task-form');
+                const editTaskId = document.getElementById('edit-task-id');
+                const editTaskText = document.getElementById('edit-task-text');
+                const editTaskTime = document.getElementById('edit-task-time');
+                const editTaskPriority = document.getElementById('edit-task-priority');
+                const editTaskTags = document.getElementById('edit-task-tags');
+                const cancelEditBtn = document.getElementById('cancel-edit-btn');
+                
+                const confirmClearModal = document.getElementById('confirm-clear-modal');
+                const cancelClearBtn = document.getElementById('cancel-clear-btn');
+                const confirmClearBtn = document.getElementById('confirm-clear-btn');
+                
+                // Celebration modal selectors
+                const celebrationModal = document.getElementById('celebration-modal');
+                const celebrationTaskCount = document.getElementById('celebration-task-count');
+                const celebrationQuote = document.getElementById('celebration-quote');
+                const addTomorrowTasksBtn = document.getElementById('add-tomorrow-tasks-btn');
+                const closeCelebrationBtn = document.getElementById('close-celebration-btn');
+                
+                // Archive selectors
+                const archiveToggleBtn = document.getElementById('archive-toggle-btn');
+                const archiveToggleText = document.getElementById('archive-toggle-text');
+                const archiveCount = document.getElementById('archive-count');
+                const archiveIndicator = document.getElementById('archive-indicator');
+                
+                // --- State ---
+                let allTasks = [];
+                let currentDate = new Date();
+                let selectedDate = new Date();
+                let currentFilter = null;
+                let synth = null;
+                let audioContextStarted = false;
+                let showingArchive = false;
+                let positionColumnExists = true; // Assume it exists until we find out otherwise
+                
+                // Initialize audio context after user interaction
+                const initAudio = async () => {
+                    if (!audioContextStarted) {
+                        try {
+                            // Load Tone.js if not already loaded
+                            if (!window.Tone) {
+                                window.loadTone();
+                                // Wait for Tone.js to load
+                                await new Promise(resolve => {
+                                    const checkTone = () => {
+                                        if (window.Tone) resolve();
+                                        else setTimeout(checkTone, 50);
+                                    };
+                                    checkTone();
+                                });
+                            }
+                            await Tone.start();
+                            synth = new Tone.Synth().toDestination();
+                            audioContextStarted = true;
+                            // Audio context started successfully
+                        } catch (error) {
+                            logger.warn('Audio initialization failed:', error);
+                        }
+                    }
+                };
+
+                // --- Celebration Functions ---
+                const motivationalQuotes = [
+                    "Success is the sum of small efforts repeated day in and day out.",
+                    "You are what you do, not what you say you'll do.",
+                    "The way to get started is to quit talking and begin doing.",
+                    "Productivity is being able to do things that you were never able to do before.",
+                    "Excellence is never an accident. It is always the result of high intention.",
+                    "The future depends on what you do today.",
+                    "Don't wait for opportunity. Create it.",
+                    "Success is where preparation and opportunity meet."
+                ];
+
+                const checkAllTasksCompleted = () => {
+                    const tasksForToday = allTasks.filter(task => !currentFilter || task.tags.includes(currentFilter));
+                    if (tasksForToday.length > 0) {
+                        const allCompleted = tasksForToday.every(task => task.completed);
+                        return { allCompleted, totalTasks: tasksForToday.length };
+                    }
+                    return { allCompleted: false, totalTasks: 0 };
+                };
+
+                const triggerCelebration = async (taskCount) => {
+                    // Load confetti if not already loaded
+                    if (!window.confetti) {
+                        window.loadConfetti();
+                        // Wait for confetti to load
+                        await new Promise(resolve => {
+                            const checkConfetti = () => {
+                                if (window.confetti) resolve();
+                                else setTimeout(checkConfetti, 50);
+                            };
+                            checkConfetti();
+                        });
+                    }
+                    
+                    // Epic confetti explosion
+                    const duration = 3000;
+                    const end = Date.now() + duration;
+                    
+                    const colors = ['#818cf8', '#c084fc', '#f472b6', '#4ade80', '#fbbf24', '#f97316'];
+                    
+                    (function frame() {
+                        if (typeof confetti === 'function') {
+                            confetti({
+                                particleCount: 15,
+                                angle: 60,
+                                spread: 55,
+                                origin: { x: 0 },
+                                colors: colors
+                            });
+                            confetti({
+                                particleCount: 15,
+                                angle: 120,
+                                spread: 55,
+                                origin: { x: 1 },
+                                colors: colors
                             });
                         }
-                        await Tone.start();
-                        synth = new Tone.Synth().toDestination();
-                        audioContextStarted = true;
-                        // Audio context started successfully
+                        
+                        if (Date.now() < end) {
+                            requestAnimationFrame(frame);
+                        }
+                    })();
+                    
+                    // Play celebration sound sequence
+                    try {
+                        if (synth && audioContextStarted) {
+                            synth.triggerAttackRelease("C5", "8n");
+                            setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
+                            setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 400);
+                            setTimeout(() => synth.triggerAttackRelease("C6", "4n"), 600);
+                        }
                     } catch (error) {
-                        logger.warn('Audio initialization failed:', error);
+                        logger.warn('Celebration sound failed:', error);
+                    }
+                    
+                    // Update celebration modal content
+                    celebrationTaskCount.textContent = taskCount;
+                    const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+                    celebrationQuote.textContent = randomQuote;
+                    
+                    // Show celebration modal with delay for effect
+                    setTimeout(() => {
+                        openModal(celebrationModal);
+                    }, 800);
+                };
+
+                // --- Helper Functions ---
+                const escapeHtml = (text) => {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                };
+                
+                const toISODateString = (date) => {
+                    const d = new Date(date);
+                    d.setHours(0,0,0,0);
+                    return d.toISOString().split('T')[0];
+                };
+                selectedDate = toISODateString(selectedDate);
+                
+                // --- Initialization ---
+                const today = new Date();
+                copyrightEl.innerHTML = `&copy; ${today.getFullYear()} RodyTech LLC. All Rights Reserved.`;
+
+                // --- API Functions ---
+                const fetchTasks = async (date, includeArchived = false) => {
+                    try {
+                        return await ApiClient.fetchTasks(date, includeArchived);
+                    } catch (error) {
+                        logger.error('Error fetching tasks:', error);
+                        return [];
+                    }
+                };
+
+                const saveTask = async (task) => {
+                    try {
+                        return await ApiClient.saveTask(task);
+                    } catch (error) {
+                        logger.error('Error saving task:', error);
+                        throw error;
+                    }
+                };
+
+                const updateTask = async (id, updates) => {
+                    try {
+                        return await ApiClient.updateTask(id, updates);
+                    } catch (error) {
+                        logger.error('Error updating task:', error);
+                        throw error;
+                    }
+                };
+
+                const deleteTask = async (id) => {
+                    try {
+                        return await ApiClient.deleteTask(id);
+                    } catch (error) {
+                        logger.error('Error deleting task:', error);
+                        throw error;
+                    }
+                };
+
+                const clearAllTasks = async () => {
+                    try {
+                        return await ApiClient.clearAllTasks();
+                    } catch (error) {
+                        logger.error('Error clearing tasks:', error);
+                        throw error;
+                    }
+                };
+
+                // --- Archive API Functions ---
+                const archiveCompletedTasks = async (date) => {
+                    try {
+                        return await ApiClient.archiveTasks(date);
+                    } catch (error) {
+                        logger.error('Error archiving tasks:', error);
+                        throw error;
+                    }
+                };
+
+                const unarchiveTasks = async (taskIds) => {
+                    try {
+                        return await ApiClient.unarchiveTasks(taskIds);
+                    } catch (error) {
+                        logger.error('Error unarchiving tasks:', error);
+                        throw error;
+                    }
+                };
+
+                const updateArchiveUI = async () => {
+                    try {
+                        // Get archived tasks count for current date
+                        const archivedTasks = await fetchTasks(selectedDate, true);
+                        const archivedCount = archivedTasks.filter(task => task.archived).length;
+                        
+                        if (archivedCount > 0) {
+                            archiveCount.textContent = archivedCount;
+                            archiveCount.classList.remove('hidden');
+                        } else {
+                            archiveCount.classList.add('hidden');
+                        }
+                        
+                        // Update UI based on current view
+                        if (showingArchive) {
+                            archiveToggleText.textContent = 'Active';
+                            archiveIndicator.classList.remove('hidden');
+                            archiveToggleBtn.classList.add('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
+                            archiveToggleBtn.classList.remove('bg-black/20', 'border-white/10', 'text-gray-400');
+                        } else {
+                            archiveToggleText.textContent = 'Archive';
+                            archiveIndicator.classList.add('hidden');
+                            archiveToggleBtn.classList.remove('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
+                            archiveToggleBtn.classList.add('bg-black/20', 'border-white/10', 'text-gray-400');
+                        }
+                    } catch (error) {
+                        logger.error('Error updating archive UI:', error);
+                    }
+                };
+
+                // --- Gemini API Call ---
+                async function callGemini(prompt) { 
+                    try {
+                        // Ensure ApiClient is loaded before using it
+                        if (!window.ApiClient || !window.ApiClient.callGemini) {
+                            throw new Error('ApiClient is not loaded or callGemini method is not available');
+                        }
+                        
+                        return await ApiClient.callGemini(prompt);
+                    } catch (error) {
+                        logger.error("Gemini API call failed:", error);
+                        
+                        // Provide more specific error messages
+                        if (error.message.includes('ApiClient')) {
+                            alert('AI feature is not ready yet. Please wait a moment and try again.');
+                        } else if (error.message.includes('Authentication')) {
+                            alert('Please log in to use AI features.');
+                        } else {
+                            alert(`AI feature failed: ${error.message}`);
+                        }
+                        return null;
                     }
                 }
-            };
 
-            // --- Celebration Functions ---
-            const motivationalQuotes = [
-                "Success is the sum of small efforts repeated day in and day out.",
-                "You are what you do, not what you say you'll do.",
-                "The way to get started is to quit talking and begin doing.",
-                "Productivity is being able to do things that you were never able to do before.",
-                "Excellence is never an accident. It is always the result of high intention.",
-                "The future depends on what you do today.",
-                "Don't wait for opportunity. Create it.",
-                "Success is where preparation and opportunity meet."
-            ];
+                // --- Core Functions ---
+                renderWeek = () => {
+                    weekDaysContainer.innerHTML = '';
+                    const weekStart = new Date(currentDate);
+                    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of the week (Sunday)
+                    
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
 
-            const checkAllTasksCompleted = () => {
-                const tasksForToday = allTasks.filter(task => !currentFilter || task.tags.includes(currentFilter));
-                if (tasksForToday.length > 0) {
-                    const allCompleted = tasksForToday.every(task => task.completed);
-                    return { allCompleted, totalTasks: tasksForToday.length };
-                }
-                return { allCompleted: false, totalTasks: 0 };
-            };
+                    currentWeekDisplay.textContent = `${weekStart.toLocaleDateString('en-US', {month: 'long', day: 'numeric'})} - ${weekEnd.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}`;
 
-            const triggerCelebration = async (taskCount) => {
-                // Load confetti if not already loaded
-                if (!window.confetti) {
-                    window.loadConfetti();
-                    // Wait for confetti to load
-                    await new Promise(resolve => {
-                        const checkConfetti = () => {
-                            if (window.confetti) resolve();
-                            else setTimeout(checkConfetti, 50);
-                        };
-                        checkConfetti();
-                    });
-                }
-                
-                // Epic confetti explosion
-                const duration = 3000;
-                const end = Date.now() + duration;
-                
-                const colors = ['#818cf8', '#c084fc', '#f472b6', '#4ade80', '#fbbf24', '#f97316'];
-                
-                (function frame() {
-                    if (typeof confetti === 'function') {
-                        confetti({
-                            particleCount: 15,
-                            angle: 60,
-                            spread: 55,
-                            origin: { x: 0 },
-                            colors: colors
+                    for (let i = 0; i < 7; i++) {
+                        const day = new Date(weekStart);
+                        day.setDate(day.getDate() + i);
+                        const dayISO = toISODateString(day);
+                        
+                        const dayButton = document.createElement('button');
+                        dayButton.dataset.date = dayISO;
+                        dayButton.className = `day-selector p-2 rounded-lg text-center transition ${dayISO === selectedDate ? 'bg-indigo-500 text-white' : 'hover:bg-white/10'}`;
+                        dayButton.innerHTML = `<div class="text-xs opacity-75">${day.toLocaleDateString('en-US', {weekday: 'short'})}</div><div class="font-bold text-lg">${day.getDate()}</div>`;
+                        
+                        dayButton.addEventListener('click', () => {
+                            selectedDate = dayISO;
+                            renderWeek();
+                            renderTasks();
                         });
-                        confetti({
-                            particleCount: 15,
-                            angle: 120,
-                            spread: 55,
-                            origin: { x: 1 },
-                            colors: colors
-                        });
+                        
+                        weekDaysContainer.appendChild(dayButton);
                     }
-                    
-                    if (Date.now() < end) {
-                        requestAnimationFrame(frame);
-                    }
-                })();
+                    const selectedDateObj = new Date(selectedDate);
+                    selectedDateObj.setMinutes(selectedDateObj.getMinutes() + selectedDateObj.getTimezoneOffset());
+                    newTaskDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long'});
+                    taskListDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
+                };
+
+                // --- Drag and Drop Functions ---
+                let draggedElement = null;
+                let draggedTaskId = null;
+                let touchDragClone = null;
+                let touchStartY = 0;
+                let touchStartX = 0;
+                let isTouchDragging = false;
                 
-                // Play celebration sound sequence
-                try {
-                    if (synth && audioContextStarted) {
-                        synth.triggerAttackRelease("C5", "8n");
-                        setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
-                        setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 400);
-                        setTimeout(() => synth.triggerAttackRelease("C6", "4n"), 600);
-                    }
-                } catch (error) {
-                    logger.warn('Celebration sound failed:', error);
-                }
-                
-                // Update celebration modal content
-                celebrationTaskCount.textContent = taskCount;
-                const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-                celebrationQuote.textContent = randomQuote;
-                
-                // Show celebration modal with delay for effect
-                setTimeout(() => {
-                    openModal(celebrationModal);
-                }, 800);
-            };
-
-            // --- Helper Functions ---
-            const escapeHtml = (text) => {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            };
-            
-            const toISODateString = (date) => {
-                const d = new Date(date);
-                d.setHours(0,0,0,0);
-                return d.toISOString().split('T')[0];
-            };
-            selectedDate = toISODateString(selectedDate);
-            
-            // --- Initialization ---
-            const today = new Date();
-            copyrightEl.innerHTML = `&copy; ${today.getFullYear()} RodyTech LLC. All Rights Reserved.`;
-
-            // --- API Functions ---
-            const fetchTasks = async (date, includeArchived = false) => {
-                try {
-                    return await ApiClient.fetchTasks(date, includeArchived);
-                } catch (error) {
-                    logger.error('Error fetching tasks:', error);
-                    return [];
-                }
-            };
-
-            const saveTask = async (task) => {
-                try {
-                    return await ApiClient.saveTask(task);
-                } catch (error) {
-                    logger.error('Error saving task:', error);
-                    throw error;
-                }
-            };
-
-            const updateTask = async (id, updates) => {
-                try {
-                    return await ApiClient.updateTask(id, updates);
-                } catch (error) {
-                    logger.error('Error updating task:', error);
-                    throw error;
-                }
-            };
-
-            const deleteTask = async (id) => {
-                try {
-                    return await ApiClient.deleteTask(id);
-                } catch (error) {
-                    logger.error('Error deleting task:', error);
-                    throw error;
-                }
-            };
-
-            const clearAllTasks = async () => {
-                try {
-                    return await ApiClient.clearAllTasks();
-                } catch (error) {
-                    logger.error('Error clearing tasks:', error);
-                    throw error;
-                }
-            };
-
-            // --- Archive API Functions ---
-            const archiveCompletedTasks = async (date) => {
-                try {
-                    return await ApiClient.archiveTasks(date);
-                } catch (error) {
-                    logger.error('Error archiving tasks:', error);
-                    throw error;
-                }
-            };
-
-            const unarchiveTasks = async (taskIds) => {
-                try {
-                    return await ApiClient.unarchiveTasks(taskIds);
-                } catch (error) {
-                    logger.error('Error unarchiving tasks:', error);
-                    throw error;
-                }
-            };
-
-            const updateArchiveUI = async () => {
-                try {
-                    // Get archived tasks count for current date
-                    const archivedTasks = await fetchTasks(selectedDate, true);
-                    const archivedCount = archivedTasks.filter(task => task.archived).length;
-                    
-                    if (archivedCount > 0) {
-                        archiveCount.textContent = archivedCount;
-                        archiveCount.classList.remove('hidden');
-                    } else {
-                        archiveCount.classList.add('hidden');
-                    }
-                    
-                    // Update UI based on current view
-                    if (showingArchive) {
-                        archiveToggleText.textContent = 'Active';
-                        archiveIndicator.classList.remove('hidden');
-                        archiveToggleBtn.classList.add('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
-                        archiveToggleBtn.classList.remove('bg-black/20', 'border-white/10', 'text-gray-400');
-                    } else {
-                        archiveToggleText.textContent = 'Archive';
-                        archiveIndicator.classList.add('hidden');
-                        archiveToggleBtn.classList.remove('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
-                        archiveToggleBtn.classList.add('bg-black/20', 'border-white/10', 'text-gray-400');
-                    }
-                } catch (error) {
-                    logger.error('Error updating archive UI:', error);
-                }
-            };
-
-            // --- Gemini API Call ---
-            async function callGemini(prompt) { 
-                try {
-                    // Ensure ApiClient is loaded before using it
-                    if (!window.ApiClient || !window.ApiClient.callGemini) {
-                        throw new Error('ApiClient is not loaded or callGemini method is not available');
-                    }
-                    
-                    return await ApiClient.callGemini(prompt);
-                } catch (error) {
-                    logger.error("Gemini API call failed:", error);
-                    
-                    // Provide more specific error messages
-                    if (error.message.includes('ApiClient')) {
-                        alert('AI feature is not ready yet. Please wait a moment and try again.');
-                    } else if (error.message.includes('Authentication')) {
-                        alert('Please log in to use AI features.');
-                    } else {
-                        alert(`AI feature failed: ${error.message}`);
-                    }
-                    return null;
-                }
-            }
-
-            // --- Core Functions ---
-            const renderWeek = () => {
-                weekDaysContainer.innerHTML = '';
-                const weekStart = new Date(currentDate);
-                weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of the week (Sunday)
-                
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekEnd.getDate() + 6);
-
-                currentWeekDisplay.textContent = `${weekStart.toLocaleDateString('en-US', {month: 'long', day: 'numeric'})} - ${weekEnd.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}`;
-
-                for (let i = 0; i < 7; i++) {
-                    const day = new Date(weekStart);
-                    day.setDate(day.getDate() + i);
-                    const dayISO = toISODateString(day);
-                    
-                    const dayButton = document.createElement('button');
-                    dayButton.dataset.date = dayISO;
-                    dayButton.className = `day-selector p-2 rounded-lg text-center transition ${dayISO === selectedDate ? 'bg-indigo-500 text-white' : 'hover:bg-white/10'}`;
-                    dayButton.innerHTML = `<div class="text-xs opacity-75">${day.toLocaleDateString('en-US', {weekday: 'short'})}</div><div class="font-bold text-lg">${day.getDate()}</div>`;
-                    
-                    dayButton.addEventListener('click', () => {
-                        selectedDate = dayISO;
-                        renderWeek();
-                        renderTasks();
+                // Event delegation for task interactions to prevent memory leaks
+                const setupEventDelegation = () => {
+                    // Handle checkbox changes separately with change event
+                    taskList.addEventListener('change', async (e) => {
+                        if (e.target.matches('input[type="checkbox"]')) {
+                            const taskElement = e.target.closest('.task-item');
+                            if (!taskElement) return;
+                            
+                            const taskId = parseInt(taskElement.dataset.id);
+                            await toggleComplete(taskId, e);
+                        }
                     });
                     
-                    weekDaysContainer.appendChild(dayButton);
-                }
-                const selectedDateObj = new Date(selectedDate);
-                selectedDateObj.setMinutes(selectedDateObj.getMinutes() + selectedDateObj.getTimezoneOffset());
-                newTaskDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long'});
-                taskListDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
-            };
-
-            // --- Drag and Drop Functions ---
-            let draggedElement = null;
-            let draggedTaskId = null;
-            let touchDragClone = null;
-            let touchStartY = 0;
-            let touchStartX = 0;
-            let isTouchDragging = false;
-            
-            // Event delegation for task interactions to prevent memory leaks
-            const setupEventDelegation = () => {
-                // Handle checkbox changes separately with change event
-                taskList.addEventListener('change', async (e) => {
-                    if (e.target.matches('input[type="checkbox"]')) {
+                    // Single event listener for all other task interactions
+                    taskList.addEventListener('click', async (e) => {
                         const taskElement = e.target.closest('.task-item');
                         if (!taskElement) return;
                         
                         const taskId = parseInt(taskElement.dataset.id);
-                        await toggleComplete(taskId, e);
-                    }
-                });
-                
-                // Single event listener for all other task interactions
-                taskList.addEventListener('click', async (e) => {
-                    const taskElement = e.target.closest('.task-item');
-                    if (!taskElement) return;
+                        
+                        // Check if taskId is valid
+                        if (isNaN(taskId)) {
+                            console.error('Invalid task ID:', taskElement.dataset.id, 'Element:', taskElement);
+                            console.error('Task element attributes:', [...taskElement.attributes].map(a => `${a.name}=${a.value}`));
+                            return;
+                        }
+                        
+                        // Handle delete button
+                        if (e.target.closest('.delete-btn')) {
+                            await removeTask(taskId);
+                        }
+                        // Handle edit button
+                        else if (e.target.closest('.edit-btn')) {
+                            openEditModal(taskId);
+                        }
+                        // Handle tag clicks
+                        else if (e.target.matches('.tag-btn')) {
+                            filterByTag(e.target.textContent);
+                        }
+                    });
                     
-                    const taskId = parseInt(taskElement.dataset.id);
+                    // Drag and drop event delegation
+                    taskList.addEventListener('dragstart', (e) => {
+                        const taskElement = e.target.closest('.task-item');
+                        if (!taskElement || !taskElement.draggable) return;
+                        
+                        draggedElement = taskElement;
+                        draggedTaskId = parseInt(taskElement.dataset.id);
+                        taskElement.classList.add('dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/html', taskElement.outerHTML);
+                    });
                     
-                    // Check if taskId is valid
-                    if (isNaN(taskId)) {
-                        console.error('Invalid task ID:', taskElement.dataset.id, 'Element:', taskElement);
-                        console.error('Task element attributes:', [...taskElement.attributes].map(a => `${a.name}=${a.value}`));
-                        return;
-                    }
+                    taskList.addEventListener('dragend', (e) => {
+                        const taskElement = e.target.closest('.task-item');
+                        if (!taskElement) return;
+                        
+                        taskElement.classList.remove('dragging');
+                        draggedElement = null;
+                        draggedTaskId = null;
+                    });
                     
-                    // Handle delete button
-                    if (e.target.closest('.delete-btn')) {
-                        await removeTask(taskId);
-                    }
-                    // Handle edit button
-                    else if (e.target.closest('.edit-btn')) {
-                        openEditModal(taskId);
-                    }
-                    // Handle tag clicks
-                    else if (e.target.matches('.tag-btn')) {
-                        filterByTag(e.target.textContent);
-                    }
-                });
-                
-                // Drag and drop event delegation
-                taskList.addEventListener('dragstart', (e) => {
-                    const taskElement = e.target.closest('.task-item');
-                    if (!taskElement || !taskElement.draggable) return;
-                    
-                    draggedElement = taskElement;
-                    draggedTaskId = parseInt(taskElement.dataset.id);
-                    taskElement.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/html', taskElement.outerHTML);
-                });
-                
-                taskList.addEventListener('dragend', (e) => {
-                    const taskElement = e.target.closest('.task-item');
-                    if (!taskElement) return;
-                    
-                    taskElement.classList.remove('dragging');
-                    draggedElement = null;
-                    draggedTaskId = null;
-                });
-                
-                taskList.addEventListener('dragover', (e) => {
-                    const taskElement = e.target.closest('.task-item');
-                    if (!taskElement || taskElement === draggedElement) return;
-                    
-                    e.preventDefault();
-                    const afterElement = getDragAfterElement(taskList, e.clientY);
-                    
-                    if (afterElement == null) {
-                        taskList.appendChild(draggedElement);
-                    } else {
-                        taskList.insertBefore(draggedElement, afterElement);
-                    }
-                });
-                
-                taskList.addEventListener('drop', async (e) => {
-                    const taskElement = e.target.closest('.task-item');
-                    if (!taskElement) return;
-                    
-                    e.preventDefault();
-                    taskElement.classList.remove('drag-over');
-                    
-                    await updateTaskPositions();
-                });
-                
-                taskList.addEventListener('dragleave', (e) => {
-                    const taskElement = e.target.closest('.task-item');
-                    if (!taskElement) return;
-                    
-                    taskElement.classList.remove('drag-over');
-                });
-                
-                // Touch event delegation for mobile drag and drop
-                taskList.addEventListener('touchstart', (e) => {
-                    const dragHandle = e.target.closest('.drag-handle');
-                    if (!dragHandle) return;
-                    
-                    const taskElement = dragHandle.closest('.task-item');
-                    if (!taskElement || showingArchive) return;
-                    
-                    e.preventDefault();
-                    isTouchDragging = true;
-                    draggedElement = taskElement;
-                    draggedTaskId = parseInt(taskElement.dataset.id);
-                    
-                    const touch = e.touches[0];
-                    touchStartY = touch.clientY;
-                    touchStartX = touch.clientX;
-                    
-                    // Create a clone for visual feedback
-                    touchDragClone = taskElement.cloneNode(true);
-                    touchDragClone.style.position = 'fixed';
-                    touchDragClone.style.top = `${taskElement.getBoundingClientRect().top}px`;
-                    touchDragClone.style.left = `${taskElement.getBoundingClientRect().left}px`;
-                    touchDragClone.style.width = `${taskElement.offsetWidth}px`;
-                    touchDragClone.style.opacity = '0.8';
-                    touchDragClone.style.zIndex = '1000';
-                    touchDragClone.style.pointerEvents = 'none';
-                    touchDragClone.classList.add('dragging');
-                    document.body.appendChild(touchDragClone);
-                    
-                    taskElement.style.opacity = '0.3';
-                });
-                
-                document.addEventListener('touchmove', (e) => {
-                    if (!isTouchDragging || !touchDragClone) return;
-                    
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const deltaY = touch.clientY - touchStartY;
-                    const deltaX = touch.clientX - touchStartX;
-                    
-                    touchDragClone.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                    
-                    // Find element under touch point
-                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-                    const taskBelow = elementBelow?.closest('.task-item');
-                    
-                    if (taskBelow && taskBelow !== draggedElement) {
-                        const afterElement = getDragAfterElement(taskList, touch.clientY);
+                    taskList.addEventListener('dragover', (e) => {
+                        const taskElement = e.target.closest('.task-item');
+                        if (!taskElement || taskElement === draggedElement) return;
+                        
+                        e.preventDefault();
+                        const afterElement = getDragAfterElement(taskList, e.clientY);
+                        
                         if (afterElement == null) {
                             taskList.appendChild(draggedElement);
                         } else {
                             taskList.insertBefore(draggedElement, afterElement);
                         }
-                    }
-                });
-                
-                document.addEventListener('touchend', async (e) => {
-                    if (!isTouchDragging) return;
+                    });
                     
-                    isTouchDragging = false;
-                    
-                    if (touchDragClone) {
-                        touchDragClone.remove();
-                        touchDragClone = null;
-                    }
-                    
-                    if (draggedElement) {
-                        draggedElement.style.opacity = '';
-                        draggedElement = null;
-                        draggedTaskId = null;
-                    }
-                    
-                    await updateTaskPositions();
-                });
-            };
-            
-            // Helper function to get the element after which the dragged element should be inserted
-            const getDragAfterElement = (container, y) => {
-                const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
-                
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            };
-            
-            // New function to update task positions after drag and drop
-            const updateTaskPositions = async () => {
-                const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
-                const taskOrders = taskElements.map((el, index) => ({
-                    id: parseInt(el.dataset.id),
-                    position: index
-                }));
-                
-                try {
-                    const result = await ApiClient.reorderTasks(taskOrders);
-                    
-                    if (result.error) {
-                        throw new Error(result.error);
-                    }
-                    
-                    // Update the allTasks array with new positions
-                    if (result.tasks) {
-                        allTasks = allTasks.map(task => {
-                            const updatedTask = result.tasks.find(t => t.id === task.id);
-                            return updatedTask ? { ...task, position: updatedTask.position } : task;
-                        });
-                    }
-                } catch (error) {
-                    logger.error('Error updating task positions:', error);
-                    alert('Failed to save task order. Please refresh and try again.');
-                    await renderTasks();
-                }
-            };
-            
-            const handleTaskReorder = async (draggedId, targetId, placement = 'before') => {
-                try {
-                    // Check if user is authenticated before proceeding
-                    if (!currentUser) {
-                        alert('Please log in to reorder tasks.');
-                        return;
-                    }
-                    
-                    // Get current tasks order
-                    const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
-                    const draggedElement = taskElements.find(el => parseInt(el.dataset.id) === draggedId);
-                    const targetElement = taskElements.find(el => parseInt(el.dataset.id) === targetId);
-                    
-                    if (!draggedElement || !targetElement || draggedId === targetId) return;
-                    
-                    // Calculate new positions
-                    const taskOrders = [];
-                    let position = 0;
-                    
-                    for (const element of taskElements) {
-                        const elementId = parseInt(element.dataset.id);
+                    taskList.addEventListener('drop', async (e) => {
+                        const taskElement = e.target.closest('.task-item');
+                        if (!taskElement) return;
                         
-                        if (elementId === draggedId) {
-                            // Skip the dragged element in its original position
-                            continue;
-                        }
+                        e.preventDefault();
+                        taskElement.classList.remove('drag-over');
                         
-                        if (elementId === targetId) {
-                            if (placement === 'before') {
-                                // Insert dragged task before target
-                                taskOrders.push({ id: draggedId, position: position++ });
-                                taskOrders.push({ id: targetId, position: position++ });
+                        await updateTaskPositions();
+                    });
+                    
+                    taskList.addEventListener('dragleave', (e) => {
+                        const taskElement = e.target.closest('.task-item');
+                        if (!taskElement) return;
+                        
+                        taskElement.classList.remove('drag-over');
+                    });
+                    
+                    // Touch event delegation for mobile drag and drop
+                    taskList.addEventListener('touchstart', (e) => {
+                        const dragHandle = e.target.closest('.drag-handle');
+                        if (!dragHandle) return;
+                        
+                        const taskElement = dragHandle.closest('.task-item');
+                        if (!taskElement || showingArchive) return;
+                        
+                        e.preventDefault();
+                        isTouchDragging = true;
+                        draggedElement = taskElement;
+                        draggedTaskId = parseInt(taskElement.dataset.id);
+                        
+                        const touch = e.touches[0];
+                        touchStartY = touch.clientY;
+                        touchStartX = touch.clientX;
+                        
+                        // Create a clone for visual feedback
+                        touchDragClone = taskElement.cloneNode(true);
+                        touchDragClone.style.position = 'fixed';
+                        touchDragClone.style.top = `${taskElement.getBoundingClientRect().top}px`;
+                        touchDragClone.style.left = `${taskElement.getBoundingClientRect().left}px`;
+                        touchDragClone.style.width = `${taskElement.offsetWidth}px`;
+                        touchDragClone.style.opacity = '0.8';
+                        touchDragClone.style.zIndex = '1000';
+                        touchDragClone.style.pointerEvents = 'none';
+                        touchDragClone.classList.add('dragging');
+                        document.body.appendChild(touchDragClone);
+                        
+                        taskElement.style.opacity = '0.3';
+                    });
+                    
+                    document.addEventListener('touchmove', (e) => {
+                        if (!isTouchDragging || !touchDragClone) return;
+                        
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const deltaY = touch.clientY - touchStartY;
+                        const deltaX = touch.clientX - touchStartX;
+                        
+                        touchDragClone.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                        
+                        // Find element under touch point
+                        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                        const taskBelow = elementBelow?.closest('.task-item');
+                        
+                        if (taskBelow && taskBelow !== draggedElement) {
+                            const afterElement = getDragAfterElement(taskList, touch.clientY);
+                            if (afterElement == null) {
+                                taskList.appendChild(draggedElement);
                             } else {
-                                // Insert dragged task after target
-                                taskOrders.push({ id: targetId, position: position++ });
-                                taskOrders.push({ id: draggedId, position: position++ });
+                                taskList.insertBefore(draggedElement, afterElement);
                             }
-                        } else {
-                            taskOrders.push({ id: elementId, position: position++ });
-                        }
-                    }
-                    
-                    // Send reorder request to API
-                    await ApiClient.reorderTasks(taskOrders);
-                    
-                    // Re-render tasks to show new order
-                    await renderTasks();
-                    
-                } catch (error) {
-                    logger.error('Failed to reorder tasks:', error);
-                    logger.error('Error details:', error.message, error.stack);
-                    
-                    // Check if it's an authentication error
-                    if (error.message.includes('401') || error.message.includes('Authentication required') || error.message.includes('Invalid token')) {
-                        alert('Authentication required. Please log in to reorder tasks.');
-                        return;
-                    }
-                    
-                    // Check if it's an HTML error page (Internal Server Error)
-                    if (error.message.includes('<!DOCTYPE html>') || error.message.includes('<html')) {
-                        alert('Server error occurred. Please try again. If the problem persists, check if you are logged in.');
-                        return;
-                    }
-                    
-                    if (error.needsMigration) {
-                        positionColumnExists = false; // Disable drag and drop
-                        alert(`Database Update Required\n\nThe drag-and-drop feature requires a database update. Please run the following SQL in your Supabase dashboard:\n\n${error.message}\n\nCheck the migrate-add-position.sql file for the complete migration script.`);
-                        // Re-render to hide drag handles
-                        await renderTasks();
-                    } else {
-                        alert(`Failed to reorder tasks: ${error.message}. Please try again.`);
-                    }
-                }
-            };
-            
-            // Performance optimization utilities
-            const debounce = (func, wait) => {
-                let timeout;
-                return function executedFunction(...args) {
-                    const later = () => {
-                        clearTimeout(timeout);
-                        func(...args);
-                    };
-                    clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                };
-            };
-            
-            // Performance optimization: Task rendering with virtual DOM-like behavior
-            let cachedTasks = new Map(); // Cache for task elements
-            let lastRenderHash = ''; // Hash to detect if re-render is needed
-            
-            const renderTasks = async (forceRender = false) => {
-                const tasksForSelectedDay = await fetchTasks(selectedDate, showingArchive);
-                // Always update allTasks with the latest fetched tasks for the selected day
-                allTasks = tasksForSelectedDay;
-                
-                // Filter tasks based on archive view
-                let filteredTasks = showingArchive 
-                    ? tasksForSelectedDay.filter(task => task.archived)
-                    : tasksForSelectedDay.filter(task => !task.archived);
-                
-                // Apply tag filter if active
-                const tasksToRender = currentFilter 
-                    ? filteredTasks.filter(task => task.tags.includes(currentFilter))
-                    : filteredTasks;
-
-                // Performance optimization: Check if we need to re-render
-                const renderHash = JSON.stringify(tasksToRender.map(t => ({ 
-                    id: t.id, 
-                    text: t.text, 
-                    completed: t.completed, 
-                    position: t.position,
-                    time: t.time,
-                    tags: t.tags,
-                    priority: t.priority
-                }))) + selectedDate + showingArchive + currentFilter;
-                
-                if (!forceRender && renderHash === lastRenderHash && tasksToRender.length > 0) {
-                    // No changes, just update counters
-                    updateUICounters(filteredTasks);
-                    return;
-                }
-                
-                lastRenderHash = renderHash;
-
-                const emptyState = document.getElementById('empty-state');
-                
-                if (tasksToRender.length === 0) {
-                    // Clear task list efficiently
-                    while (taskList.firstChild && taskList.firstChild.id !== 'empty-state') {
-                        taskList.removeChild(taskList.firstChild);
-                    }
-                    
-                    if (currentFilter) {
-                        emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${escapeHTML(currentFilter)}".</p>`;
-                    } else {
-                        emptyState.innerHTML = `<i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks for this day.</p>`;
-                    }
-                    emptyState.style.display = 'block';
-                } else {
-                    if(emptyState) emptyState.style.display = 'none';
-                    
-                    // Performance optimization: Use DocumentFragment for batch DOM updates
-                    const fragment = document.createDocumentFragment();
-                    
-                    // Get existing task elements
-                    const existingTasks = new Map();
-                    Array.from(taskList.children).forEach(el => {
-                        if (el.dataset.id) {
-                            existingTasks.set(el.dataset.id, el);
                         }
                     });
                     
-                    // Clear task list but preserve empty state
-                    while (taskList.firstChild && taskList.firstChild.id !== 'empty-state') {
-                        taskList.removeChild(taskList.firstChild);
-                    }
-                    
-                    // Tasks are already sorted by position from the backend
-                    tasksToRender.forEach(task => {
-                        let taskElement = existingTasks.get(task.id.toString());
+                    document.addEventListener('touchend', async (e) => {
+                        if (!isTouchDragging) return;
                         
-                        // Performance optimization: Reuse existing elements when possible
-                        if (taskElement && !forceRender) {
-                            // Update existing element
-                            updateTaskElement(taskElement, task);
+                        isTouchDragging = false;
+                        
+                        if (touchDragClone) {
+                            touchDragClone.remove();
+                            touchDragClone = null;
+                        }
+                        
+                        if (draggedElement) {
+                            draggedElement.style.opacity = '';
+                            draggedElement = null;
+                            draggedTaskId = null;
+                        }
+                        
+                        await updateTaskPositions();
+                    });
+                };
+                
+                // Helper function to get the element after which the dragged element should be inserted
+                const getDragAfterElement = (container, y) => {
+                    const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+                    
+                    return draggableElements.reduce((closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+                        
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
                         } else {
-                            // Create new element - ensure we have an element to work with
-                            if (!taskElement) {
-                                if (!task || !task.id || isNaN(task.id)) {
-                                    console.error('Invalid task data in renderTasks:', task);
-                                    return; // Skip this task
-                                }
-                                taskElement = document.createElement('div');
-                                taskElement.className = 'task-item glass-pane p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-300 border border-white/20';
-                                taskElement.dataset.id = task.id;
-                                taskElement.style.backdropFilter = 'blur(20px)';
+                            return closest;
+                        }
+                    }, { offset: Number.NEGATIVE_INFINITY }).element;
+                };
+                
+                // New function to update task positions after drag and drop
+                const updateTaskPositions = async () => {
+                    const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
+                    const taskOrders = taskElements.map((el, index) => ({
+                        id: parseInt(el.dataset.id),
+                        position: index
+                    }));
+                    
+                    try {
+                        const result = await ApiClient.reorderTasks(taskOrders);
+                        
+                        if (result.error) {
+                            throw new Error(result.error);
+                        }
+                        
+                        // Update the allTasks array with new positions
+                        if (result.tasks) {
+                            allTasks = allTasks.map(task => {
+                                const updatedTask = result.tasks.find(t => t.id === task.id);
+                                return updatedTask ? { ...task, position: updatedTask.position } : task;
+                            });
+                        }
+                    } catch (error) {
+                        logger.error('Error updating task positions:', error);
+                        alert('Failed to save task order. Please refresh and try again.');
+                        await renderTasks();
+                    }
+                };
+                
+                const handleTaskReorder = async (draggedId, targetId, placement = 'before') => {
+                    try {
+                        // Check if user is authenticated before proceeding
+                        if (!currentUser) {
+                            alert('Please log in to reorder tasks.');
+                            return;
+                        }
+                        
+                        // Get current tasks order
+                        const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
+                        const draggedElement = taskElements.find(el => parseInt(el.dataset.id) === draggedId);
+                        const targetElement = taskElements.find(el => parseInt(el.dataset.id) === targetId);
+                        
+                        if (!draggedElement || !targetElement || draggedId === targetId) return;
+                        
+                        // Calculate new positions
+                        const taskOrders = [];
+                        let position = 0;
+                        
+                        for (const element of taskElements) {
+                            const elementId = parseInt(element.dataset.id);
+                            
+                            if (elementId === draggedId) {
+                                // Skip the dragged element in its original position
+                                continue;
                             }
                             
-                            const isCompleted = task.completed;
-                            const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                            const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHTML(tag)}</span>`).join('');
+                            if (elementId === targetId) {
+                                if (placement === 'before') {
+                                    // Insert dragged task before target
+                                    taskOrders.push({ id: draggedId, position: position++ });
+                                    taskOrders.push({ id: targetId, position: position++ });
+                                } else {
+                                    // Insert dragged task after target
+                                    taskOrders.push({ id: targetId, position: position++ });
+                                    taskOrders.push({ id: draggedId, position: position++ });
+                                }
+                            } else {
+                                taskOrders.push({ id: elementId, position: position++ });
+                            }
+                        }
+                        
+                        // Send reorder request to API
+                        await ApiClient.reorderTasks(taskOrders);
+                        
+                        // Re-render tasks to show new order
+                        await renderTasks();
+                        
+                    } catch (error) {
+                        logger.error('Failed to reorder tasks:', error);
+                        logger.error('Error details:', error.message, error.stack);
+                        
+                        // Check if it's an authentication error
+                        if (error.message.includes('401') || error.message.includes('Authentication required') || error.message.includes('Invalid token')) {
+                            alert('Authentication required. Please log in to reorder tasks.');
+                            return;
+                        }
+                        
+                        // Check if it's an HTML error page (Internal Server Error)
+                        if (error.message.includes('<!DOCTYPE html>') || error.message.includes('<html')) {
+                            alert('Server error occurred. Please try again. If the problem persists, check if you are logged in.');
+                            return;
+                        }
+                        
+                        if (error.needsMigration) {
+                            positionColumnExists = false; // Disable drag and drop
+                            alert(`Database Update Required\n\nThe drag-and-drop feature requires a database update. Please run the following SQL in your Supabase dashboard:\n\n${error.message}\n\nCheck the migrate-add-position.sql file for the complete migration script.`);
+                            // Re-render to hide drag handles
+                            await renderTasks();
+                        } else {
+                            alert(`Failed to reorder tasks: ${error.message}. Please try again.`);
+                        }
+                    }
+                };
+                
+                // Performance optimization utilities
+                const debounce = (func, wait) => {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                };
+                
+                // Performance optimization: Task rendering with virtual DOM-like behavior
+                let cachedTasks = new Map(); // Cache for task elements
+                let lastRenderHash = ''; // Hash to detect if re-render is needed
+                
+                renderTasks = async (forceRender = false) => {
+                    const tasksForSelectedDay = await fetchTasks(selectedDate, showingArchive);
+                    // Always update allTasks with the latest fetched tasks for the selected day
+                    allTasks = tasksForSelectedDay;
+                    
+                    // Filter tasks based on archive view
+                    let filteredTasks = showingArchive 
+                        ? tasksForSelectedDay.filter(task => task.archived)
+                        : tasksForSelectedDay.filter(task => !task.archived);
+                    
+                    // Apply tag filter if active
+                    const tasksToRender = currentFilter 
+                        ? filteredTasks.filter(task => task.tags.includes(currentFilter))
+                        : filteredTasks;
 
-                            taskElement.innerHTML = `
-                                <div class="flex items-start justify-between">
-                                    ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
-                                        <i class="fas fa-grip-vertical"></i>
-                                    </div>` : ''}
-                                    <div class="flex items-start gap-4 flex-grow">
-                                        <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
-                                        <div class="flex-grow">
-                                            <div class="flex items-center gap-3">
-                                                <span class="text-2xl">${escapeHTML(task.emoji)}</span>
-                                                <span class="task-text font-medium text-gray-200">${escapeHTML(task.text)}</span>
-                                            </div>
-                                            <div class="mt-2 flex items-center flex-wrap gap-y-2">
-                                                ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
-                                                <div class="flex flex-wrap">${tagsHTML}</div>
+                    // Performance optimization: Check if we need to re-render
+                    const renderHash = JSON.stringify(tasksToRender.map(t => ({ 
+                        id: t.id, 
+                        text: t.text, 
+                        completed: t.completed, 
+                        position: t.position,
+                        time: t.time,
+                        tags: t.tags,
+                        priority: t.priority
+                    }))) + selectedDate + showingArchive + currentFilter;
+                    
+                    if (!forceRender && renderHash === lastRenderHash && tasksToRender.length > 0) {
+                        // No changes, just update counters
+                        updateUICounters(filteredTasks);
+                        return;
+                    }
+                    
+                    lastRenderHash = renderHash;
+
+                    const emptyState = document.getElementById('empty-state');
+                    
+                    if (tasksToRender.length === 0) {
+                        // Clear task list efficiently
+                        while (taskList.firstChild && taskList.firstChild.id !== 'empty-state') {
+                            taskList.removeChild(taskList.firstChild);
+                        }
+                        
+                        if (currentFilter) {
+                            emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${escapeHTML(currentFilter)}".</p>`;
+                        } else {
+                            emptyState.innerHTML = `<i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks for this day.</p>`;
+                        }
+                        emptyState.style.display = 'block';
+                    } else {
+                        if(emptyState) emptyState.style.display = 'none';
+                        
+                        // Performance optimization: Use DocumentFragment for batch DOM updates
+                        const fragment = document.createDocumentFragment();
+                        
+                        // Get existing task elements
+                        const existingTasks = new Map();
+                        Array.from(taskList.children).forEach(el => {
+                            if (el.dataset.id) {
+                                existingTasks.set(el.dataset.id, el);
+                            }
+                        });
+                        
+                        // Clear task list but preserve empty state
+                        while (taskList.firstChild && taskList.firstChild.id !== 'empty-state') {
+                            taskList.removeChild(taskList.firstChild);
+                        }
+                        
+                        // Tasks are already sorted by position from the backend
+                        tasksToRender.forEach(task => {
+                            let taskElement = existingTasks.get(task.id.toString());
+                            
+                            // Performance optimization: Reuse existing elements when possible
+                            if (taskElement && !forceRender) {
+                                // Update existing element
+                                updateTaskElement(taskElement, task);
+                            } else {
+                                // Create new element - ensure we have an element to work with
+                                if (!taskElement) {
+                                    if (!task || !task.id || isNaN(task.id)) {
+                                        console.error('Invalid task data in renderTasks:', task);
+                                        return; // Skip this task
+                                    }
+                                    taskElement = document.createElement('div');
+                                    taskElement.className = 'task-item glass-pane p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-300 border border-white/20';
+                                    taskElement.dataset.id = task.id;
+                                    taskElement.style.backdropFilter = 'blur(20px)';
+                                }
+                                
+                                const isCompleted = task.completed;
+                                const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                                const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHTML(tag)}</span>`).join('');
+
+                                taskElement.innerHTML = `
+                                    <div class="flex items-start justify-between">
+                                        ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
+                                            <i class="fas fa-grip-vertical"></i>
+                                        </div>` : ''}
+                                        <div class="flex items-start gap-4 flex-grow">
+                                            <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
+                                            <div class="flex-grow">
+                                                <div class="flex items-center gap-3">
+                                                    <span class="text-2xl">${escapeHTML(task.emoji)}</span>
+                                                    <span class="task-text font-medium text-gray-200">${escapeHTML(task.text)}</span>
+                                                </div>
+                                                <div class="mt-2 flex items-center flex-wrap gap-y-2">
+                                                    ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
+                                                    <div class="flex flex-wrap">${tagsHTML}</div>
+                                                </div>
                                             </div>
                                         </div>
+                                        <div class="flex items-center gap-2 shrink-0 ml-2">
+                                            <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
+                                            <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2 shrink-0 ml-2">
-                                        <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
-                                        <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
-                                    </div>
-                                </div>
-                            `;
-                            taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
-                            taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
-                            taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
-                            
-                            // Add reminder button listener if it exists (tasks with time)
-                            const reminderBtn = taskElement.querySelector('.reminder-btn');
-                            if (reminderBtn && window.reminderUI) {
-                                reminderBtn.addEventListener('click', () => {
-                                    window.reminderUI.openModal(task);
+                                `;
+                                taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
+                                taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
+                                taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
+                                
+                                // Add reminder button listener if it exists (tasks with time)
+                                const reminderBtn = taskElement.querySelector('.reminder-btn');
+                                if (reminderBtn && window.reminderUI) {
+                                    reminderBtn.addEventListener('click', () => {
+                                        window.reminderUI.openModal(task);
+                                    });
+                                }
+                                
+                                taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
+                                    tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
                                 });
+                                
+                                // Drag and drop is handled by event delegation above - no individual setup needed
                             }
                             
-                            taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
-                                tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
-                            });
-                            
-                            // Drag and drop is handled by event delegation above - no individual setup needed
-                        }
+                            fragment.appendChild(taskElement);
+                        });
                         
-                        fragment.appendChild(taskElement);
-                    });
-                    
-                    // Batch DOM update
-                    taskList.appendChild(fragment);
-                }
-                updateUICounters(filteredTasks);
-                await updateArchiveUI();
-            };
-            
-            // Performance optimization: Separate function to create task elements
-            const createTaskElement = (task) => {
-                if (!task || !task.id || isNaN(task.id)) {
-                    console.error('Invalid task data when creating element:', task);
-                    return null;
-                }
-                const taskElement = document.createElement('div');
-                taskElement.dataset.id = task.id;
-                taskElement.dataset.position = task.position || 0;
-                taskElement.draggable = !showingArchive; // Only allow dragging in active view
-                updateTaskElement(taskElement, task, true);
-                return taskElement;
-            };
-            
-            // Performance optimization: Update task element without recreating
-            const updateTaskElement = (taskElement, task, isNew = false) => {
-                const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
-                // Always coerce completed to boolean for robust UI
-                const isCompleted = !!task.completed;
+                        // Batch DOM update
+                        taskList.appendChild(fragment);
+                    }
+                    updateUICounters(filteredTasks);
+                    await updateArchiveUI();
+                };
                 
-                if (isNew || taskElement.dataset.lastCompleted !== isCompleted.toString()) {
-                    taskElement.className = `task-item glass-card p-4 rounded-xl border-l-4 transition-all duration-300 ${isCompleted ? 'border-green-400' : priorityClasses[task.priority]}`;
-                    if (isCompleted) taskElement.classList.add('completed');
-                    taskElement.dataset.lastCompleted = isCompleted.toString();
-                }
-                
-                if (isNew || taskElement.dataset.position !== (task.position || 0).toString()) {
+                // Performance optimization: Separate function to create task elements
+                const createTaskElement = (task) => {
+                    if (!task || !task.id || isNaN(task.id)) {
+                        console.error('Invalid task data when creating element:', task);
+                        return null;
+                    }
+                    const taskElement = document.createElement('div');
+                    taskElement.dataset.id = task.id;
                     taskElement.dataset.position = task.position || 0;
-                }
+                    taskElement.draggable = !showingArchive; // Only allow dragging in active view
+                    updateTaskElement(taskElement, task, true);
+                    return taskElement;
+                };
                 
-                // Only update innerHTML if content changed
-                const contentHash = task.text + task.time + JSON.stringify(task.tags) + task.emoji + task.priority;
-                if (isNew || taskElement.dataset.contentHash !== contentHash) {
-                    const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                    const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHtml(tag)}</span>`).join('');
+                // Performance optimization: Update task element without recreating
+                const updateTaskElement = (taskElement, task, isNew = false) => {
+                    const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
+                    // Always coerce completed to boolean for robust UI
+                    const isCompleted = !!task.completed;
+                    
+                    if (isNew || taskElement.dataset.lastCompleted !== isCompleted.toString()) {
+                        taskElement.className = `task-item glass-card p-4 rounded-xl border-l-4 transition-all duration-300 ${isCompleted ? 'border-green-400' : priorityClasses[task.priority]}`;
+                        if (isCompleted) taskElement.classList.add('completed');
+                        taskElement.dataset.lastCompleted = isCompleted.toString();
+                    }
+                    
+                    if (isNew || taskElement.dataset.position !== (task.position || 0).toString()) {
+                        taskElement.dataset.position = task.position || 0;
+                    }
+                    
+                    // Only update innerHTML if content changed
+                    const contentHash = task.text + task.time + JSON.stringify(task.tags) + task.emoji + task.priority;
+                    if (isNew || taskElement.dataset.contentHash !== contentHash) {
+                        const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                        const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHtml(tag)}</span>`).join('');
 
-                    taskElement.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
-                                <i class="fas fa-grip-vertical"></i>
-                            </div>` : ''}
-                            <div class="flex items-start gap-4 flex-grow">
-                                <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
-                                <div class="flex-grow">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-2xl">${escapeHtml(task.emoji)}</span>
-                                        <span class="task-text font-medium text-gray-200">${escapeHtml(task.text)}</span>
-                                    </div>
-                                    <div class="mt-2 flex items-center flex-wrap gap-y-2">
-                                        ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
-                                        <div class="flex flex-wrap">${tagsHTML}</div>
+                        taskElement.innerHTML = `
+                            <div class="flex items-start justify-between">
+                                ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>` : ''}
+                                <div class="flex items-start gap-4 flex-grow">
+                                    <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
+                                    <div class="flex-grow">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-2xl">${escapeHtml(task.emoji)}</span>
+                                            <span class="task-text font-medium text-gray-200">${escapeHtml(task.text)}</span>
+                                        </div>
+                                        <div class="mt-2 flex items-center flex-wrap gap-y-2">
+                                            ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
+                                            <div class="flex flex-wrap">${tagsHTML}</div>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="flex items-center gap-2 shrink-0 ml-2">
+                                    ${task.time ? `<button class="reminder-btn ${task.reminder_enabled ? 'text-indigo-400' : 'text-gray-400'} hover:text-indigo-400 transition" data-task-id="${task.id}" title="${task.reminder_enabled ? `Reminder set for ${task.reminder_minutes} minutes before` : 'Set reminder'}"><i class="fas fa-bell${task.reminder_enabled ? '' : '-slash'}"></i></button>` : ''}
+                                    <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
+                                    <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0 ml-2">
-                                ${task.time ? `<button class="reminder-btn ${task.reminder_enabled ? 'text-indigo-400' : 'text-gray-400'} hover:text-indigo-400 transition" data-task-id="${task.id}" title="${task.reminder_enabled ? `Reminder set for ${task.reminder_minutes} minutes before` : 'Set reminder'}"><i class="fas fa-bell${task.reminder_enabled ? '' : '-slash'}"></i></button>` : ''}
-                                <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
-                                <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
+                        `;
+                        taskElement.dataset.contentHash = contentHash;
+                    } else if (!isNew) {
+                        // Just update the checkbox state if content didn't change
+                        const checkbox = taskElement.querySelector('.custom-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = isCompleted;
+                        }
+                    }
+                };
+
+                const updateUICounters = (currentTasks) => {
+                    taskCounter.textContent = `${currentTasks.length} task${currentTasks.length !== 1 ? 's' : ''}`;
+                    const completedTasks = currentTasks.filter(t => t.completed).length;
+                    const progressPercentage = currentTasks.length > 0 ? (completedTasks / currentTasks.length) * 100 : 0;
+                    progressBar.style.width = `${progressPercentage}%`;
+                    progressText.textContent = `${Math.round(progressPercentage)}%`;
+                    const hasUnscheduledTasks = currentTasks.some(t => !t.time);
+                    // smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0); // Smart Plan disabled
+                    
+                    // Check for celebration when all tasks are completed (but NOT in archive view)
+                    if (!showingArchive && currentTasks.length > 0 && completedTasks === currentTasks.length && progressPercentage === 100) {
+                        // Add a small delay to let the final task animation complete
+                        setTimeout(() => {
+                            triggerCelebration(completedTasks);
+                        }, 500);
+                    }
+                };
+
+                const addTask = async (task) => {
+                    try {
+                        await saveTask(task);
+                        await renderTasks();
+                    } catch (error) {
+                        alert('Failed to add task. Please try again.');
+                    }
+                };
+
+                const toggleComplete = async (id, event) => {
+                    try {
+                        const task = allTasks.find(t => t.id === id);
+                        if (!task) {
+                            logger.error('Task not found:', id);
+                            return;
+                        }
+                        
+                        const wasCompleted = task.completed;
+                        const newCompletedState = !wasCompleted;
+                        
+                        // Play effects when completing a task (not when uncompleting)
+                        if (newCompletedState) {
+                            // Initialize audio context on first interaction
+                            await initAudio();
+                            
+                            // Trigger confetti animation
+                            try {
+                                // Load confetti if not already loaded
+                                if (!window.confetti) {
+                                    window.loadConfetti();
+                                    // Wait for confetti to load
+                                    await new Promise(resolve => {
+                                        const checkConfetti = () => {
+                                            if (window.confetti) resolve();
+                                            else setTimeout(checkConfetti, 50);
+                                        };
+                                        checkConfetti();
+                                    });
+                                }
+                                
+                                const rect = event.target.getBoundingClientRect();
+                                const origin = { 
+                                    x: (rect.left + rect.right) / 2 / window.innerWidth, 
+                                    y: (rect.top + rect.bottom) / 2 / window.innerHeight 
+                                };
+                                
+                                if (typeof confetti === 'function') {
+                                    confetti({ 
+                                        particleCount: 100, 
+                                        spread: 70, 
+                                        origin: origin, 
+                                        colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] 
+                                    });
+                                } else {
+                                    logger.warn('Confetti function not available');
+                                }
+                            } catch (confettiError) {
+                                logger.warn('Confetti animation failed:', confettiError);
+                            }
+                            
+                            // Play completion sound
+                            try {
+                                if (synth && audioContextStarted) {
+                                    synth.triggerAttackRelease("C5", "8n");
+                                }
+                            } catch (audioError) {
+                                logger.warn('Audio playback failed:', audioError);
+                            }
+                        }
+                        
+                        // Update task completion state
+                        const updatedTask = { ...task, completed: newCompletedState };
+                        await updateTask(id, updatedTask);
+                        
+                        // Update local state immediately for better UX
+                        const taskIndex = allTasks.findIndex(t => t.id === id);
+                        if (taskIndex !== -1) {
+                            allTasks[taskIndex] = updatedTask;
+                        }
+                        
+                        await renderTasks();
+                    } catch (error) {
+                        logger.error('Task completion toggle failed:', error);
+                        alert('Failed to update task. Please try again.');
+                        // Revert checkbox state on failure
+                        event.target.checked = !event.target.checked;
+                    }
+                };
+                
+                const removeTask = async (id) => {
+                    try {
+                        await deleteTask(id);
+                        await renderTasks();
+                    } catch (error) {
+                        // If task not found (404), it might already be deleted - refresh the view
+                        if (error.message.includes('404') || error.message.includes('not found')) {
+                            console.log('Task not found on server, refreshing view...');
+                            await renderTasks();
+                        } else {
+                            console.error('Delete task error:', error);
+                            alert('Failed to delete task. Please try again.');
+                        }
+                    }
+                };
+
+
+                const filterByTag = (tag) => {
+                    currentFilter = tag;
+                    filterContainer.classList.remove('hidden');
+                    activeFilterTag.textContent = `#${tag}`;
+                    renderTasks();
+                };
+
+                // --- Event Listeners ---
+                // Natural Language Task Parser
+                const parseNaturalLanguageTask = async (input) => {
+                    const now = new Date();
+                    const currentHours = String(now.getHours()).padStart(2, '0');
+                    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+                    const currentTime = `${currentHours}:${currentMinutes}`;
+                    
+                    // First try AI parsing with proper error handling
+                    try {
+                        // Check if AI is available
+                        if (window.ApiClient && typeof window.ApiClient.callGemini === 'function') {
+                            const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
+                            
+    Task: "${input}"
+
+    Extract and return a JSON object with these fields:
+    - text: The main task description (clean, without time/priority/tags). IMPORTANT: Keep the full task description together (e.g., "clean bathroom" should remain as "clean bathroom", not split into separate words)
+    - time: Time in HH:MM format (24-hour). Convert natural language like "3pm", "tomorrow morning", "in 2 hours" to specific times. If no time mentioned, return null.
+    - priority: Either "high", "medium", or "low". Look for words like urgent, important, ASAP (high), normal (medium), whenever, later (low). Default to "medium" if not specified.
+    - tags: Array of tags. Look for hashtags (#work, #personal) or context words that could be tags (meeting->work, shopping->personal). Return empty array if none.
+    - emoji: A single relevant emoji for this task.
+
+    Examples:
+    "Clean room at 3pm high priority #home" -> {"text": "Clean room", "time": "15:00", "priority": "high", "tags": ["home"], "emoji": "🧹"}
+    "clean bathroom at 1pm" -> {"text": "clean bathroom", "time": "13:00", "priority": "medium", "tags": [], "emoji": "🚿"}
+    "Meeting with John tomorrow 2pm" -> {"text": "Meeting with John", "time": "14:00", "priority": "medium", "tags": ["work"], "emoji": "👥"}
+    "Buy groceries" -> {"text": "Buy groceries", "time": null, "priority": "medium", "tags": ["personal"], "emoji": "🛒"}
+
+    Return only the JSON object.`;
+
+                            const response = await callGemini(parsePrompt);
+                            if (response) {
+                                const cleaned = response.replace(/```json/g, '').replace(/```/g, '').trim();
+                                const parsed = JSON.parse(cleaned);
+                                
+                                // Validate and clean the parsed response
+                                return {
+                                    text: parsed.text || input,
+                                    time: parsed.time || '',
+                                    priority: ['high', 'medium', 'low'].includes(parsed.priority) ? parsed.priority : 'medium',
+                                    tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+                                    emoji: parsed.emoji || '📝'
+                                };
+                            }
+                        } else {
+                            console.log('AI not available, using fallback parser');
+                        }
+                    } catch (error) {
+                        console.error('AI parsing failed, using fallback:', error);
+                    }
+                    
+                    // Fallback: Simple parsing if AI fails
+                    let text = input;
+                    let time = '';
+                    let priority = 'medium';
+                    let tags = [];
+                    
+                    // Extract hashtags
+                    const hashtagMatches = input.match(/#\w+/g);
+                    if (hashtagMatches) {
+                        tags = hashtagMatches.map(tag => tag.slice(1));
+                        text = text.replace(/#\w+/g, '').trim();
+                    }
+                    
+                    // Extract priority
+                    if (/\b(high|urgent|important|asap)\b/i.test(input)) {
+                        priority = 'high';
+                        text = text.replace(/\b(high|urgent|important|asap)\s*(priority|pri)?\b/gi, '').trim();
+                    } else if (/\b(low|later|whenever)\b/i.test(input)) {
+                        priority = 'low';
+                        text = text.replace(/\b(low|later|whenever)\s*(priority|pri)?\b/gi, '').trim();
+                    } else if (/\b(medium|normal|med)\b/i.test(input)) {
+                        priority = 'medium';
+                        text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
+                    }
+                    
+                    // Extract time (enhanced patterns)
+                    const timePatterns = [
+                        /\bat\s+(\d{1,2}):(\d{2})\s*(am|pm)\b/i,      // at 3:30pm
+                        /\bat\s+(\d{1,2})\s*(am|pm)\b/i,              // at 3pm
+                        /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
+                        /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
+                        /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
+                    ];
+                    
+                    for (const pattern of timePatterns) {
+                        const timeMatch = text.match(pattern);
+                        if (timeMatch) {
+                            let hours = parseInt(timeMatch[1]);
+                            let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
+                            // Ensure minutes is not NaN
+                            if (isNaN(minutes)) minutes = 0;
+                            const period = timeMatch[3];
+                            
+                            // Convert to 24-hour format
+                            if (period) {
+                                const isPM = /pm/i.test(period);
+                                if (isPM && hours < 12) hours += 12;
+                                if (!isPM && hours === 12) hours = 0;
+                            }
+                            
+                            time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                            // Remove the entire matched time pattern including "at" if present
+                            text = text.replace(timeMatch[0], '').trim();
+                            break;
+                        }
+                    }
+                    
+                    // Simple emoji assignment based on keywords
+                    let emoji = '📝';
+                    const emojiMap = {
+                        'clean': '🧹', 'bathroom': '🚿', 'shower': '🚿', 'bath': '🛁',
+                        'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
+                        'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
+                        'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
+                        'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗',
+                        'laundry': '👔', 'wash': '🧼', 'kitchen': '🍳', 'bedroom': '🛏️'
+                    };
+                    
+                    for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
+                        if (new RegExp(`\\b${keyword}`, 'i').test(input)) {
+                            emoji = emojiChar;
+                            break;
+                        }
+                    }
+                    
+                    return { text, time, priority, tags, emoji };
+                };
+
+                taskForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const inputText = taskInput.value.trim();
+                    if (inputText === '') return;
+
+                    // Initialize audio on first user interaction
+                    await initAudio();
+
+                    addTaskBtn.disabled = true;
+                    addSpinner.classList.remove('hidden');
+                    addBtnText.classList.add('hidden');
+                    
+                    // Parse the natural language input
+                    const parsedTask = await parseNaturalLanguageTask(inputText);
+                    logger.log('Parsed task data:', parsedTask);
+                    
+                    // If no time was extracted, use current time
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const currentTime = `${hours}:${minutes}`;
+
+                    // Validate and prepare task data for API
+                    const task = {
+                        id: Date.now(),
+                        date: selectedDate,
+                        text: parsedTask.text.trim(),
+                        emoji: parsedTask.emoji || '📝',
+                        time: parsedTask.time || currentTime,
+                        priority: ['high', 'medium', 'low'].includes(parsedTask.priority) ? parsedTask.priority : 'medium',
+                        tags: Array.isArray(parsedTask.tags) ? parsedTask.tags : [],
+                        completed: false
+                    };
+                    
+                    // Update hidden inputs for compatibility
+                    timeInput.value = task.time;
+                    priorityInput.value = task.priority;
+                    tagsInput.value = Array.isArray(task.tags) ? task.tags.join(', ') : '';
+                    
+                    logger.log('Final task data being sent:', task);
+                    addTask(task);
+                    
+                    taskForm.reset();
+                    addTaskBtn.disabled = false;
+                    addSpinner.classList.add('hidden');
+                    addBtnText.classList.remove('hidden');
+                });
+
+                prevWeekBtn.addEventListener('click', () => {
+                    currentDate.setDate(currentDate.getDate() - 7);
+                    renderWeek();
+                    renderTasks();
+                });
+
+                nextWeekBtn.addEventListener('click', () => {
+                    currentDate.setDate(currentDate.getDate() + 7);
+                    renderWeek();
+                    renderTasks();
+                });
+                
+                suggestTasksBtn.addEventListener('click', () => openModal(suggestModal));
+                cancelSuggestBtn.addEventListener('click', () => closeModal(suggestModal));
+                
+                 generateTasksBtn.addEventListener('click', async () => {
+                    const goal = goalInput.value.trim();
+                    if (!goal) return;
+
+                    generateBtnText.classList.add('hidden');
+                    generateSpinner.classList.remove('hidden');
+                    generateTasksBtn.disabled = true;
+                    
+                    const prompt = `Based on the goal "${goal}", suggest a list of 3 to 5 actionable tasks. Return a JSON array of strings. Example: ["Task 1", "Task 2"]`;
+                    const responseText = await callGemini(prompt);
+
+                    if (responseText) {
+                        try {
+                            const suggestedTaskTexts = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
+                            
+                            const taskPromises = suggestedTaskTexts.map(async (taskText) => {
+                                const emojiPrompt = `Based on the task "${taskText}", suggest one single, relevant emoji. Only return the emoji itself.`;
+                                const emoji = await callGemini(emojiPrompt) || '💡';
+                                return {
+                                    id: Date.now() + Math.random(),
+                                    date: selectedDate,
+                                    text: taskText,
+                                    emoji: emoji.trim(),
+                                    time: null,
+                                    priority: 'medium',
+                                    tags: ['suggested', goal.split(' ')[0].toLowerCase()],
+                                    completed: false
+                                };
+                            });
+
+                            const newTasks = await Promise.all(taskPromises);
+                            newTasks.forEach(task => addTask(task));
+                            
+                            closeModal(suggestModal);
+                            goalInput.value = '';
+                        } catch (e) {
+                            alert("The AI returned an unexpected format. Please try a different goal.");
+                        }
+                    }
+                    
+                    generateBtnText.classList.remove('hidden');
+                    generateSpinner.classList.add('hidden');
+                    generateTasksBtn.disabled = false;
+                });
+                
+                // Smart Plan feature temporarily disabled
+                /* smartPlanBtn.addEventListener('click', async () => {
+                    const tasksForDay = allTasks.filter(t => t.date === selectedDate && !t.time);
+                    if (tasksForDay.length === 0) return;
+                    
+                    smartPlanBtn.innerHTML = `<div class="spinner h-5 w-5 rounded-full border-2 border-t-transparent"></div><span>Planning...</span>`;
+                    smartPlanBtn.disabled = true;
+
+                    try {
+                        // Use the proper smartPlanning method with authentication
+                        const response = await auth.smartPlanning(tasksForDay, selectedDate);
+                        logger.log('🤖 Smart Plan Response:', response);
+
+                        if (response.schedule) {
+                            logger.log('⏰ Parsed Schedule:', response.schedule);
+                            logger.log('📋 Tasks for Day:', tasksForDay);
+                            
+                            // Update tasks with suggested times and persist to database
+                            const updatePromises = [];
+                            for (const task of tasksForDay) {
+                                logger.log(`🔍 Checking task "${task.text}" for schedule match...`);
+                                if (response.schedule[task.text]) {
+                                    const suggestedTime = response.schedule[task.text];
+                                    logger.log(`⏱️ Found time "${suggestedTime}" for task "${task.text}"`);
+                                    const updatedTask = { ...task, time: suggestedTime };
+                                    updatePromises.push(updateTask(task.id, updatedTask));
+                                } else {
+                                    logger.log(`❌ No time found for task "${task.text}"`);
+                                    logger.log('Available schedule keys:', Object.keys(response.schedule));
+                                }
+                            }
+                            
+                            logger.log(`🔄 Updating ${updatePromises.length} tasks...`);
+                            await Promise.all(updatePromises);
+                            logger.log('✅ All task updates completed');
+                            await renderTasks();
+                        } else if (response.rawResponse) {
+                            // Fallback to parsing raw response if schedule parsing failed
+                            logger.log('📝 Fallback: parsing raw AI response');
+                            const cleanResponse = response.rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+                            const schedule = JSON.parse(cleanResponse);
+                            logger.log('⏰ Parsed Schedule from raw:', schedule);
+                            
+                            // Same update logic
+                            const updatePromises = [];
+                            for (const task of tasksForDay) {
+                                if (schedule[task.text]) {
+                                    const updatedTask = { ...task, time: schedule[task.text] };
+                                    updatePromises.push(updateTask(task.id, updatedTask));
+                                }
+                            }
+                            await Promise.all(updatePromises);
+                            await renderTasks();
+                        } else {
+                            throw new Error('No schedule data in response');
+                        }
+                    } catch (e) {
+                        logger.error('❌ Smart Plan Error:', e);
+                        alert("Smart planning failed. Please try again.");
+                    }
+
+                    smartPlanBtn.innerHTML = `<i class="fas fa-brain"></i> <span>✨ Smart Plan</span>`;
+                    smartPlanBtn.disabled = false;
+                }); */
+
+                editTaskForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const id = parseInt(editTaskId.value);
+                    const task = allTasks.find(t => t.id === id);
+                    if (!task) return;
+
+                    try {
+                        await updateTask(id, {
+                            ...task,
+                            text: editTaskText.value,
+                            time: editTaskTime.value,
+                            priority: editTaskPriority.value,
+                            tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                        });
+                        await renderTasks();
+                        closeModal(editModal);
+                    } catch (error) {
+                        alert('Failed to update task. Please try again.');
+                    }
+                });
+
+                cancelEditBtn.addEventListener('click', () => closeModal(editModal));
+                
+                clearAllBtn.addEventListener('click', () => openModal(confirmClearModal));
+                cancelClearBtn.addEventListener('click', () => closeModal(confirmClearModal));
+                confirmClearBtn.addEventListener('click', async () => {
+                    try {
+                        await clearAllTasks();
+                        await renderTasks();
+                        closeModal(confirmClearModal);
+                    } catch (error) {
+                        alert('Failed to clear tasks. Please try again.');
+                    }
+                });
+
+                clearFilterBtn.addEventListener('click', () => {
+                    currentFilter = null;
+                    filterContainer.classList.add('hidden');
+                    renderTasks();
+                });
+
+                // Celebration modal event listeners
+                closeCelebrationBtn.addEventListener('click', async () => {
+                    try {
+                        // Archive completed tasks when closing celebration
+                        await archiveCompletedTasks(selectedDate);
+                        closeModal(celebrationModal);
+                        await renderTasks(); // Refresh to show archived tasks are gone
+                    } catch (error) {
+                        logger.error('Error archiving tasks:', error);
+                        closeModal(celebrationModal);
+                    }
+                });
+
+                addTomorrowTasksBtn.addEventListener('click', async () => {
+                    try {
+                        // Archive completed tasks from today before moving to tomorrow
+                        const todayDate = selectedDate;
+                        await archiveCompletedTasks(todayDate);
+                        
+                        closeModal(celebrationModal);
+                        
+                        // Navigate to tomorrow - properly parse the ISO date string
+                        const currentSelectedDate = new Date(selectedDate + 'T00:00:00');
+                        const tomorrow = new Date(currentSelectedDate);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        
+                        // Update the selected date
+                        selectedDate = toISODateString(tomorrow);
+                        
+                        // Update the current date for week navigation
+                        currentDate = new Date(tomorrow);
+                        
+                        // Re-render everything for the new date
+                        renderWeek();
+                        renderTasks();
+                        updateSelectedDateDisplay();
+                        
+                        // Focus on the task input for easy task creation
+                        setTimeout(() => {
+                            taskInput.focus();
+                        }, 300);
+                        
+                        // Successfully archived tasks and navigated to tomorrow
+                    } catch (error) {
+                        logger.error('Error during tomorrow navigation:', error);
+                        closeModal(celebrationModal);
+                    }
+                });
+
+                // Archive toggle functionality
+                archiveToggleBtn.addEventListener('click', () => {
+                    showingArchive = !showingArchive;
+                    renderTasks();
+                });
+
+                // --- Setup Task List Drop Zone ---
+                const setupTaskListDropZone = () => {
+                    taskList.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                    });
+                    
+                    taskList.addEventListener('drop', async (e) => {
+                        e.preventDefault();
+                        
+                        if (draggedElement) {
+                            // If dropped on empty area, move to end
+                            const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
+                            if (allTasks.length > 0) {
+                                const lastTask = allTasks[allTasks.length - 1];
+                                const lastTaskId = parseInt(lastTask.dataset.id);
+                                if (lastTaskId !== draggedTaskId) {
+                                    await handleTaskReorder(draggedTaskId, lastTaskId, 'after');
+                                }
+                            }
+                        }
+                    });
+                };
+                
+                // --- Form Switching Logic ---
+                const registerBranding = document.getElementById('register-branding');
+                const loginBranding = document.querySelector('.mt-8.text-center.border-t');
+                
+                // Show register form
+                if (showRegisterBtn) {
+                    showRegisterBtn.addEventListener('click', () => {
+                        loginForm.classList.add('hidden');
+                        registerForm.classList.remove('hidden');
+                        registerSwitch.classList.remove('hidden');
+                        authMessage.classList.add('hidden');
+                        
+                        // Switch branding visibility
+                        if (loginBranding) loginBranding.classList.add('hidden');
+                        if (registerBranding) registerBranding.classList.remove('hidden');
+                    });
+                }
+                
+                // Show login form
+                if (showLoginBtn) {
+                    showLoginBtn.addEventListener('click', () => {
+                        registerForm.classList.add('hidden');
+                        loginForm.classList.remove('hidden');
+                        registerSwitch.classList.add('hidden');
+                        authMessage.classList.add('hidden');
+                        
+                        // Switch branding visibility
+                        if (registerBranding) registerBranding.classList.add('hidden');
+                        if (loginBranding) loginBranding.classList.remove('hidden');
+                    });
+                }
+                
+                // --- Initial Load ---
+                setupTaskListDropZone();
+                setupEventDelegation();
+                renderWeek();
+                // Initialize notification manager
+                let notificationManager;
+                let reminderUI;
+                
+                try {
+                    // Initialize notification manager
+                    if (window.NotificationManager) {
+                        notificationManager = new NotificationManager();
+                        window.notificationManager = notificationManager;
+                        
+                        // Initialize reminder UI
+                        if (window.ReminderUI) {
+                            reminderUI = new ReminderUI(notificationManager);
+                            window.reminderUI = reminderUI;
+                            reminderUI.init();
+                            
+                            // Sync reminders on startup
+                            if (notificationManager.isEnabled()) {
+                                await notificationManager.syncReminders();
+                            }
+                        }
+                        
+                        // Make task manager accessible for notifications
+                        window.taskManager = {
+                            allTasks: allTasks,
+                            toggleComplete: toggleComplete
+                        };
+                        
+                        // Request notification permission if not already granted
+                        if (notificationManager.permission === 'default') {
+                            // Show a friendly prompt after user has interacted with the app
+                            setTimeout(() => {
+                                const shouldAsk = localStorage.getItem('askForNotifications') !== 'false';
+                                if (shouldAsk && allTasks.some(t => t.time)) {
+                                    // Only ask if there are tasks with times
+                                    showNotificationPrompt();
+                                }
+                            }, 5000);
+                        }
+                    }
+                } catch (error) {
+                    logger.error('Failed to initialize notification system:', error);
+                }
+                
+                // Function to show notification permission prompt
+                const showNotificationPrompt = () => {
+                    const prompt = document.createElement('div');
+                    prompt.className = 'fixed top-4 right-4 glass-pane p-4 rounded-xl z-50 max-w-sm';
+                    prompt.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-bell text-2xl text-indigo-400"></i>
+                            <div class="flex-grow">
+                                <h3 class="font-semibold mb-1">Enable Reminders?</h3>
+                                <p class="text-sm text-gray-300 mb-3">Get notified before your scheduled tasks</p>
+                                <div class="flex gap-2">
+                                    <button id="enableNotifications" class="btn-primary text-sm py-1 px-3">Enable</button>
+                                    <button id="dismissNotifications" class="btn-secondary text-sm py-1 px-3">Not Now</button>
+                                </div>
                             </div>
                         </div>
                     `;
-                    taskElement.dataset.contentHash = contentHash;
-                } else if (!isNew) {
-                    // Just update the checkbox state if content didn't change
-                    const checkbox = taskElement.querySelector('.custom-checkbox');
-                    if (checkbox) {
-                        checkbox.checked = isCompleted;
-                    }
-                }
-            };
-
-            const updateUICounters = (currentTasks) => {
-                taskCounter.textContent = `${currentTasks.length} task${currentTasks.length !== 1 ? 's' : ''}`;
-                const completedTasks = currentTasks.filter(t => t.completed).length;
-                const progressPercentage = currentTasks.length > 0 ? (completedTasks / currentTasks.length) * 100 : 0;
-                progressBar.style.width = `${progressPercentage}%`;
-                progressText.textContent = `${Math.round(progressPercentage)}%`;
-                const hasUnscheduledTasks = currentTasks.some(t => !t.time);
-                // smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0); // Smart Plan disabled
-                
-                // Check for celebration when all tasks are completed (but NOT in archive view)
-                if (!showingArchive && currentTasks.length > 0 && completedTasks === currentTasks.length && progressPercentage === 100) {
-                    // Add a small delay to let the final task animation complete
-                    setTimeout(() => {
-                        triggerCelebration(completedTasks);
-                    }, 500);
-                }
-            };
-
-            const addTask = async (task) => {
-                try {
-                    await saveTask(task);
-                    await renderTasks();
-                } catch (error) {
-                    alert('Failed to add task. Please try again.');
-                }
-            };
-
-            const toggleComplete = async (id, event) => {
-                try {
-                    const task = allTasks.find(t => t.id === id);
-                    if (!task) {
-                        logger.error('Task not found:', id);
-                        return;
-                    }
+                    document.body.appendChild(prompt);
                     
-                    const wasCompleted = task.completed;
-                    const newCompletedState = !wasCompleted;
-                    
-                    // Play effects when completing a task (not when uncompleting)
-                    if (newCompletedState) {
-                        // Initialize audio context on first interaction
-                        await initAudio();
-                        
-                        // Trigger confetti animation
-                        try {
-                            // Load confetti if not already loaded
-                            if (!window.confetti) {
-                                window.loadConfetti();
-                                // Wait for confetti to load
-                                await new Promise(resolve => {
-                                    const checkConfetti = () => {
-                                        if (window.confetti) resolve();
-                                        else setTimeout(checkConfetti, 50);
-                                    };
-                                    checkConfetti();
-                                });
-                            }
-                            
-                            const rect = event.target.getBoundingClientRect();
-                            const origin = { 
-                                x: (rect.left + rect.right) / 2 / window.innerWidth, 
-                                y: (rect.top + rect.bottom) / 2 / window.innerHeight 
-                            };
-                            
-                            if (typeof confetti === 'function') {
-                                confetti({ 
-                                    particleCount: 100, 
-                                    spread: 70, 
-                                    origin: origin, 
-                                    colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] 
-                                });
-                            } else {
-                                logger.warn('Confetti function not available');
-                            }
-                        } catch (confettiError) {
-                            logger.warn('Confetti animation failed:', confettiError);
-                        }
-                        
-                        // Play completion sound
-                        try {
-                            if (synth && audioContextStarted) {
-                                synth.triggerAttackRelease("C5", "8n");
-                            }
-                        } catch (audioError) {
-                            logger.warn('Audio playback failed:', audioError);
-                        }
-                    }
-                    
-                    // Update task completion state
-                    const updatedTask = { ...task, completed: newCompletedState };
-                    await updateTask(id, updatedTask);
-                    
-                    // Update local state immediately for better UX
-                    const taskIndex = allTasks.findIndex(t => t.id === id);
-                    if (taskIndex !== -1) {
-                        allTasks[taskIndex] = updatedTask;
-                    }
-                    
-                    await renderTasks();
-                } catch (error) {
-                    logger.error('Task completion toggle failed:', error);
-                    alert('Failed to update task. Please try again.');
-                    // Revert checkbox state on failure
-                    event.target.checked = !event.target.checked;
-                }
-            };
-            
-            const removeTask = async (id) => {
-                try {
-                    await deleteTask(id);
-                    await renderTasks();
-                } catch (error) {
-                    // If task not found (404), it might already be deleted - refresh the view
-                    if (error.message.includes('404') || error.message.includes('not found')) {
-                        console.log('Task not found on server, refreshing view...');
-                        await renderTasks();
-                    } else {
-                        console.error('Delete task error:', error);
-                        alert('Failed to delete task. Please try again.');
-                    }
-                }
-            };
-
-            const openModal = (modalEl) => {
-                modalEl.classList.remove('invisible', 'opacity-0');
-                modalEl.querySelector('.modal-content').classList.remove('scale-95');
-            }
-
-            const closeModal = (modalEl) => {
-                modalEl.classList.add('invisible', 'opacity-0');
-                modalEl.querySelector('.modal-content').classList.add('scale-95');
-            }
-
-            const openEditModal = (id) => {
-                const task = allTasks.find(t => t.id === id);
-                if (!task) return;
-                editTaskId.value = task.id;
-                editTaskText.value = task.text;
-                editTaskTime.value = task.time;
-                editTaskPriority.value = task.priority;
-                editTaskTags.value = task.tags.join(', ');
-                openModal(editModal);
-            };
-
-            const filterByTag = (tag) => {
-                currentFilter = tag;
-                filterContainer.classList.remove('hidden');
-                activeFilterTag.textContent = `#${tag}`;
-                renderTasks();
-            };
-
-            // --- Event Listeners ---
-            // Natural Language Task Parser
-            const parseNaturalLanguageTask = async (input) => {
-                const now = new Date();
-                const currentHours = String(now.getHours()).padStart(2, '0');
-                const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-                const currentTime = `${currentHours}:${currentMinutes}`;
-                
-                // First try AI parsing with proper error handling
-                try {
-                    // Check if AI is available
-                    if (window.ApiClient && typeof window.ApiClient.callGemini === 'function') {
-                        const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
-                        
-Task: "${input}"
-
-Extract and return a JSON object with these fields:
-- text: The main task description (clean, without time/priority/tags). IMPORTANT: Keep the full task description together (e.g., "clean bathroom" should remain as "clean bathroom", not split into separate words)
-- time: Time in HH:MM format (24-hour). Convert natural language like "3pm", "tomorrow morning", "in 2 hours" to specific times. If no time mentioned, return null.
-- priority: Either "high", "medium", or "low". Look for words like urgent, important, ASAP (high), normal (medium), whenever, later (low). Default to "medium" if not specified.
-- tags: Array of tags. Look for hashtags (#work, #personal) or context words that could be tags (meeting->work, shopping->personal). Return empty array if none.
-- emoji: A single relevant emoji for this task.
-
-Examples:
-"Clean room at 3pm high priority #home" -> {"text": "Clean room", "time": "15:00", "priority": "high", "tags": ["home"], "emoji": "🧹"}
-"clean bathroom at 1pm" -> {"text": "clean bathroom", "time": "13:00", "priority": "medium", "tags": [], "emoji": "🚿"}
-"Meeting with John tomorrow 2pm" -> {"text": "Meeting with John", "time": "14:00", "priority": "medium", "tags": ["work"], "emoji": "👥"}
-"Buy groceries" -> {"text": "Buy groceries", "time": null, "priority": "medium", "tags": ["personal"], "emoji": "🛒"}
-
-Return only the JSON object.`;
-
-                        const response = await callGemini(parsePrompt);
-                        if (response) {
-                            const cleaned = response.replace(/```json/g, '').replace(/```/g, '').trim();
-                            const parsed = JSON.parse(cleaned);
-                            
-                            // Validate and clean the parsed response
-                            return {
-                                text: parsed.text || input,
-                                time: parsed.time || '',
-                                priority: ['high', 'medium', 'low'].includes(parsed.priority) ? parsed.priority : 'medium',
-                                tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-                                emoji: parsed.emoji || '📝'
-                            };
-                        }
-                    } else {
-                        console.log('AI not available, using fallback parser');
-                    }
-                } catch (error) {
-                    console.error('AI parsing failed, using fallback:', error);
-                }
-                
-                // Fallback: Simple parsing if AI fails
-                let text = input;
-                let time = '';
-                let priority = 'medium';
-                let tags = [];
-                
-                // Extract hashtags
-                const hashtagMatches = input.match(/#\w+/g);
-                if (hashtagMatches) {
-                    tags = hashtagMatches.map(tag => tag.slice(1));
-                    text = text.replace(/#\w+/g, '').trim();
-                }
-                
-                // Extract priority
-                if (/\b(high|urgent|important|asap)\b/i.test(input)) {
-                    priority = 'high';
-                    text = text.replace(/\b(high|urgent|important|asap)\s*(priority|pri)?\b/gi, '').trim();
-                } else if (/\b(low|later|whenever)\b/i.test(input)) {
-                    priority = 'low';
-                    text = text.replace(/\b(low|later|whenever)\s*(priority|pri)?\b/gi, '').trim();
-                } else if (/\b(medium|normal|med)\b/i.test(input)) {
-                    priority = 'medium';
-                    text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
-                }
-                
-                // Extract time (enhanced patterns)
-                const timePatterns = [
-                    /\bat\s+(\d{1,2}):(\d{2})\s*(am|pm)\b/i,      // at 3:30pm
-                    /\bat\s+(\d{1,2})\s*(am|pm)\b/i,              // at 3pm
-                    /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
-                    /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
-                    /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
-                ];
-                
-                for (const pattern of timePatterns) {
-                    const timeMatch = text.match(pattern);
-                    if (timeMatch) {
-                        let hours = parseInt(timeMatch[1]);
-                        let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
-                        // Ensure minutes is not NaN
-                        if (isNaN(minutes)) minutes = 0;
-                        const period = timeMatch[3];
-                        
-                        // Convert to 24-hour format
-                        if (period) {
-                            const isPM = /pm/i.test(period);
-                            if (isPM && hours < 12) hours += 12;
-                            if (!isPM && hours === 12) hours = 0;
-                        }
-                        
-                        time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                        // Remove the entire matched time pattern including "at" if present
-                        text = text.replace(timeMatch[0], '').trim();
-                        break;
-                    }
-                }
-                
-                // Simple emoji assignment based on keywords
-                let emoji = '📝';
-                const emojiMap = {
-                    'clean': '🧹', 'bathroom': '🚿', 'shower': '🚿', 'bath': '🛁',
-                    'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
-                    'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
-                    'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
-                    'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗',
-                    'laundry': '👔', 'wash': '🧼', 'kitchen': '🍳', 'bedroom': '🛏️'
-                };
-                
-                for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
-                    if (new RegExp(`\\b${keyword}`, 'i').test(input)) {
-                        emoji = emojiChar;
-                        break;
-                    }
-                }
-                
-                return { text, time, priority, tags, emoji };
-            };
-
-            taskForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const inputText = taskInput.value.trim();
-                if (inputText === '') return;
-
-                // Initialize audio on first user interaction
-                await initAudio();
-
-                addTaskBtn.disabled = true;
-                addSpinner.classList.remove('hidden');
-                addBtnText.classList.add('hidden');
-                
-                // Parse the natural language input
-                const parsedTask = await parseNaturalLanguageTask(inputText);
-                logger.log('Parsed task data:', parsedTask);
-                
-                // If no time was extracted, use current time
-                const now = new Date();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const currentTime = `${hours}:${minutes}`;
-
-                // Validate and prepare task data for API
-                const task = {
-                    id: Date.now(),
-                    date: selectedDate,
-                    text: parsedTask.text.trim(),
-                    emoji: parsedTask.emoji || '📝',
-                    time: parsedTask.time || currentTime,
-                    priority: ['high', 'medium', 'low'].includes(parsedTask.priority) ? parsedTask.priority : 'medium',
-                    tags: Array.isArray(parsedTask.tags) ? parsedTask.tags : [],
-                    completed: false
-                };
-                
-                // Update hidden inputs for compatibility
-                timeInput.value = task.time;
-                priorityInput.value = task.priority;
-                tagsInput.value = Array.isArray(task.tags) ? task.tags.join(', ') : '';
-                
-                logger.log('Final task data being sent:', task);
-                addTask(task);
-                
-                taskForm.reset();
-                addTaskBtn.disabled = false;
-                addSpinner.classList.add('hidden');
-                addBtnText.classList.remove('hidden');
-            });
-
-            prevWeekBtn.addEventListener('click', () => {
-                currentDate.setDate(currentDate.getDate() - 7);
-                renderWeek();
-                renderTasks();
-            });
-
-            nextWeekBtn.addEventListener('click', () => {
-                currentDate.setDate(currentDate.getDate() + 7);
-                renderWeek();
-                renderTasks();
-            });
-            
-            suggestTasksBtn.addEventListener('click', () => openModal(suggestModal));
-            cancelSuggestBtn.addEventListener('click', () => closeModal(suggestModal));
-            
-             generateTasksBtn.addEventListener('click', async () => {
-                const goal = goalInput.value.trim();
-                if (!goal) return;
-
-                generateBtnText.classList.add('hidden');
-                generateSpinner.classList.remove('hidden');
-                generateTasksBtn.disabled = true;
-                
-                const prompt = `Based on the goal "${goal}", suggest a list of 3 to 5 actionable tasks. Return a JSON array of strings. Example: ["Task 1", "Task 2"]`;
-                const responseText = await callGemini(prompt);
-
-                if (responseText) {
-                    try {
-                        const suggestedTaskTexts = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
-                        
-                        const taskPromises = suggestedTaskTexts.map(async (taskText) => {
-                            const emojiPrompt = `Based on the task "${taskText}", suggest one single, relevant emoji. Only return the emoji itself.`;
-                            const emoji = await callGemini(emojiPrompt) || '💡';
-                            return {
-                                id: Date.now() + Math.random(),
-                                date: selectedDate,
-                                text: taskText,
-                                emoji: emoji.trim(),
-                                time: null,
-                                priority: 'medium',
-                                tags: ['suggested', goal.split(' ')[0].toLowerCase()],
-                                completed: false
-                            };
-                        });
-
-                        const newTasks = await Promise.all(taskPromises);
-                        newTasks.forEach(task => addTask(task));
-                        
-                        closeModal(suggestModal);
-                        goalInput.value = '';
-                    } catch (e) {
-                        alert("The AI returned an unexpected format. Please try a different goal.");
-                    }
-                }
-                
-                generateBtnText.classList.remove('hidden');
-                generateSpinner.classList.add('hidden');
-                generateTasksBtn.disabled = false;
-            });
-            
-            // Smart Plan feature temporarily disabled
-            /* smartPlanBtn.addEventListener('click', async () => {
-                const tasksForDay = allTasks.filter(t => t.date === selectedDate && !t.time);
-                if (tasksForDay.length === 0) return;
-                
-                smartPlanBtn.innerHTML = `<div class="spinner h-5 w-5 rounded-full border-2 border-t-transparent"></div><span>Planning...</span>`;
-                smartPlanBtn.disabled = true;
-
-                try {
-                    // Use the proper smartPlanning method with authentication
-                    const response = await auth.smartPlanning(tasksForDay, selectedDate);
-                    logger.log('🤖 Smart Plan Response:', response);
-
-                    if (response.schedule) {
-                        logger.log('⏰ Parsed Schedule:', response.schedule);
-                        logger.log('📋 Tasks for Day:', tasksForDay);
-                        
-                        // Update tasks with suggested times and persist to database
-                        const updatePromises = [];
-                        for (const task of tasksForDay) {
-                            logger.log(`🔍 Checking task "${task.text}" for schedule match...`);
-                            if (response.schedule[task.text]) {
-                                const suggestedTime = response.schedule[task.text];
-                                logger.log(`⏱️ Found time "${suggestedTime}" for task "${task.text}"`);
-                                const updatedTask = { ...task, time: suggestedTime };
-                                updatePromises.push(updateTask(task.id, updatedTask));
-                            } else {
-                                logger.log(`❌ No time found for task "${task.text}"`);
-                                logger.log('Available schedule keys:', Object.keys(response.schedule));
-                            }
-                        }
-                        
-                        logger.log(`🔄 Updating ${updatePromises.length} tasks...`);
-                        await Promise.all(updatePromises);
-                        logger.log('✅ All task updates completed');
-                        await renderTasks();
-                    } else if (response.rawResponse) {
-                        // Fallback to parsing raw response if schedule parsing failed
-                        logger.log('📝 Fallback: parsing raw AI response');
-                        const cleanResponse = response.rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-                        const schedule = JSON.parse(cleanResponse);
-                        logger.log('⏰ Parsed Schedule from raw:', schedule);
-                        
-                        // Same update logic
-                        const updatePromises = [];
-                        for (const task of tasksForDay) {
-                            if (schedule[task.text]) {
-                                const updatedTask = { ...task, time: schedule[task.text] };
-                                updatePromises.push(updateTask(task.id, updatedTask));
-                            }
-                        }
-                        await Promise.all(updatePromises);
-                        await renderTasks();
-                    } else {
-                        throw new Error('No schedule data in response');
-                    }
-                } catch (e) {
-                    logger.error('❌ Smart Plan Error:', e);
-                    alert("Smart planning failed. Please try again.");
-                }
-
-                smartPlanBtn.innerHTML = `<i class="fas fa-brain"></i> <span>✨ Smart Plan</span>`;
-                smartPlanBtn.disabled = false;
-            }); */
-
-            editTaskForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const id = parseInt(editTaskId.value);
-                const task = allTasks.find(t => t.id === id);
-                if (!task) return;
-
-                try {
-                    await updateTask(id, {
-                        ...task,
-                        text: editTaskText.value,
-                        time: editTaskTime.value,
-                        priority: editTaskPriority.value,
-                        tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
-                    });
-                    await renderTasks();
-                    closeModal(editModal);
-                } catch (error) {
-                    alert('Failed to update task. Please try again.');
-                }
-            });
-
-            cancelEditBtn.addEventListener('click', () => closeModal(editModal));
-            
-            clearAllBtn.addEventListener('click', () => openModal(confirmClearModal));
-            cancelClearBtn.addEventListener('click', () => closeModal(confirmClearModal));
-            confirmClearBtn.addEventListener('click', async () => {
-                try {
-                    await clearAllTasks();
-                    await renderTasks();
-                    closeModal(confirmClearModal);
-                } catch (error) {
-                    alert('Failed to clear tasks. Please try again.');
-                }
-            });
-
-            clearFilterBtn.addEventListener('click', () => {
-                currentFilter = null;
-                filterContainer.classList.add('hidden');
-                renderTasks();
-            });
-
-            // Celebration modal event listeners
-            closeCelebrationBtn.addEventListener('click', async () => {
-                try {
-                    // Archive completed tasks when closing celebration
-                    await archiveCompletedTasks(selectedDate);
-                    closeModal(celebrationModal);
-                    await renderTasks(); // Refresh to show archived tasks are gone
-                } catch (error) {
-                    logger.error('Error archiving tasks:', error);
-                    closeModal(celebrationModal);
-                }
-            });
-
-            addTomorrowTasksBtn.addEventListener('click', async () => {
-                try {
-                    // Archive completed tasks from today before moving to tomorrow
-                    const todayDate = selectedDate;
-                    await archiveCompletedTasks(todayDate);
-                    
-                    closeModal(celebrationModal);
-                    
-                    // Navigate to tomorrow - properly parse the ISO date string
-                    const currentSelectedDate = new Date(selectedDate + 'T00:00:00');
-                    const tomorrow = new Date(currentSelectedDate);
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    
-                    // Update the selected date
-                    selectedDate = toISODateString(tomorrow);
-                    
-                    // Update the current date for week navigation
-                    currentDate = new Date(tomorrow);
-                    
-                    // Re-render everything for the new date
-                    renderWeek();
-                    renderTasks();
-                    updateSelectedDateDisplay();
-                    
-                    // Focus on the task input for easy task creation
-                    setTimeout(() => {
-                        taskInput.focus();
-                    }, 300);
-                    
-                    // Successfully archived tasks and navigated to tomorrow
-                } catch (error) {
-                    logger.error('Error during tomorrow navigation:', error);
-                    closeModal(celebrationModal);
-                }
-            });
-
-            // Archive toggle functionality
-            archiveToggleBtn.addEventListener('click', () => {
-                showingArchive = !showingArchive;
-                renderTasks();
-            });
-
-            // --- Setup Task List Drop Zone ---
-            const setupTaskListDropZone = () => {
-                taskList.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                });
-                
-                taskList.addEventListener('drop', async (e) => {
-                    e.preventDefault();
-                    
-                    if (draggedElement) {
-                        // If dropped on empty area, move to end
-                        const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
-                        if (allTasks.length > 0) {
-                            const lastTask = allTasks[allTasks.length - 1];
-                            const lastTaskId = parseInt(lastTask.dataset.id);
-                            if (lastTaskId !== draggedTaskId) {
-                                await handleTaskReorder(draggedTaskId, lastTaskId, 'after');
-                            }
-                        }
-                    }
-                });
-            };
-            
-            // --- Form Switching Logic ---
-            const registerBranding = document.getElementById('register-branding');
-            const loginBranding = document.querySelector('.mt-8.text-center.border-t');
-            
-            // Show register form
-            if (showRegisterBtn) {
-                showRegisterBtn.addEventListener('click', () => {
-                    loginForm.classList.add('hidden');
-                    registerForm.classList.remove('hidden');
-                    registerSwitch.classList.remove('hidden');
-                    authMessage.classList.add('hidden');
-                    
-                    // Switch branding visibility
-                    if (loginBranding) loginBranding.classList.add('hidden');
-                    if (registerBranding) registerBranding.classList.remove('hidden');
-                });
-            }
-            
-            // Show login form
-            if (showLoginBtn) {
-                showLoginBtn.addEventListener('click', () => {
-                    registerForm.classList.add('hidden');
-                    loginForm.classList.remove('hidden');
-                    registerSwitch.classList.add('hidden');
-                    authMessage.classList.add('hidden');
-                    
-                    // Switch branding visibility
-                    if (registerBranding) registerBranding.classList.add('hidden');
-                    if (loginBranding) loginBranding.classList.remove('hidden');
-                });
-            }
-            
-            // --- Initial Load ---
-            setupTaskListDropZone();
-            setupEventDelegation();
-            renderWeek();
-            // Initialize notification manager
-            let notificationManager;
-            let reminderUI;
-            
-            try {
-                // Initialize notification manager
-                if (window.NotificationManager) {
-                    notificationManager = new NotificationManager();
-                    window.notificationManager = notificationManager;
-                    
-                    // Initialize reminder UI
-                    if (window.ReminderUI) {
-                        reminderUI = new ReminderUI(notificationManager);
-                        window.reminderUI = reminderUI;
-                        reminderUI.init();
-                        
-                        // Sync reminders on startup
-                        if (notificationManager.isEnabled()) {
+                    document.getElementById('enableNotifications').addEventListener('click', async () => {
+                        const granted = await notificationManager.requestPermission();
+                        if (granted) {
                             await notificationManager.syncReminders();
                         }
-                    }
-                    
-                    // Make task manager accessible for notifications
-                    window.taskManager = {
-                        allTasks: allTasks,
-                        toggleComplete: toggleComplete
-                    };
-                    
-                    // Request notification permission if not already granted
-                    if (notificationManager.permission === 'default') {
-                        // Show a friendly prompt after user has interacted with the app
-                        setTimeout(() => {
-                            const shouldAsk = localStorage.getItem('askForNotifications') !== 'false';
-                            if (shouldAsk && allTasks.some(t => t.time)) {
-                                // Only ask if there are tasks with times
-                                showNotificationPrompt();
-                            }
-                        }, 5000);
-                    }
-                }
-            } catch (error) {
-                logger.error('Failed to initialize notification system:', error);
-            }
-            
-            // Function to show notification permission prompt
-            const showNotificationPrompt = () => {
-                const prompt = document.createElement('div');
-                prompt.className = 'fixed top-4 right-4 glass-pane p-4 rounded-xl z-50 max-w-sm';
-                prompt.innerHTML = `
-                    <div class="flex items-start gap-3">
-                        <i class="fas fa-bell text-2xl text-indigo-400"></i>
-                        <div class="flex-grow">
-                            <h3 class="font-semibold mb-1">Enable Reminders?</h3>
-                            <p class="text-sm text-gray-300 mb-3">Get notified before your scheduled tasks</p>
-                            <div class="flex gap-2">
-                                <button id="enableNotifications" class="btn-primary text-sm py-1 px-3">Enable</button>
-                                <button id="dismissNotifications" class="btn-secondary text-sm py-1 px-3">Not Now</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(prompt);
-                
-                document.getElementById('enableNotifications').addEventListener('click', async () => {
-                    const granted = await notificationManager.requestPermission();
-                    if (granted) {
-                        await notificationManager.syncReminders();
-                    }
-                    prompt.remove();
-                });
-                
-                document.getElementById('dismissNotifications').addEventListener('click', () => {
-                    localStorage.setItem('askForNotifications', 'false');
-                    prompt.remove();
-                });
-                
-                // Auto-dismiss after 10 seconds
-                setTimeout(() => {
-                    if (prompt.parentNode) {
                         prompt.remove();
-                    }
-                }, 10000);
-            };
-            
-            renderTasks();
+                    });
+                    
+                    document.getElementById('dismissNotifications').addEventListener('click', () => {
+                        localStorage.setItem('askForNotifications', 'false');
+                        prompt.remove();
+                    });
+                    
+                    // Auto-dismiss after 10 seconds
+                    setTimeout(() => {
+                        if (prompt.parentNode) {
+                            prompt.remove();
+                        }
+                    }, 10000);
+                };
+                
+                renderTasks();
+            }
+
+            if (currentUser) {
+                await initializeMainApp();
+            }
         });
     </script>
     
@@ -2984,8 +3003,11 @@ Return only the JSON object.`;
     
     <!-- Vercel Analytics -->
     <script type="module">
-        import { inject } from '@vercel/analytics';
-        inject();
+        import('https://unpkg.com/@vercel/analytics@1.5.0?module')
+            .then(({ inject }) => inject())
+            .catch((error) => {
+                console.warn('Vercel Analytics failed to load', error);
+            });
     </script>
 </body>
 </html>

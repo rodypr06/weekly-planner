@@ -14,12 +14,34 @@ async function loadSupabaseConfig() {
         if (!response.ok) {
             throw new Error('Failed to load configuration');
         }
-        supabaseConfig = await response.json();
+        const config = await response.json();
+        supabaseConfig = normalizeSupabaseConfig(config);
+        console.log('Supabase configuration loaded:', {
+            supabaseUrl: supabaseConfig.supabaseUrl,
+            hasAnonKey: Boolean(supabaseConfig.supabaseAnonKey)
+        });
         return supabaseConfig;
     } catch (error) {
         console.error('Error loading Supabase configuration:', error);
         throw error;
     }
+}
+
+function normalizeSupabaseConfig(config) {
+    const sanitizeUrl = (value) => {
+        if (typeof value !== 'string') return '';
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+        const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+        return withProtocol.replace(/\/+$/, '');
+    };
+
+    const sanitizeKey = (value) => (typeof value === 'string' ? value.trim() : '');
+
+    return {
+        supabaseUrl: sanitizeUrl(config?.supabaseUrl),
+        supabaseAnonKey: sanitizeKey(config?.supabaseAnonKey)
+    };
 }
 
 // Initialize Supabase client
