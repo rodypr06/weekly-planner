@@ -3003,8 +3003,11 @@
     
     <!-- Vercel Analytics -->
     <script type="module">
-        import { inject } from '@vercel/analytics';
-        inject();
+        import('https://unpkg.com/@vercel/analytics@1.5.0?module')
+            .then(({ inject }) => inject())
+            .catch((error) => {
+                console.warn('Vercel Analytics failed to load', error);
+            });
     </script>
 </body>
 </html>
