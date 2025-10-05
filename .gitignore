@@ -38,3 +38,16 @@ weekly-planner.conf tasks.db
 # Vercel
 .vercel
 *.vercel.app
+
+# Test files
+test-*.html
+debug-*.html
+tests/manual/
+
+# Database files
+*.db
+*.db-journal
+
+# Backup files
+*-backup.js
+*-original.js

@@ -3,9 +3,9 @@ const { createCanvas } = require('canvas');
 
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
-// Create icons directory if it doesn't exist
-if (!fs.existsSync('./icons')) {
-    fs.mkdirSync('./icons');
+// Create public/icons directory if it doesn't exist
+if (!fs.existsSync('./public/icons')) {
+    fs.mkdirSync('./public/icons', { recursive: true });
 }
 
 sizes.forEach(size => {
@@ -27,5 +27,5 @@ sizes.forEach(size => {
 
     // Save the icon
     const buffer = canvas.toBuffer('image/png');
-    fs.writeFileSync(`./icons/icon-${size}x${size}.png`, buffer);
+    fs.writeFileSync(`./public/icons/icon-${size}x${size}.png`, buffer);
 }); 
