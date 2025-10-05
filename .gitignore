@@ -51,3 +51,4 @@ tests/manual/
 # Backup files
 *-backup.js
 *-original.js
+.serena/
