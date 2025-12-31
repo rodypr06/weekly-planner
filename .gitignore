@@ -52,3 +52,4 @@ tests/manual/
 *-backup.js
 *-original.js
 .serena/
+.archive/
