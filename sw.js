@@ -1,18 +1,17 @@
 const CACHE_NAME = 'weekly-planner-v3-sqlite';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/manifest.json',
-  '/auth.js',
-  '/auth-ui.js',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-128x128.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-152x152.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png',
+  '/public/manifest.json',
+  '/public/auth.js',
+  '/public/auth-ui.js',
+  '/public/icons/icon-72x72.png',
+  '/public/icons/icon-96x96.png',
+  '/public/icons/icon-128x128.png',
+  '/public/icons/icon-144x144.png',
+  '/public/icons/icon-152x152.png',
+  '/public/icons/icon-192x192.png',
+  '/public/icons/icon-384x384.png',
+  '/public/icons/icon-512x512.png',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
@@ -25,7 +24,14 @@ self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then(cache => {
+        // Try to cache each URL individually to avoid failing if one fails
+        return Promise.allSettled(
+          urlsToCache.map(url => cache.add(url).catch(err => {
+            console.log('Failed to cache:', url, err);
+          }))
+        );
+      })
   );
 });
 
@@ -35,28 +41,34 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Network-first strategy for HTML files to ensure fresh content
-  if (event.request.headers.get('accept').includes('text/html')) {
+  // Network-first strategy for HTML files and API requests to ensure fresh content
+  if (event.request.headers.get('accept')?.includes('text/html') || event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Clone the response before caching
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
+          // Only cache successful responses
+          if (response.ok && !event.request.url.includes('/api/')) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+          }
           return response;
         })
         .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(event.request);
+          // Fallback to cache if network fails (for HTML only, not API)
+          if (!event.request.url.includes('/api/')) {
+            return caches.match(event.request);
+          }
+          // For API requests, return a network error
+          return new Response('Network error', { status: 503 });
         })
     );
     return;
   }
 
-  // Cache-first for other resources
+  // Cache-first for other resources (CSS, JS, images)
   event.respondWith(
     caches.match(event.request)
       .then(response => {
