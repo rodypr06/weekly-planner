@@ -55,22 +55,36 @@ function createAuthRoutes(authAdapter, rateLimiters) {
         // Registration endpoint
         router.post('/register', rateLimiters.authLimiter, async (req, res) => {
             try {
-                const { username, password } = req.body;
-                
-                if (!username || !password) {
-                    return res.status(400).json({ error: 'Username and password are required' });
+                const { name, email, password } = req.body;
+
+                if (!name || !email || !password) {
+                    return res.status(400).json({ error: 'Name, email, and password are required' });
                 }
-                
-                const result = await authAdapter.register(username, password);
-                
+
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    return res.status(400).json({ error: 'Invalid email format' });
+                }
+
+                // Password strength validation
+                if (password.length < 6) {
+                    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+                }
+
+                const result = await authAdapter.register(name, email, password);
+
                 if (result.error) {
                     return res.status(400).json({ error: result.error.message });
                 }
-                
+
+                // Auto-login after registration
+                const loginResult = await authAdapter.login(req, email, password);
+
                 res.json({
                     success: true,
-                    message: 'User created successfully',
-                    user: result.data
+                    message: 'Account created successfully',
+                    user: loginResult.data
                 });
             } catch (error) {
                 logger.error('Registration error:', error);
@@ -81,18 +95,18 @@ function createAuthRoutes(authAdapter, rateLimiters) {
         // Login endpoint
         router.post('/login', rateLimiters.authLimiter, async (req, res) => {
             try {
-                const { username, password } = req.body;
-                
-                if (!username || !password) {
-                    return res.status(400).json({ error: 'Username and password are required' });
+                const { email, password } = req.body;
+
+                if (!email || !password) {
+                    return res.status(400).json({ error: 'Email and password are required' });
                 }
-                
-                const result = await authAdapter.login(req, username, password);
-                
+
+                const result = await authAdapter.login(req, email, password);
+
                 if (result.error) {
                     return res.status(401).json({ error: result.error.message });
                 }
-                
+
                 res.json({
                     success: true,
                     message: 'Login successful',

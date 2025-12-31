@@ -79,22 +79,22 @@ class SessionAuthAdapter {
     /**
      * Register a new user
      */
-    async register(username, password) {
+    async register(name, email, password) {
         try {
             const bcrypt = require('bcryptjs');
-            
+
             // Check if user already exists
-            const existingUser = await this.dbAdapter.getUserByUsername(username);
+            const existingUser = await this.dbAdapter.getUserByEmail(email);
             if (existingUser.data) {
-                return { data: null, error: { message: 'Username already exists' } };
+                return { data: null, error: { message: 'Email already registered' } };
             }
 
             // Hash password
             const passwordHash = await bcrypt.hash(password, 10);
-            
+
             // Create user
-            const result = await this.dbAdapter.createUser(username, passwordHash);
-            
+            const result = await this.dbAdapter.createUser(name, email, passwordHash);
+
             if (result.error) {
                 return { data: null, error: result.error };
             }
@@ -102,7 +102,8 @@ class SessionAuthAdapter {
             return {
                 data: {
                     id: result.data.id,
-                    username: result.data.username
+                    name: result.data.name,
+                    email: result.data.email
                 },
                 error: null
             };
@@ -115,33 +116,36 @@ class SessionAuthAdapter {
     /**
      * Login user
      */
-    async login(req, username, password) {
+    async login(req, email, password) {
         try {
             const bcrypt = require('bcryptjs');
-            
+
             // Get user from database
-            const userResult = await this.dbAdapter.getUserByUsername(username);
-            
+            const userResult = await this.dbAdapter.getUserByEmail(email);
+
             if (userResult.error || !userResult.data) {
-                return { data: null, error: { message: 'Invalid username or password' } };
+                return { data: null, error: { message: 'Invalid email or password' } };
             }
 
             const user = userResult.data;
 
             // Check password
             const isValidPassword = await bcrypt.compare(password, user.password_hash);
-            
+
             if (!isValidPassword) {
-                return { data: null, error: { message: 'Invalid username or password' } };
+                return { data: null, error: { message: 'Invalid email or password' } };
             }
 
             // Set session
             req.session.userId = user.id;
+            req.session.userName = user.name;
+            req.session.userEmail = user.email;
 
             return {
                 data: {
                     id: user.id,
-                    username: user.username
+                    name: user.name,
+                    email: user.email
                 },
                 error: null
             };
@@ -174,17 +178,22 @@ class SessionAuthAdapter {
      * Get current user info
      */
     async getCurrentUser(req) {
-        if (req.user) {
-            return {
-                data: {
-                    authenticated: true,
-                    user: {
-                        id: req.user.id,
-                        username: req.user.username || `user_${req.user.id}`
-                    }
-                },
-                error: null
-            };
+        if (req.session && req.session.userId) {
+            // Fetch full user info from database
+            const userResult = await this.dbAdapter.getUserById(req.session.userId);
+            if (userResult.data) {
+                return {
+                    data: {
+                        authenticated: true,
+                        user: {
+                            id: userResult.data.id,
+                            name: userResult.data.name,
+                            email: userResult.data.email
+                        }
+                    },
+                    error: null
+                };
+            }
         }
         return { data: null, error: { message: 'Not authenticated' } };
     }

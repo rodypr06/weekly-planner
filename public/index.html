@@ -24,10 +24,10 @@
     <!-- Mobile-First CSS Framework -->
     <link rel="stylesheet" href="/public/mobile-responsive.css">
     
-    <!-- Supabase Integration -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="supabase-auth.js"></script>
-    
+    <!-- Local Authentication -->
+    <script src="auth.js"></script>
+    <script src="auth-ui.js" defer></script>
+
     <!-- Mobile Navigation and Touch Optimization -->
     <script src="/public/mobile-navigation.js" defer></script>
     <script src="/public/touch-optimization.js" defer></script>
@@ -186,30 +186,30 @@
                     <p class="text-gray-400 text-sm">Join to start planning your week</p>
                 </div>
                 <div>
-                    <label for="register-email" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
-                    <input type="email" id="register-email" name="email" required 
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
-                           placeholder="Enter your email">
+                    <label for="register-name" class="block text-sm font-medium text-gray-400 mb-2">Name</label>
+                    <input type="text" id="register-name" name="name" required
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
+                           placeholder="Enter your name">
                 </div>
                 <div>
-                    <label for="register-username" class="block text-sm font-medium text-gray-400 mb-2">Username (Optional)</label>
-                    <input type="text" id="register-username" name="username" 
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
-                           placeholder="Choose a display name">
+                    <label for="register-email" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="register-email" name="email" required
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
+                           placeholder="Enter your email">
                 </div>
                 <div>
                     <label for="register-password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
                     <input type="password" id="register-password" name="password" required minlength="6"
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
                            placeholder="At least 6 characters">
                 </div>
                 <div>
                     <label for="register-password-confirm" class="block text-sm font-medium text-gray-400 mb-2">Confirm Password</label>
                     <input type="password" id="register-password-confirm" name="passwordConfirm" required minlength="6"
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
                            placeholder="Confirm your password">
                 </div>
-                <button type="submit" id="register-btn" 
+                <button type="submit" id="register-btn"
                         class="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2">
                     <span id="register-btn-text">Create Account</span>
                     <div id="register-spinner" class="spinner h-5 w-5 rounded-full border-2 border-t-transparent hidden"></div>
@@ -492,280 +492,14 @@
     </div>
 
     <script>
+        // Wait for app to be ready (triggered by auth-ui.js)
+        window.addEventListener('app-ready', () => {
+            console.log('App is ready, initializing...');
+            renderWeek();
+            renderTasks();
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- Authentication Management ---
-            let currentUser = null;
-            let supabaseInitialized = false;
-            
-            // Auth element selectors
-            const authModal = document.getElementById('auth-modal');
-            const mainApp = document.getElementById('main-app');
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const showRegisterBtn = document.getElementById('show-register-btn');
-            const showLoginBtn = document.getElementById('show-login-btn');
-            const registerSwitch = document.getElementById('register-switch');
-            const authMessage = document.getElementById('auth-message');
-            const authMessageText = document.getElementById('auth-message-text');
-            const userDisplayName = document.getElementById('user-display-name');
-            const userMenuName = document.getElementById('user-menu-name');
-            const userMenuBtn = document.getElementById('user-menu-btn');
-            const userMenu = document.getElementById('user-menu');
-            const logoutBtn = document.getElementById('logout-btn');
-            
-            // Check authentication status on load
-            async function checkAuth() {
-                try {
-                    const authStatus = await SupabaseAuth.checkAuth();
-                    
-                    if (authStatus.authenticated) {
-                        currentUser = authStatus.user;
-                        showMainApp();
-                    } else {
-                        showAuthModal();
-                    }
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                    showAuthModal();
-                }
-            }
-            
-            function showAuthModal() {
-                authModal.classList.remove('hidden');
-                mainApp.classList.add('hidden');
-            }
-            
-            function showMainApp() {
-                authModal.classList.add('hidden');
-                mainApp.classList.remove('hidden');
-                updateUserDisplay();
-                
-                // Load initial data when showing the main app
-                renderWeek();
-                renderTasks();
-            }
-            
-            function updateUserDisplay() {
-                if (currentUser) {
-                    userDisplayName.textContent = currentUser.username;
-                    userMenuName.textContent = currentUser.username;
-                }
-            }
-            
-            function showMessage(message, type = 'error') {
-                authMessage.className = `mt-4 p-3 rounded-lg ${type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`;
-                authMessageText.className = `text-sm text-center ${type === 'success' ? 'text-emerald-400' : 'text-red-400'}`;
-                authMessageText.textContent = message;
-                authMessage.classList.remove('hidden');
-                
-                setTimeout(() => {
-                    authMessage.classList.add('hidden');
-                }, 5000);
-            }
-            
-            // Initialize UI Event Listeners (works regardless of Supabase status)
-            function initializeUIEventListeners() {
-                // Form switching
-                if (showRegisterBtn) {
-                    showRegisterBtn.addEventListener('click', () => {
-                        console.log('Create Account button clicked');
-                        loginForm.classList.add('hidden');
-                        registerForm.classList.remove('hidden');
-                        registerSwitch.classList.remove('hidden');
-                        authMessage.classList.add('hidden');
-                    });
-                }
-                
-                if (showLoginBtn) {
-                    showLoginBtn.addEventListener('click', () => {
-                        console.log('Back to login clicked');
-                        registerForm.classList.add('hidden');
-                        loginForm.classList.remove('hidden');
-                        registerSwitch.classList.add('hidden');
-                        authMessage.classList.add('hidden');
-                    });
-                }
-            }
-            
-            // Initialize UI immediately
-            initializeUIEventListeners();
-            
-            // User menu toggle
-            if (userMenuBtn) {
-                userMenuBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    userMenu.classList.toggle('hidden');
-                });
-            }
-            
-            // Close user menu when clicking outside
-            if (userMenu) {
-                document.addEventListener('click', () => {
-                    userMenu.classList.add('hidden');
-                });
-            }
-            
-            // Login form submission
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!supabaseInitialized) {
-                    showMessage('Authentication service is not ready. Please refresh the page.');
-                    return;
-                }
-                
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                const loginBtn = document.getElementById('login-btn');
-                const loginBtnText = document.getElementById('login-btn-text');
-                const loginSpinner = document.getElementById('login-spinner');
-                
-                // Show loading state
-                loginBtnText.classList.add('hidden');
-                loginSpinner.classList.remove('hidden');
-                loginBtn.disabled = true;
-                
-                try {
-                    const result = await SupabaseAuth.login(email, password);
-                    
-                    if (result.success) {
-                        currentUser = result.user;
-                        showMainApp();
-                        showMessage('Welcome back!', 'success');
-                    } else {
-                        showMessage(result.error || 'Login failed');
-                    }
-                } catch (error) {
-                    showMessage('Network error. Please try again.');
-                } finally {
-                    // Reset loading state
-                    loginBtnText.classList.remove('hidden');
-                    loginSpinner.classList.add('hidden');
-                    loginBtn.disabled = false;
-                }
-            });
-            
-            // Register form submission
-            registerForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!supabaseInitialized) {
-                    showMessage('Authentication service is not ready. Please refresh the page.');
-                    return;
-                }
-                
-                const email = document.getElementById('register-email').value;
-                const username = document.getElementById('register-username').value;
-                const password = document.getElementById('register-password').value;
-                const passwordConfirm = document.getElementById('register-password-confirm').value;
-                const registerBtn = document.getElementById('register-btn');
-                const registerBtnText = document.getElementById('register-btn-text');
-                const registerSpinner = document.getElementById('register-spinner');
-                
-                if (password !== passwordConfirm) {
-                    showMessage('Passwords do not match');
-                    return;
-                }
-                
-                // Show loading state
-                registerBtnText.classList.add('hidden');
-                registerSpinner.classList.remove('hidden');
-                registerBtn.disabled = true;
-                
-                try {
-                    const result = await SupabaseAuth.register(email, password, username);
-                    
-                    if (result.success) {
-                        if (result.needsConfirmation) {
-                            showMessage(result.message, 'success');
-                        } else {
-                            currentUser = result.user;
-                            showMainApp();
-                            showMessage('Account created successfully!', 'success');
-                        }
-                    } else {
-                        showMessage(result.error || 'Registration failed');
-                    }
-                } catch (error) {
-                    showMessage('Network error. Please try again.');
-                } finally {
-                    // Reset loading state
-                    registerBtnText.classList.remove('hidden');
-                    registerSpinner.classList.add('hidden');
-                    registerBtn.disabled = false;
-                }
-            });
-            
-            // Logout functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async () => {
-                    try {
-                        const result = await SupabaseAuth.logout();
-                        if (result.success) {
-                            currentUser = null;
-                            showAuthModal();
-                            
-                            // Reset forms
-                            loginForm.reset();
-                            registerForm.reset();
-                        }
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                    }
-                });
-            }
-            
-            // Initialize Supabase asynchronously
-            async function initializeSupabaseAsync() {
-                try {
-                    // Wait for the function to be available
-                    if (typeof initializeSupabase === 'undefined') {
-                        console.log('Waiting for initializeSupabase function to be available...');
-                        await new Promise((resolve) => {
-                            const checkInterval = setInterval(() => {
-                                if (typeof initializeSupabase === 'function') {
-                                    clearInterval(checkInterval);
-                                    resolve();
-                                }
-                            }, 100);
-                            // Timeout after 10 seconds
-                            setTimeout(() => {
-                                clearInterval(checkInterval);
-                                resolve();
-                            }, 10000);
-                        });
-                    }
-                    
-                    if (typeof initializeSupabase === 'function') {
-                        supabaseInitialized = await initializeSupabase();
-                        if (supabaseInitialized) {
-                            console.log('Supabase initialized successfully');
-                            // Check authentication status after Supabase is ready
-                            await checkAuth();
-                        } else {
-                            console.error('Supabase initialization failed');
-                            showMessage('Authentication service is unavailable. Some features may not work.');
-                            // Show auth modal anyway to allow UI interaction
-                            showAuthModal();
-                        }
-                    } else {
-                        console.error('initializeSupabase function not found');
-                        showMessage('Authentication service is unavailable. Some features may not work.');
-                        showAuthModal();
-                    }
-                } catch (error) {
-                    console.error('Error during Supabase initialization:', error);
-                    showMessage('Authentication service error. Please refresh the page.');
-                    showAuthModal();
-                }
-            }
-            
-            // Start Supabase initialization (don't await, let it run async)
-            initializeSupabaseAsync();
-            
-            // Continue with app initialization regardless of auth status
-            // This ensures UI is responsive even if Supabase fails
-            
             // --- Element Selectors ---
             const taskForm = document.getElementById('add-task-form');
             const taskInput = document.getElementById('task-input');

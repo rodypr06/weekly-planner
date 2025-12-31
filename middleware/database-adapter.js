@@ -36,9 +36,11 @@ class SQLiteAdapter {
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
 
@@ -313,16 +315,16 @@ class SQLiteAdapter {
     }
 
     // User operations (for SQLite authentication)
-    async createUser(username, passwordHash) {
+    async createUser(name, email, passwordHash) {
         try {
             const stmt = this.db.prepare(`
-                INSERT INTO users (username, password_hash) 
-                VALUES (?, ?)
+                INSERT INTO users (name, email, password_hash)
+                VALUES (?, ?, ?)
             `);
-            const result = stmt.run(username, passwordHash);
+            const result = stmt.run(name, email, passwordHash);
 
             return {
-                data: { id: result.lastInsertRowid, username },
+                data: { id: result.lastInsertRowid, name, email },
                 error: null
             };
         } catch (error) {
@@ -331,17 +333,32 @@ class SQLiteAdapter {
         }
     }
 
-    async getUserByUsername(username) {
+    async getUserByEmail(email) {
         try {
-            const stmt = this.db.prepare('SELECT * FROM users WHERE username = ?');
-            const user = stmt.get(username);
+            const stmt = this.db.prepare('SELECT * FROM users WHERE email = ?');
+            const user = stmt.get(email);
 
             return {
                 data: user,
                 error: null
             };
         } catch (error) {
-            logger.error('SQLite getUserByUsername error:', error);
+            logger.error('SQLite getUserByEmail error:', error);
+            return { data: null, error };
+        }
+    }
+
+    async getUserById(id) {
+        try {
+            const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
+            const user = stmt.get(id);
+
+            return {
+                data: user,
+                error: null
+            };
+        } catch (error) {
+            logger.error('SQLite getUserById error:', error);
             return { data: null, error };
         }
     }

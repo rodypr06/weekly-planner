@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes, maximum-scale=5.0">
-    <title>📋 Smart Planner</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Smart Planner</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#4f46e5">
@@ -15,135 +14,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Smart Planner">
     
-    <!-- Critical CSS (optimized local builds) -->
-    <link rel="stylesheet" href="/public/vendor/tailwind.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" preload>
+    <!-- Existing Resources -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
     
-    <!-- Critical Styles -->
-    <link rel="stylesheet" href="/public/vendor/fontawesome.min.css">
-    
-    <!-- MagicUI Premium Styles -->
-    <link rel="stylesheet" href="/public/magicui-styles.css">
-    
-    <!-- Theme Switcher Styles -->
-    <link rel="stylesheet" href="/public/theme-switcher.css">
-    
-    <!-- Mobile-First Responsive Styles -->
+    <!-- Mobile-First CSS Framework -->
     <link rel="stylesheet" href="/public/mobile-responsive.css">
     
-    <!-- Critical Viewport Fix for iOS Safari (load immediately) -->
-    <script src="/public/viewport-fix.js"></script>
-    
-    <!-- Preload critical JavaScript resources -->
-    <!-- Removed preload hints to prevent unused resource warnings -->
-    
-    <!-- Security Libraries (load early, non-blocking) -->
-    <script src="/public/vendor/dompurify.min.js" defer></script>
-    <script src="/public/security-utils.js" defer></script>
-    
-    <!-- Supabase Integration with fallback -->
-    <script>
-        // Fallback to CDN if local file fails
-        function loadScript(src, fallback, callback) {
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = callback;
-            script.onerror = () => {
-                console.log('Loading fallback for:', src);
-                const fallbackScript = document.createElement('script');
-                fallbackScript.src = fallback;
-                fallbackScript.onload = callback;
-                document.head.appendChild(fallbackScript);
-            };
-            document.head.appendChild(script);
-        }
-        
-        // Load Supabase with CDN fallback
-        loadScript('/public/vendor/supabase.js', 'https://unpkg.com/@supabase/supabase-js@2', () => {
-            // Load auth script after Supabase is loaded
-            const authScript = document.createElement('script');
-            authScript.src = '/public/supabase-auth-fixed.js?v=1.5';
-            authScript.onload = () => {
-                // Set a flag to indicate auth script is loaded
-                window.supabaseAuthLoaded = true;
-                // Dispatch a custom event
-                window.dispatchEvent(new Event('supabaseAuthReady'));
-            };
-            authScript.onerror = () => {
-                console.error('Failed to load supabase-auth-fixed.js');
-            };
-            document.head.appendChild(authScript);
-        });
-    </script>
-    
-    <!-- Non-critical libraries (lazy load) -->
-    <script>
-        // Lazy load confetti for celebrations
-        window.loadConfetti = () => {
-            if (!window.confetti) {
-                const script = document.createElement('script');
-                script.src = '/public/vendor/confetti.min.js';
-                document.head.appendChild(script);
-            }
-        };
-        
-        // Lazy load Tone.js for audio (only when needed)
-        window.loadTone = () => {
-            if (!window.Tone) {
-                const script = document.createElement('script');
-                script.src = '/public/vendor/tone.min.js';
-                document.head.appendChild(script);
-            }
-        };
-    </script>
-    <!-- ApiClient loaded from supabase-auth.js -->
-    
-    <!-- Notification Manager -->
-    <script src="/public/notification-manager.js" defer></script>
-    <script src="/public/reminder-ui.js" defer></script>
-    
-    <!-- Mobile Navigation -->
-    <script src="/public/mobile-navigation.js" defer></script>
-    
-    <!-- Touch Optimization -->
-    <script src="/public/touch-optimization.js" defer></script>
+    <!-- Local Authentication -->
+    <script src="auth.js"></script>
+    <script src="auth-ui.js" defer></script>
 
-    <!-- Production-safe Logger -->
-    <script>
-        // Production-safe logger for frontend
-        const logger = {
-            isProduction: window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1',
-            
-            log: function(...args) {
-                if (!this.isProduction) {
-                    console.log(...args);
-                }
-            },
-            
-            error: function(...args) {
-                // Always log errors
-                console.error(...args);
-            },
-            
-            warn: function(...args) {
-                if (!this.isProduction) {
-                    console.warn(...args);
-                }
-            },
-            
-            info: function(...args) {
-                if (!this.isProduction) {
-                    console.info(...args);
-                }
-            },
-            
-            debug: function(...args) {
-                if (!this.isProduction) {
-                    console.debug(...args);
-                }
-            }
-        };
-    </script>
+    <!-- Mobile Navigation and Touch Optimization -->
+    <script src="/public/mobile-navigation.js" defer></script>
+    <script src="/public/touch-optimization.js" defer></script>
 
     <!-- Service Worker Registration -->
     <script>
@@ -151,10 +38,10 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                     .then(registration => {
-                        logger.log('ServiceWorker registered successfully');
+                        console.log('ServiceWorker registration successful');
                     })
                     .catch(err => {
-                        logger.error('ServiceWorker registration failed: ', err);
+                        console.log('ServiceWorker registration failed: ', err);
                     });
             });
         }
@@ -163,43 +50,13 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            font-weight: 400;
-            letter-spacing: -0.01em;
         }
-        
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: 600;
-            letter-spacing: -0.02em;
-        }
-        
         .task-item, .day-selector {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
         .task-item.removing {
             transform: scale(0.95);
             opacity: 0;
-        }
-        .task-item.dragging {
-            opacity: 0.5;
-            transform: rotate(3deg);
-            z-index: 1000;
-        }
-        .task-item.drag-over {
-            border-top: 3px solid #818cf8;
-            margin-top: 8px;
-        }
-        .task-list-sortable {
-            min-height: 60px;
-        }
-        .touch-dragging {
-            position: fixed;
-            z-index: 1000;
-            pointer-events: none;
-            transform: rotate(3deg);
-            opacity: 0.8;
-        }
-        .task-item.completed {
-            opacity: 0.6;
         }
         .task-item.completed .task-text {
             text-decoration: line-through;
@@ -279,228 +136,12 @@
         .celebration-orb {
             animation: celebration-float 6s infinite ease-in-out;
         }
-        
-        /* Animated Title Styles */
-        .animated-title-container, .animated-title-container-large {
-            position: relative;
-            display: inline-block;
-            overflow: visible;
-        }
-        
-        .animated-title, .animated-title-large {
-            position: relative;
-            z-index: 10;
-            text-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-        }
-        
-        .animated-title-container::before,
-        .animated-title-container-large::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 120%;
-            height: 120%;
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        /* Nested squares animation */
-        @keyframes nested-magic {
-            0% {
-                transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
-                opacity: 0.3;
-            }
-            50% {
-                transform: translate(-50%, -50%) scale(1.2) rotate(90deg);
-                opacity: 0.6;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1) rotate(180deg);
-                opacity: 0.4;
-            }
-        }
-        
-        @keyframes title-glow {
-            0%, 100% { 
-                text-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(79, 70, 229, 0.2); 
-            }
-            50% { 
-                text-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(79, 70, 229, 0.3); 
-            }
-        }
-        
-        .animated-title {
-            animation: title-glow 3s ease-in-out infinite;
-        }
-        
-        .animated-title-large {
-            animation: title-glow 3s ease-in-out infinite;
-        }
-        
-        /* Create nested squares with CSS */
-        .nested-square {
-            position: absolute;
-            border: 1px solid;
-            border-radius: 2px;
-            animation: nested-magic 4s ease-in-out infinite alternate;
-            pointer-events: none;
-        }
-        
-        .nested-square:nth-child(1) {
-            width: 20px; height: 20px;
-            border-color: rgba(168, 85, 247, 0.6);
-            animation-delay: 0s;
-            box-shadow: 0 0 5px rgba(168, 85, 247, 0.3);
-        }
-        
-        .nested-square:nth-child(2) {
-            width: 30px; height: 30px;
-            border-color: rgba(99, 102, 241, 0.5);
-            animation-delay: 0.2s;
-            box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
-        }
-        
-        .nested-square:nth-child(3) {
-            width: 40px; height: 40px;
-            border-color: rgba(79, 70, 229, 0.4);
-            animation-delay: 0.4s;
-            box-shadow: 0 0 10px rgba(79, 70, 229, 0.1);
-        }
-        
-        .nested-square:nth-child(4) {
-            width: 50px; height: 50px;
-            border-color: rgba(147, 51, 234, 0.3);
-            animation-delay: 0.6s;
-            box-shadow: 0 0 12px rgba(147, 51, 234, 0.1);
-        }
-        
-        .nested-square:nth-child(5) {
-            width: 60px; height: 60px;
-            border-color: rgba(168, 85, 247, 0.2);
-            animation-delay: 0.8s;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.05);
-        }
-        
-        /* Hover effects - Updated for purple theme */
-        .animated-title-container:hover .nested-square,
-        .animated-title-container-large:hover .nested-square {
-            border-color: rgba(168, 85, 247, 0.9) !important;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4) !important;
-            animation-duration: 2s;
-        }
-        
-        /* Force purple color on all nested squares - override any other styles */
-        .nested-square:hover,
-        .animated-title-container:hover .nested-square,
-        .animated-title-container-large:hover .nested-square {
-            border-color: rgba(168, 85, 247, 0.9) !important;
-            background-color: transparent !important;
-        }
-        
-        .animated-title-container:hover .animated-title,
-        .animated-title-container-large:hover .animated-title-large {
-            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 80px rgba(168, 85, 247, 0.5) !important;
-        }
-        
-        /* Mobile-first responsive adjustments */
-        @media (max-width: 640px) {
-            .animated-title-container-large .nested-square {
-                transform: translate(-50%, -50%) scale(0.8);
-            }
-            
-            /* Mobile-optimized spacing */
-            .main-container {
-                padding: 12px 16px;
-                padding-bottom: calc(80px + env(safe-area-inset-bottom));
-            }
-            
-            /* Touch-friendly buttons */
-            .btn, button {
-                min-height: 48px;
-                padding: 12px 20px;
-                font-size: 16px;
-            }
-            
-            /* Responsive modals */
-            .modal {
-                margin: 16px;
-                max-height: calc(100vh - 32px);
-                border-radius: 16px;
-            }
-            
-            /* Mobile form inputs */
-            input[type="text"], 
-            input[type="email"], 
-            input[type="password"],
-            textarea, 
-            select {
-                min-height: 48px;
-                font-size: 16px;
-                padding: 12px 16px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            /* Very small mobile adjustments */
-            .main-container {
-                padding: 8px 12px;
-            }
-            
-            .modal {
-                margin: 8px;
-                border-radius: 12px;
-            }
-        }
-        
-        @media (min-width: 768px) {
-            /* Tablet adjustments */
-            .main-container {
-                padding: 24px;
-                max-width: 720px;
-                margin: 0 auto;
-            }
-            
-            .modal {
-                max-width: 500px;
-                left: 50%;
-                transform: translateX(-50%);
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            /* Desktop adjustments */
-            .main-container {
-                max-width: 960px;
-                padding: 32px;
-            }
-        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 no-scroll-x">
-    <!-- Mobile Header will be injected by mobile-navigation.js -->
-    
-    <!-- Theme Toggle Button -->
-    <div class="theme-toggle desktop-only" id="theme-toggle">
-        <div class="theme-toggle-slider"></div>
-    </div>
-    
-    <div class="background-container safe-area-inset">
+<body class="bg-gray-900 text-gray-200 no-scroll-x safe-area-inset touch-optimized">
+    <div class="background-container">
         <div id="orb1" class="background-orb"></div>
         <div id="orb2" class="background-orb"></div>
-    </div>
-    
-    <!-- Floating Shapes -->
-    <div class="floating-shapes">
-        <div class="shape w-16 h-16 bg-white rounded-full" style="left: 10%; animation-delay: 0s;"></div>
-        <div class="shape w-8 h-8 bg-white rounded-full" style="left: 20%; animation-delay: 2s;"></div>
-        <div class="shape w-12 h-12 bg-white" style="left: 30%; animation-delay: 4s; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
-        <div class="shape w-10 h-10 bg-white rounded-full" style="left: 40%; animation-delay: 6s;"></div>
-        <div class="shape w-14 h-14 bg-white" style="left: 60%; animation-delay: 8s; clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);"></div>
-        <div class="shape w-6 h-6 bg-white rounded-full" style="left: 70%; animation-delay: 10s;"></div>
-        <div class="shape w-16 h-16 bg-white" style="left: 80%; animation-delay: 12s; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
-        <div class="shape w-8 h-8 bg-white rounded-full" style="left: 90%; animation-delay: 14s;"></div>
     </div>
     
     <!-- Authentication Modal -->
@@ -508,9 +149,7 @@
         <div class="glass-pane rounded-2xl shadow-2xl w-full max-w-md p-8">
             <div class="text-center mb-8">
                 <svg class="w-16 h-16 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <div class="animated-title-container mb-2">
-                    <h1 class="animated-title text-2xl font-bold text-gray-100">Smart Planner</h1>
-                </div>
+                <h1 class="text-2xl font-bold text-gray-100 mb-2">Smart Planner</h1>
                 <p class="text-gray-400">Sign in to access your personal planner</p>
             </div>
 
@@ -528,14 +167,6 @@
                            class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
                            placeholder="Enter your password">
                 </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="stay-logged-in" name="stay-logged-in" 
-                           class="custom-checkbox h-4 w-4 rounded border-white/20 cursor-pointer appearance-none border-2 shrink-0" 
-                           checked>
-                    <label for="stay-logged-in" class="ml-3 text-sm text-gray-400 cursor-pointer select-none hover:text-gray-300 transition-colors">
-                        Keep me logged in (recommended)
-                    </label>
-                </div>
                 <button type="submit" id="login-btn" 
                         class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2">
                     <span id="login-btn-text">Sign In</span>
@@ -547,11 +178,6 @@
                 <p class="text-gray-400 text-sm">Don't have an account?</p>
                 <button id="show-register-btn" class="text-indigo-400 hover:text-indigo-300 font-medium">Create Account</button>
             </div>
-            
-            <!-- RodyTech Branding -->
-            <div class="mt-8 text-center border-t border-white/10 pt-4">
-                <p class="text-xs text-gray-500">Made with ❤️ by <span class="text-indigo-400 font-medium">RodyTech</span></p>
-            </div>
 
             <!-- Register Form (Initially Hidden) -->
             <form id="register-form" class="space-y-4 hidden">
@@ -560,30 +186,30 @@
                     <p class="text-gray-400 text-sm">Join to start planning your week</p>
                 </div>
                 <div>
-                    <label for="register-email" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
-                    <input type="email" id="register-email" name="email" required 
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
-                           placeholder="Enter your email">
+                    <label for="register-name" class="block text-sm font-medium text-gray-400 mb-2">Name</label>
+                    <input type="text" id="register-name" name="name" required
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
+                           placeholder="Enter your name">
                 </div>
                 <div>
-                    <label for="register-username" class="block text-sm font-medium text-gray-400 mb-2">Username (Optional)</label>
-                    <input type="text" id="register-username" name="username" 
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
-                           placeholder="Choose a display name">
+                    <label for="register-email" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input type="email" id="register-email" name="email" required
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
+                           placeholder="Enter your email">
                 </div>
                 <div>
                     <label for="register-password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
                     <input type="password" id="register-password" name="password" required minlength="6"
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
                            placeholder="At least 6 characters">
                 </div>
                 <div>
                     <label for="register-password-confirm" class="block text-sm font-medium text-gray-400 mb-2">Confirm Password</label>
                     <input type="password" id="register-password-confirm" name="passwordConfirm" required minlength="6"
-                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" 
+                           class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500"
                            placeholder="Confirm your password">
                 </div>
-                <button type="submit" id="register-btn" 
+                <button type="submit" id="register-btn"
                         class="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2">
                     <span id="register-btn-text">Create Account</span>
                     <div id="register-spinner" class="spinner h-5 w-5 rounded-full border-2 border-t-transparent hidden"></div>
@@ -594,11 +220,6 @@
                 <p class="text-gray-400 text-sm">Already have an account?</p>
                 <button id="show-login-btn" class="text-indigo-400 hover:text-indigo-300 font-medium">Sign In</button>
             </div>
-            
-            <!-- RodyTech Branding for Register -->
-            <div id="register-branding" class="mt-8 text-center border-t border-white/10 pt-4 hidden">
-                <p class="text-xs text-gray-500">Made with ❤️ by <span class="text-indigo-400 font-medium">RodyTech</span></p>
-            </div>
 
             <!-- Error/Success Messages -->
             <div id="auth-message" class="mt-4 p-3 rounded-lg hidden">
@@ -608,16 +229,14 @@
     </div>
     
     <!-- Main App Container (Hidden until authenticated) -->
-    <div id="main-app" class="relative z-10 w-full mobile-container glass-pane rounded-2xl shadow-2xl p-mobile-md md:p-8 hidden main-content safe-area-inset-top" style="margin-top: 20px; max-width: min(95vw, 1024px);">
+    <div id="main-app" class="relative z-10 w-full max-w-4xl mx-auto my-8 glass-pane rounded-2xl shadow-2xl p-6 md:p-8 hidden">
 
         <!-- Header -->
         <div class="flex justify-between items-start mb-6">
             <div class="flex-1"></div>
             <div class="text-center">
                 <svg class="w-20 h-20 mx-auto mb-4" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="logoGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#a855f7; stop-opacity:1" /><stop offset="100%" style="stop-color:#4f46e5; stop-opacity:1" /></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="4" style="filter:url(#glow)"/><path d="M30 50 L45 65 L70 40" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <div class="animated-title-container-large">
-                    <h1 class="animated-title-large text-3xl md:text-4xl font-bold text-gray-100">Smart Planner</h1>
-                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-100">Smart Planner</h1>
                 <p id="current-week-display" class="text-gray-400 mt-2 text-lg"></p>
             </div>
             <div class="flex-1 flex justify-end">
@@ -633,10 +252,6 @@
                             <p class="text-xs text-gray-400">Signed in as</p>
                             <p id="user-menu-name" class="text-sm font-medium text-gray-200">User</p>
                         </div>
-                        <button id="feedback-btn" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/5 transition flex items-center gap-2">
-                            <i class="fas fa-comment-dots"></i>
-                            Send Feedback
-                        </button>
                         <button id="logout-btn" class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-white/5 transition flex items-center gap-2">
                             <i class="fas fa-sign-out-alt"></i>
                             Sign Out
@@ -658,30 +273,31 @@
 
         <!-- Add Task Form -->
         <form id="add-task-form" class="bg-white/5 p-4 rounded-lg shadow-inner mb-6 border border-white/10">
-            <div class="flex flex-col gap-3">
-                <div class="w-full">
+            <div class="flex flex-col md:flex-row items-end gap-4">
+                 <div class="flex-grow w-full">
                     <label class="text-sm font-medium text-gray-400 mb-2 block">New Task for <span id="new-task-date" class="font-bold"></span></label>
-                    <div class="relative">
-                        <input type="text" id="task-input" 
-                               placeholder="Try: 'Clean room at 11am high priority' or 'Meeting with John 2pm #work' or 'Buy groceries tomorrow morning'" 
-                               class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 pr-24 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500/70 text-sm" 
-                               required>
-                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
-                            <span class="hidden md:inline bg-purple-500/20 px-2 py-1 rounded">✨ AI</span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                        💡 Just type naturally! Include time (3pm, tomorrow, next week), priority (high/med/low), and #tags
-                    </p>
+                    <input type="text" id="task-input" placeholder="What's your next task?" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" required>
                 </div>
-                <!-- Hidden inputs for backwards compatibility -->
-                <input type="hidden" id="time-input" value="">
-                <input type="hidden" id="priority-input" value="medium">
-                <input type="hidden" id="tags-input" value="">
+                 <div class="w-full md:w-auto">
+                    <label class="text-sm font-medium text-gray-400 mb-2 block">Time <span class="opacity-75">(optional)</span></label>
+                    <input type="time" id="time-input" class="w-full h-12 bg-black/20 border border-white/10 rounded-lg p-3 text-gray-400 focus:ring-indigo-400 focus:border-indigo-400 transition" style="color-scheme: dark;">
+                </div>
+                 <div class="w-full md:w-auto">
+                    <label for="priority-input" class="text-sm font-medium text-gray-400 mb-2 block">Priority</label>
+                    <select id="priority-input" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg px-3 focus:ring-indigo-400 focus:border-indigo-400 transition">
+                        <option value="low" selected>Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3">
+                 <label class="text-sm font-medium text-gray-400 mb-2 block">Tags <span class="text-xs">(comma separated)</span></label>
+                 <input type="text" id="tags-input" placeholder="e.g. work, personal" class="w-full bg-black/20 border border-white/10 text-gray-200 text-sm rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500">
             </div>
              <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button type="submit" id="add-task-btn" class="add-btn w-full text-white font-medium rounded-xl px-6 py-3 transition duration-300 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-white/30">
-                    <span id="add-btn-text">Add Task</span>
+                <button type="submit" id="add-task-btn" class="w-full text-white bg-indigo-500 hover:bg-indigo-600 focus:ring-4 focus:ring-indigo-500/50 font-medium rounded-lg px-6 py-3 transition duration-300 flex items-center justify-center gap-2 border border-indigo-400">
+                    <span id="add-btn-text"><i class="fas fa-plus mr-2"></i>Add Task</span>
                     <div id="add-spinner" class="spinner h-5 w-5 rounded-full border-2 border-t-transparent hidden"></div>
                 </button>
                 <button type="button" id="suggest-tasks-btn" class="w-full text-white bg-purple-500 hover:bg-purple-600 focus:ring-4 focus:ring-purple-500/50 font-medium rounded-lg px-6 py-3 transition duration-300 flex items-center justify-center gap-2 border border-purple-400">
@@ -721,7 +337,7 @@
         </div>
         
         <!-- Task List -->
-        <div id="task-list" class="task-list-sortable space-y-3 min-h-[100px]">
+        <div id="task-list" class="space-y-3 min-h-[100px]">
              <div id="empty-state" class="text-center py-8 px-4 border-2 border-dashed border-white/10 rounded-lg">
                 <i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i>
                 <p class="text-gray-400">No tasks for this day.</p>
@@ -737,18 +353,11 @@
             <div class="w-full bg-black/20 rounded-full h-2.5 mb-8 border border-white/10">
                 <div id="progress-bar" class="bg-indigo-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <footer class="pt-6 border-t border-white/10 flex flex-col gap-4">
-                <div class="flex justify-between items-center">
-                    <button id="clear-all-btn" class="text-sm text-red-400 hover:text-red-300 transition flex items-center gap-2">
-                        <i class="fas fa-trash-alt"></i> Clear All Tasks
-                    </button>
-                    <p id="copyright" class="text-sm text-gray-400"></p>
-                </div>
-                
-                <!-- RodyTech Branding -->
-                <div class="text-center py-2 border-t border-white/10">
-                    <p class="text-xs text-gray-500">Made with ❤️ by <span class="text-indigo-400 font-medium hover:text-indigo-300 transition cursor-pointer" onclick="window.open('https://rodytech.com', '_blank')">RodyTech</span></p>
-                </div>
+            <footer class="pt-6 border-t border-white/10 flex justify-between items-center">
+                <button id="clear-all-btn" class="text-sm text-red-400 hover:text-red-300 transition flex items-center gap-2">
+                    <i class="fas fa-trash-alt"></i> Clear All Tasks
+                </button>
+                <p id="copyright" class="text-sm text-gray-400"></p>
             </footer>
         </div>
     </div>
@@ -812,53 +421,6 @@
                 <button type="button" id="cancel-clear-btn" class="px-6 py-2 bg-black/20 text-white rounded-lg hover:bg-white/10 transition border border-white/10">Cancel</button>
                 <button type="button" id="confirm-clear-btn" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition border border-red-400">Delete All</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Feedback Modal -->
-    <div id="feedback-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 invisible opacity-0 z-50">
-        <div class="modal-content glass-pane rounded-2xl shadow-lg w-full max-w-lg p-6 transform scale-95">
-            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fas fa-comment-dots text-indigo-400"></i>
-                Send Feedback
-            </h3>
-            <form id="feedback-form" class="space-y-4">
-                <div>
-                    <label for="feedback-type" class="text-sm font-medium text-gray-300 mb-2 block">Feedback Type</label>
-                    <select id="feedback-type" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg px-3 focus:ring-indigo-400 focus:border-indigo-400 transition" required>
-                        <option value="">Select type...</option>
-                        <option value="bug">🐛 Bug Report</option>
-                        <option value="feature">✨ Feature Request</option>
-                        <option value="improvement">💡 Improvement Suggestion</option>
-                        <option value="other">💬 Other</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="feedback-subject" class="text-sm font-medium text-gray-300 mb-2 block">Subject</label>
-                    <input type="text" id="feedback-subject" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" placeholder="Brief description" required>
-                </div>
-                <div>
-                    <label for="feedback-message" class="text-sm font-medium text-gray-300 mb-2 block">Message</label>
-                    <textarea id="feedback-message" rows="4" class="w-full bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500 resize-none" placeholder="Tell us more details..." required></textarea>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="feedback-name" class="text-sm font-medium text-gray-300 mb-2 block">Name <span class="text-gray-500">(optional)</span></label>
-                        <input type="text" id="feedback-name" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" placeholder="Your name">
-                    </div>
-                    <div>
-                        <label for="feedback-email" class="text-sm font-medium text-gray-300 mb-2 block">Email <span class="text-gray-500">(optional)</span></label>
-                        <input type="email" id="feedback-email" class="w-full h-12 bg-black/20 border border-white/10 text-gray-200 rounded-lg p-3 focus:ring-indigo-400 focus:border-indigo-400 transition placeholder:text-gray-500" placeholder="your@email.com">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="button" id="cancel-feedback-btn" class="px-6 py-2 bg-black/20 text-white rounded-lg hover:bg-white/10 transition border border-white/10">Cancel</button>
-                    <button type="submit" id="submit-feedback-btn" class="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition border border-indigo-400 flex items-center justify-center gap-2">
-                        <span id="feedback-btn-text">Send Feedback</span>
-                        <div id="feedback-spinner" class="spinner h-5 w-5 rounded-full border-2 border-t-transparent hidden"></div>
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -930,1364 +492,374 @@
     </div>
 
     <script>
+        // Wait for app to be ready (triggered by auth-ui.js)
+        window.addEventListener('app-ready', () => {
+            console.log('App is ready, initializing...');
+            renderWeek();
+            renderTasks();
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
-            // Theme Switcher Logic
-            const initTheme = () => {
-                const savedTheme = localStorage.getItem('theme') || 'dark';
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                
-                // Update theme color meta tag for PWA
-                const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-                if (themeColorMeta) {
-                    themeColorMeta.content = savedTheme === 'light' ? '#e0e7ff' : '#4f46e5';
-                }
-            };
-            
-            // Initialize theme
-            initTheme();
-            
-            // Theme toggle handler
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    const currentTheme = document.documentElement.getAttribute('data-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    
-                    // Apply new theme
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('theme', newTheme);
-                    
-                    // Update theme color meta tag
-                    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-                    if (themeColorMeta) {
-                        themeColorMeta.content = newTheme === 'light' ? '#e0e7ff' : '#4f46e5';
-                    }
-                    
-                    // Optional: Add a smooth transition effect
-                    document.body.style.transition = 'background 0.3s ease, color 0.3s ease';
-                });
-            }
-            
-            // Production-ready initialization without debug logs
-            
-            // Utility to escape user provided content to prevent XSS
-            const escapeHTML = (str) => {
-                return str
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
-            };
-            
-            // Ensure ApiClient is available globally - wait for it to load
-            let apiClientReady = false;
-            const waitForApiClient = () => {
-                return new Promise((resolve, reject) => {
-                    let attempts = 0;
-                    const maxAttempts = 30; // 3 seconds
-                    
-                    const checkApiClient = () => {
-                        if (window.ApiClient && window.ApiClient.callGemini) {
-                            apiClientReady = true;
-                            logger.log('ApiClient loaded and ready');
-                            resolve(true);
-                        } else if (attempts < maxAttempts) {
-                            attempts++;
-                            setTimeout(checkApiClient, 100);
-                        } else {
-                            logger.error('ApiClient failed to load after', attempts * 100, 'ms');
-                            reject(new Error('ApiClient failed to load'));
-                        }
-                    };
-                    
-                    checkApiClient();
-                });
-            };
-            
-            // Ensure ApiClient is available globally
-            if (typeof ApiClient === 'undefined' && typeof window.ApiClient !== 'undefined') {
-                window.ApiClient = window.ApiClient;
-            }
-            
-            // Wait for auth script to be loaded
-            const waitForAuthScript = async () => {
-                if (window.supabaseAuthLoaded && typeof window.initializeSupabase === 'function') {
-                    return true;
-                }
-                
-                return new Promise((resolve) => {
-                    // If already loaded, resolve immediately
-                    if (window.supabaseAuthLoaded && typeof window.initializeSupabase === 'function') {
-                        resolve(true);
-                        return;
-                    }
-                    
-                    // Otherwise wait for the event
-                    window.addEventListener('supabaseAuthReady', () => {
-                        resolve(true);
-                    });
-                    
-                    // Timeout after 10 seconds
-                    setTimeout(() => {
-                        logger.error('Timeout waiting for supabase auth script');
-                        resolve(false);
-                    }, 10000);
-                });
-            };
-            
-            // Wait for auth script to load
-            const authScriptLoaded = await waitForAuthScript();
-            if (!authScriptLoaded) {
-                logger.error('Failed to load supabase auth script');
-                return;
-            }
-            
-            // Initialize Supabase with retry logic
-            let supabaseInitialized = false;
-            for (let i = 0; i < 3; i++) {
-                try {
-                    supabaseInitialized = await window.initializeSupabase();
-                    if (supabaseInitialized) break;
-                    
-                    logger.log(`Supabase initialization attempt ${i + 1} failed, retrying...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                } catch (error) {
-                    logger.error(`Supabase initialization attempt ${i + 1} error:`, error);
-                    if (i === 2) throw error;
-                }
-            }
-            
-            if (!supabaseInitialized) {
-                logger.error('Failed to initialize Supabase after 3 attempts');
-                return;
-            }
-            
-            logger.log('Supabase initialized successfully');
-            
-            // Initialize Animated Titles
-            function initializeAnimatedTitles() {
-                const containers = document.querySelectorAll('.animated-title-container, .animated-title-container-large');
-                
-                containers.forEach(container => {
-                    // Create nested squares
-                    for (let i = 1; i <= 5; i++) {
-                        const square = document.createElement('div');
-                        square.className = 'nested-square';
-                        square.style.cssText = `
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            width: ${i * 10 + 10}px;
-                            height: ${i * 10 + 10}px;
-                            transform: translate(-50%, -50%);
-                            z-index: ${-i};
-                        `;
-                        container.appendChild(square);
-                    }
-                    
-                    // Add hover interaction for enhanced effect
-                    container.addEventListener('mouseenter', () => {
-                        container.style.transform = 'scale(1.05)';
-                        container.style.transition = 'transform 0.3s ease';
-                    });
-                    
-                    container.addEventListener('mouseleave', () => {
-                        container.style.transform = 'scale(1)';
-                    });
-                });
-            }
-            
-            // Initialize the animated titles
-            initializeAnimatedTitles();
-            
-            // --- Authentication Management ---
-            let currentUser = null;
-            let appInitialized = false;
-            let renderTasks;
-            let renderWeek;
-            
-            // Auth element selectors
-            const authModal = document.getElementById('auth-modal');
-            const mainApp = document.getElementById('main-app');
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const showRegisterBtn = document.getElementById('show-register-btn');
-            const showLoginBtn = document.getElementById('show-login-btn');
-            const registerSwitch = document.getElementById('register-switch');
-            const authMessage = document.getElementById('auth-message');
-            const authMessageText = document.getElementById('auth-message-text');
-            const userDisplayName = document.getElementById('user-display-name');
-            const userMenuName = document.getElementById('user-menu-name');
-            const userMenuBtn = document.getElementById('user-menu-btn');
-            const userMenu = document.getElementById('user-menu');
-            const logoutBtn = document.getElementById('logout-btn');
-            const feedbackBtn = document.getElementById('feedback-btn');
-            
-            // Feedback modal elements
-            const feedbackModal = document.getElementById('feedback-modal');
-            const feedbackForm = document.getElementById('feedback-form');
-            const cancelFeedbackBtn = document.getElementById('cancel-feedback-btn');
-            const submitFeedbackBtn = document.getElementById('submit-feedback-btn');
-            const feedbackBtnText = document.getElementById('feedback-btn-text');
-            const feedbackSpinner = document.getElementById('feedback-spinner');
-            
-            // Check authentication status on load
-            async function checkAuth() {
-                try {
-                    logger.log('Starting authentication check...');
-                    const authStatus = await SupabaseAuth.checkAuth();
-                    logger.log('Auth status result:', authStatus);
-                    
-                    if (authStatus && authStatus.authenticated) {
-                        currentUser = authStatus.user;
-                        logger.log('User authenticated:', currentUser);
-                        showMainApp();
-                    } else {
-                        logger.log('User not authenticated, showing auth modal');
-                        showAuthModal();
-                    }
-                } catch (error) {
-                    logger.error('Auth check failed:', error);
-                    showAuthModal();
-                }
-            }
-            
-            function showAuthModal() {
-                authModal.classList.remove('hidden');
-                mainApp.classList.add('hidden');
-            }
-            
-            function showMainApp() {
-                authModal.classList.add('hidden');
-                mainApp.classList.remove('hidden');
-                updateUserDisplay();
-            }
-            
-            function updateUserDisplay() {
-                if (currentUser) {
-                    userDisplayName.textContent = currentUser.username;
-                    userMenuName.textContent = currentUser.username;
-                }
-            }
-            
-            function showMessage(message, type = 'error') {
-                authMessage.className = `mt-4 p-3 rounded-lg ${type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`;
-                authMessageText.className = `text-sm text-center ${type === 'success' ? 'text-emerald-400' : 'text-red-400'}`;
-                authMessageText.textContent = message;
-                authMessage.classList.remove('hidden');
+            // --- Element Selectors ---
+            const taskForm = document.getElementById('add-task-form');
+            const taskInput = document.getElementById('task-input');
+            const timeInput = document.getElementById('time-input');
+            const priorityInput = document.getElementById('priority-input');
+            const tagsInput = document.getElementById('tags-input');
+            const taskList = document.getElementById('task-list');
+            const taskCounter = document.getElementById('task-counter');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const addBtnText = document.getElementById('add-btn-text');
+            const addSpinner = document.getElementById('add-spinner');
+            const suggestTasksBtn = document.getElementById('suggest-tasks-btn');
+            const weekDaysContainer = document.getElementById('week-days-container');
+            const prevWeekBtn = document.getElementById('prev-week-btn');
+            const nextWeekBtn = document.getElementById('next-week-btn');
+            const currentWeekDisplay = document.getElementById('current-week-display');
+            const newTaskDate = document.getElementById('new-task-date');
+            const taskListDate = document.getElementById('task-list-date');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const copyrightEl = document.getElementById('copyright');
 
+            const filterContainer = document.getElementById('filter-container');
+            const activeFilterTag = document.getElementById('active-filter-tag');
+            const clearFilterBtn = document.getElementById('clear-filter-btn');
+            // const smartPlanBtn = document.getElementById('smart-plan-btn'); // Smart Plan disabled
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            
+            // Modal Selectors
+            const suggestModal = document.getElementById('suggest-modal');
+            const generateTasksBtn = document.getElementById('generate-tasks-btn');
+            const generateBtnText = document.getElementById('generate-btn-text');
+            const generateSpinner = document.getElementById('generate-spinner');
+            const goalInput = document.getElementById('goal-input');
+            const cancelSuggestBtn = document.getElementById('cancel-suggest-btn');
+
+            const editModal = document.getElementById('edit-modal');
+            const editTaskForm = document.getElementById('edit-task-form');
+            const editTaskId = document.getElementById('edit-task-id');
+            const editTaskText = document.getElementById('edit-task-text');
+            const editTaskTime = document.getElementById('edit-task-time');
+            const editTaskPriority = document.getElementById('edit-task-priority');
+            const editTaskTags = document.getElementById('edit-task-tags');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            
+            const confirmClearModal = document.getElementById('confirm-clear-modal');
+            const cancelClearBtn = document.getElementById('cancel-clear-btn');
+            const confirmClearBtn = document.getElementById('confirm-clear-btn');
+            
+            // Celebration modal selectors
+            const celebrationModal = document.getElementById('celebration-modal');
+            const celebrationTaskCount = document.getElementById('celebration-task-count');
+            const celebrationQuote = document.getElementById('celebration-quote');
+            const addTomorrowTasksBtn = document.getElementById('add-tomorrow-tasks-btn');
+            const closeCelebrationBtn = document.getElementById('close-celebration-btn');
+            
+            // Archive selectors
+            const archiveToggleBtn = document.getElementById('archive-toggle-btn');
+            const archiveToggleText = document.getElementById('archive-toggle-text');
+            const archiveCount = document.getElementById('archive-count');
+            const archiveIndicator = document.getElementById('archive-indicator');
+            
+            // --- State ---
+            let allTasks = [];
+            let currentDate = new Date();
+            let selectedDate = new Date();
+            let currentFilter = null;
+            let synth = null;
+            let audioContextStarted = false;
+            let showingArchive = false;
+            
+            // Initialize audio context after user interaction
+            const initAudio = async () => {
+                if (!audioContextStarted) {
+                    try {
+                        await Tone.start();
+                        synth = new Tone.Synth().toDestination();
+                        audioContextStarted = true;
+                        console.log('Audio context started successfully');
+                    } catch (error) {
+                        console.warn('Audio initialization failed:', error);
+                    }
+                }
+            };
+
+            // --- Celebration Functions ---
+            const motivationalQuotes = [
+                "Success is the sum of small efforts repeated day in and day out.",
+                "You are what you do, not what you say you'll do.",
+                "The way to get started is to quit talking and begin doing.",
+                "Productivity is being able to do things that you were never able to do before.",
+                "Excellence is never an accident. It is always the result of high intention.",
+                "The future depends on what you do today.",
+                "Don't wait for opportunity. Create it.",
+                "Success is where preparation and opportunity meet."
+            ];
+
+            const checkAllTasksCompleted = () => {
+                const tasksForToday = allTasks.filter(task => !currentFilter || task.tags.includes(currentFilter));
+                if (tasksForToday.length > 0) {
+                    const allCompleted = tasksForToday.every(task => task.completed);
+                    return { allCompleted, totalTasks: tasksForToday.length };
+                }
+                return { allCompleted: false, totalTasks: 0 };
+            };
+
+            const triggerCelebration = async (taskCount) => {
+                // Epic confetti explosion
+                const duration = 3000;
+                const end = Date.now() + duration;
+                
+                const colors = ['#818cf8', '#c084fc', '#f472b6', '#4ade80', '#fbbf24', '#f97316'];
+                
+                (function frame() {
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: 15,
+                            angle: 60,
+                            spread: 55,
+                            origin: { x: 0 },
+                            colors: colors
+                        });
+                        confetti({
+                            particleCount: 15,
+                            angle: 120,
+                            spread: 55,
+                            origin: { x: 1 },
+                            colors: colors
+                        });
+                    }
+                    
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                })();
+                
+                // Play celebration sound sequence
+                try {
+                    if (synth && audioContextStarted) {
+                        synth.triggerAttackRelease("C5", "8n");
+                        setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
+                        setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 400);
+                        setTimeout(() => synth.triggerAttackRelease("C6", "4n"), 600);
+                    }
+                } catch (error) {
+                    console.warn('Celebration sound failed:', error);
+                }
+                
+                // Update celebration modal content
+                celebrationTaskCount.textContent = taskCount;
+                const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+                celebrationQuote.textContent = randomQuote;
+                
+                // Show celebration modal with delay for effect
                 setTimeout(() => {
-                    authMessage.classList.add('hidden');
-                }, 5000);
+                    openModal(celebrationModal);
+                }, 800);
+            };
+
+            // --- Date Formatting Helper ---
+            const toISODateString = (date) => {
+                const d = new Date(date);
+                d.setHours(0,0,0,0);
+                return d.toISOString().split('T')[0];
+            };
+            selectedDate = toISODateString(selectedDate);
+            
+            // --- Initialization ---
+            const today = new Date();
+            copyrightEl.innerHTML = `&copy; ${today.getFullYear()} RodyTech LLC. All Rights Reserved.`;
+
+            // --- API Functions ---
+            const fetchTasks = async (date, includeArchived = false) => {
+                try {
+                    return await ApiClient.fetchTasks(date, includeArchived);
+                } catch (error) {
+                    console.error('Error fetching tasks:', error);
+                    return [];
+                }
+            };
+
+            const saveTask = async (task) => {
+                try {
+                    return await ApiClient.saveTask(task);
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                    throw error;
+                }
+            };
+
+            const updateTask = async (id, updates) => {
+                try {
+                    return await ApiClient.updateTask(id, updates);
+                } catch (error) {
+                    console.error('Error updating task:', error);
+                    throw error;
+                }
+            };
+
+            const deleteTask = async (id) => {
+                try {
+                    return await ApiClient.deleteTask(id);
+                } catch (error) {
+                    console.error('Error deleting task:', error);
+                    throw error;
+                }
+            };
+
+            const clearAllTasks = async () => {
+                try {
+                    return await ApiClient.clearAllTasks();
+                } catch (error) {
+                    console.error('Error clearing tasks:', error);
+                    throw error;
+                }
+            };
+
+            // --- Archive API Functions ---
+            const archiveCompletedTasks = async (date) => {
+                try {
+                    return await ApiClient.archiveTasks(date);
+                } catch (error) {
+                    console.error('Error archiving tasks:', error);
+                    throw error;
+                }
+            };
+
+            const unarchiveTasks = async (taskIds) => {
+                try {
+                    return await ApiClient.unarchiveTasks(taskIds);
+                } catch (error) {
+                    console.error('Error unarchiving tasks:', error);
+                    throw error;
+                }
+            };
+
+            const updateArchiveUI = async () => {
+                try {
+                    // Get archived tasks count for current date
+                    const archivedTasks = await fetchTasks(selectedDate, true);
+                    const archivedCount = archivedTasks.filter(task => task.archived).length;
+                    
+                    if (archivedCount > 0) {
+                        archiveCount.textContent = archivedCount;
+                        archiveCount.classList.remove('hidden');
+                    } else {
+                        archiveCount.classList.add('hidden');
+                    }
+                    
+                    // Update UI based on current view
+                    if (showingArchive) {
+                        archiveToggleText.textContent = 'Active';
+                        archiveIndicator.classList.remove('hidden');
+                        archiveToggleBtn.classList.add('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
+                        archiveToggleBtn.classList.remove('bg-black/20', 'border-white/10', 'text-gray-400');
+                    } else {
+                        archiveToggleText.textContent = 'Archive';
+                        archiveIndicator.classList.add('hidden');
+                        archiveToggleBtn.classList.remove('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
+                        archiveToggleBtn.classList.add('bg-black/20', 'border-white/10', 'text-gray-400');
+                    }
+                } catch (error) {
+                    console.error('Error updating archive UI:', error);
+                }
+            };
+
+            // --- Gemini API Call ---
+            async function callGemini(prompt) { 
+                try {
+                    return await ApiClient.callGemini(prompt);
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    alert(`AI feature failed: ${error.message}`);
+                    return null;
+                }
             }
 
-            function openModal(modalEl) {
-                if (!modalEl) return;
-                modalEl.classList.remove('invisible', 'opacity-0');
-                const modalContent = modalEl.querySelector('.modal-content');
-                if (modalContent) {
-                    modalContent.classList.remove('scale-95');
-                }
-            }
+            // --- Core Functions ---
+            const renderWeek = () => {
+                weekDaysContainer.innerHTML = '';
+                const weekStart = new Date(currentDate);
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of the week (Sunday)
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
 
-            function closeModal(modalEl) {
-                if (!modalEl) return;
-                modalEl.classList.add('invisible', 'opacity-0');
-                const modalContent = modalEl.querySelector('.modal-content');
-                if (modalContent) {
-                    modalContent.classList.add('scale-95');
-                }
-            }
-            
-            // Form switching
-            showRegisterBtn.addEventListener('click', () => {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                registerSwitch.classList.remove('hidden');
-                authMessage.classList.add('hidden');
-            });
-            
-            showLoginBtn.addEventListener('click', () => {
-                registerForm.classList.add('hidden');
-                loginForm.classList.remove('hidden');
-                registerSwitch.classList.add('hidden');
-                authMessage.classList.add('hidden');
-            });
-            
-            // User menu toggle
-            userMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userMenu.classList.toggle('hidden');
-            });
-            
-            // Close user menu when clicking outside
-            document.addEventListener('click', () => {
-                userMenu.classList.add('hidden');
-            });
-            
-            // Login form submission
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                const stayLoggedIn = document.getElementById('stay-logged-in').checked;
-                const loginBtn = document.getElementById('login-btn');
-                const loginBtnText = document.getElementById('login-btn-text');
-                const loginSpinner = document.getElementById('login-spinner');
-                
-                // Show loading state
-                loginBtnText.classList.add('hidden');
-                loginSpinner.classList.remove('hidden');
-                loginBtn.disabled = true;
-                
-                try {
-                    const result = await SupabaseAuth.login(email, password, stayLoggedIn);
+                currentWeekDisplay.textContent = `${weekStart.toLocaleDateString('en-US', {month: 'long', day: 'numeric'})} - ${weekEnd.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}`;
+
+                for (let i = 0; i < 7; i++) {
+                    const day = new Date(weekStart);
+                    day.setDate(day.getDate() + i);
+                    const dayISO = toISODateString(day);
                     
-                    if (result.success) {
-                        currentUser = result.user;
-                        showMainApp();
-                        await initializeMainApp();
-                        showMessage('Welcome back!', 'success');
-                    } else {
-                        showMessage(result.error || 'Login failed');
-                    }
-                } catch (error) {
-                    showMessage('Network error. Please try again.');
-                } finally {
-                    // Reset loading state
-                    loginBtnText.classList.remove('hidden');
-                    loginSpinner.classList.add('hidden');
-                    loginBtn.disabled = false;
-                }
-            });
-            
-            // Register form submission
-            registerForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('register-email').value;
-                const username = document.getElementById('register-username').value;
-                const password = document.getElementById('register-password').value;
-                const passwordConfirm = document.getElementById('register-password-confirm').value;
-                const registerBtn = document.getElementById('register-btn');
-                const registerBtnText = document.getElementById('register-btn-text');
-                const registerSpinner = document.getElementById('register-spinner');
-                
-                if (password !== passwordConfirm) {
-                    showMessage('Passwords do not match');
-                    return;
-                }
-                
-                // Show loading state
-                registerBtnText.classList.add('hidden');
-                registerSpinner.classList.remove('hidden');
-                registerBtn.disabled = true;
-                
-                try {
-                    const result = await SupabaseAuth.register(email, password, username);
+                    const dayButton = document.createElement('button');
+                    dayButton.dataset.date = dayISO;
+                    dayButton.className = `day-selector p-2 rounded-lg text-center transition ${dayISO === selectedDate ? 'bg-indigo-500 text-white' : 'hover:bg-white/10'}`;
+                    dayButton.innerHTML = `<div class="text-xs opacity-75">${day.toLocaleDateString('en-US', {weekday: 'short'})}</div><div class="font-bold text-lg">${day.getDate()}</div>`;
                     
-                    if (result.success) {
-                        if (result.needsConfirmation) {
-                            showMessage(result.message, 'success');
-                        } else {
-                            currentUser = result.user;
-                            showMainApp();
-                            await initializeMainApp();
-                            showMessage('Account created successfully!', 'success');
-                        }
-                    } else {
-                        showMessage(result.error || 'Registration failed');
-                    }
-                } catch (error) {
-                    showMessage('Network error. Please try again.');
-                } finally {
-                    // Reset loading state
-                    registerBtnText.classList.remove('hidden');
-                    registerSpinner.classList.add('hidden');
-                    registerBtn.disabled = false;
-                }
-            });
-            
-            // Logout functionality
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    const result = await SupabaseAuth.logout();
-                    if (result.success) {
-                        currentUser = null;
-                        showAuthModal();
-                        
-                        // Reset forms
-                        loginForm.reset();
-                        registerForm.reset();
-                    }
-                } catch (error) {
-                    logger.error('Logout error:', error);
-                }
-            });
-            
-            // Feedback button functionality
-            feedbackBtn.addEventListener('click', () => {
-                userMenu.classList.add('hidden');
-                openModal(feedbackModal);
-                // Pre-fill email if user is logged in
-                if (currentUser && currentUser.email) {
-                    document.getElementById('feedback-email').value = currentUser.email;
-                }
-            });
-            
-            // Cancel feedback button
-            cancelFeedbackBtn.addEventListener('click', () => {
-                closeModal(feedbackModal);
-                feedbackForm.reset();
-            });
-            
-            // Feedback form submission
-            feedbackForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                // Get form values
-                const feedbackType = document.getElementById('feedback-type').value;
-                const subject = document.getElementById('feedback-subject').value;
-                const message = document.getElementById('feedback-message').value;
-                const name = document.getElementById('feedback-name').value || (currentUser ? currentUser.username : null);
-                const email = document.getElementById('feedback-email').value || (currentUser ? currentUser.email : null);
-                
-                // Show loading state
-                feedbackBtnText.classList.add('hidden');
-                feedbackSpinner.classList.remove('hidden');
-                submitFeedbackBtn.disabled = true;
-                
-                try {
-                    const response = await ApiClient.submitFeedback({
-                        feedback_type: feedbackType,
-                        subject,
-                        message,
-                        name,
-                        email,
-                        page_url: window.location.href,
-                        user_agent: navigator.userAgent
-                    });
-                    
-                    if (response.success) {
-                        // Show success message
-                        showMessage('Thank you for your feedback! We appreciate your input.', 'success');
-                        closeModal(feedbackModal);
-                        feedbackForm.reset();
-                        
-                        // Play a success sound if audio is initialized
-                        if (synth && audioContextStarted) {
-                            try {
-                                synth.triggerAttackRelease("E5", "8n");
-                                setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 100);
-                            } catch (error) {
-                                logger.warn('Success sound failed:', error);
-                            }
-                        }
-                    } else {
-                        showMessage('Failed to send feedback. Please try again.');
-                    }
-                } catch (error) {
-                    logger.error('Feedback submission error:', error);
-                    showMessage('Network error. Please try again later.');
-                } finally {
-                    // Reset loading state
-                    feedbackBtnText.classList.remove('hidden');
-                    feedbackSpinner.classList.add('hidden');
-                    submitFeedbackBtn.disabled = false;
-                }
-            });
-            
-            // Initialize authentication check
-            await checkAuth();
-            
-            async function initializeMainApp() {
-                if (appInitialized) {
-                    if (typeof renderWeek === 'function') {
+                    dayButton.addEventListener('click', () => {
+                        selectedDate = dayISO;
                         renderWeek();
-                    }
-                    if (typeof renderTasks === 'function') {
-                        await renderTasks();
-                    }
-                    return;
+                        renderTasks();
+                    });
+                    
+                    weekDaysContainer.appendChild(dayButton);
                 }
+                const selectedDateObj = new Date(selectedDate);
+                selectedDateObj.setMinutes(selectedDateObj.getMinutes() + selectedDateObj.getTimezoneOffset());
+                newTaskDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long'});
+                taskListDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
+            };
 
-                appInitialized = true;
-
+            const renderTasks = async () => {
+                const tasksForSelectedDay = await fetchTasks(selectedDate, showingArchive);
+                // Always update allTasks with the latest fetched tasks for the selected day
+                allTasks = tasksForSelectedDay;
                 
-                // Wait for ApiClient to be ready before initializing UI that uses AI
-                try {
-                    await waitForApiClient();
-                    logger.log('All dependencies loaded, initializing main app...');
-                } catch (error) {
-                    logger.error('ApiClient failed to load:', error);
-                    // Continue anyway, but AI features may not work
-                }
+                // Filter tasks based on archive view
+                let filteredTasks = showingArchive 
+                    ? tasksForSelectedDay.filter(task => task.archived)
+                    : tasksForSelectedDay.filter(task => !task.archived);
                 
-                // --- Element Selectors ---
-                const taskForm = document.getElementById('add-task-form');
-                const taskInput = document.getElementById('task-input');
-                const timeInput = document.getElementById('time-input');
-                const priorityInput = document.getElementById('priority-input');
-                const tagsInput = document.getElementById('tags-input');
-                const taskList = document.getElementById('task-list');
-                const taskCounter = document.getElementById('task-counter');
-                const addTaskBtn = document.getElementById('add-task-btn');
-                const addBtnText = document.getElementById('add-btn-text');
-                const addSpinner = document.getElementById('add-spinner');
-                const suggestTasksBtn = document.getElementById('suggest-tasks-btn');
-                const weekDaysContainer = document.getElementById('week-days-container');
-                const prevWeekBtn = document.getElementById('prev-week-btn');
-                const nextWeekBtn = document.getElementById('next-week-btn');
-                const currentWeekDisplay = document.getElementById('current-week-display');
-                const newTaskDate = document.getElementById('new-task-date');
-                const taskListDate = document.getElementById('task-list-date');
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-                const copyrightEl = document.getElementById('copyright');
+                // Apply tag filter if active
+                const tasksToRender = currentFilter 
+                    ? filteredTasks.filter(task => task.tags.includes(currentFilter))
+                    : filteredTasks;
 
-                const filterContainer = document.getElementById('filter-container');
-                const activeFilterTag = document.getElementById('active-filter-tag');
-                const clearFilterBtn = document.getElementById('clear-filter-btn');
-                // const smartPlanBtn = document.getElementById('smart-plan-btn'); // Smart Plan disabled
-                const clearAllBtn = document.getElementById('clear-all-btn');
+                const emptyState = document.getElementById('empty-state');
+                taskList.innerHTML = '';
+                if(emptyState) taskList.appendChild(emptyState);
                 
-                // Modal Selectors
-                const suggestModal = document.getElementById('suggest-modal');
-                const generateTasksBtn = document.getElementById('generate-tasks-btn');
-                const generateBtnText = document.getElementById('generate-btn-text');
-                const generateSpinner = document.getElementById('generate-spinner');
-                const goalInput = document.getElementById('goal-input');
-                const cancelSuggestBtn = document.getElementById('cancel-suggest-btn');
-
-                const editModal = document.getElementById('edit-modal');
-                const editTaskForm = document.getElementById('edit-task-form');
-                const editTaskId = document.getElementById('edit-task-id');
-                const editTaskText = document.getElementById('edit-task-text');
-                const editTaskTime = document.getElementById('edit-task-time');
-                const editTaskPriority = document.getElementById('edit-task-priority');
-                const editTaskTags = document.getElementById('edit-task-tags');
-                const cancelEditBtn = document.getElementById('cancel-edit-btn');
-                
-                const confirmClearModal = document.getElementById('confirm-clear-modal');
-                const cancelClearBtn = document.getElementById('cancel-clear-btn');
-                const confirmClearBtn = document.getElementById('confirm-clear-btn');
-                
-                // Celebration modal selectors
-                const celebrationModal = document.getElementById('celebration-modal');
-                const celebrationTaskCount = document.getElementById('celebration-task-count');
-                const celebrationQuote = document.getElementById('celebration-quote');
-                const addTomorrowTasksBtn = document.getElementById('add-tomorrow-tasks-btn');
-                const closeCelebrationBtn = document.getElementById('close-celebration-btn');
-                
-                // Archive selectors
-                const archiveToggleBtn = document.getElementById('archive-toggle-btn');
-                const archiveToggleText = document.getElementById('archive-toggle-text');
-                const archiveCount = document.getElementById('archive-count');
-                const archiveIndicator = document.getElementById('archive-indicator');
-                
-                // --- State ---
-                let allTasks = [];
-                let currentDate = new Date();
-                let selectedDate = new Date();
-                let currentFilter = null;
-                let synth = null;
-                let audioContextStarted = false;
-                let showingArchive = false;
-                let positionColumnExists = true; // Assume it exists until we find out otherwise
-                
-                // Initialize audio context after user interaction
-                const initAudio = async () => {
-                    if (!audioContextStarted) {
-                        try {
-                            // Load Tone.js if not already loaded
-                            if (!window.Tone) {
-                                window.loadTone();
-                                // Wait for Tone.js to load
-                                await new Promise(resolve => {
-                                    const checkTone = () => {
-                                        if (window.Tone) resolve();
-                                        else setTimeout(checkTone, 50);
-                                    };
-                                    checkTone();
-                                });
-                            }
-                            await Tone.start();
-                            synth = new Tone.Synth().toDestination();
-                            audioContextStarted = true;
-                            // Audio context started successfully
-                        } catch (error) {
-                            logger.warn('Audio initialization failed:', error);
-                        }
-                    }
-                };
-
-                // --- Celebration Functions ---
-                const motivationalQuotes = [
-                    "Success is the sum of small efforts repeated day in and day out.",
-                    "You are what you do, not what you say you'll do.",
-                    "The way to get started is to quit talking and begin doing.",
-                    "Productivity is being able to do things that you were never able to do before.",
-                    "Excellence is never an accident. It is always the result of high intention.",
-                    "The future depends on what you do today.",
-                    "Don't wait for opportunity. Create it.",
-                    "Success is where preparation and opportunity meet."
-                ];
-
-                const checkAllTasksCompleted = () => {
-                    const tasksForToday = allTasks.filter(task => !currentFilter || task.tags.includes(currentFilter));
-                    if (tasksForToday.length > 0) {
-                        const allCompleted = tasksForToday.every(task => task.completed);
-                        return { allCompleted, totalTasks: tasksForToday.length };
-                    }
-                    return { allCompleted: false, totalTasks: 0 };
-                };
-
-                const triggerCelebration = async (taskCount) => {
-                    // Load confetti if not already loaded
-                    if (!window.confetti) {
-                        window.loadConfetti();
-                        // Wait for confetti to load
-                        await new Promise(resolve => {
-                            const checkConfetti = () => {
-                                if (window.confetti) resolve();
-                                else setTimeout(checkConfetti, 50);
-                            };
-                            checkConfetti();
-                        });
-                    }
-                    
-                    // Epic confetti explosion
-                    const duration = 3000;
-                    const end = Date.now() + duration;
-                    
-                    const colors = ['#818cf8', '#c084fc', '#f472b6', '#4ade80', '#fbbf24', '#f97316'];
-                    
-                    (function frame() {
-                        if (typeof confetti === 'function') {
-                            confetti({
-                                particleCount: 15,
-                                angle: 60,
-                                spread: 55,
-                                origin: { x: 0 },
-                                colors: colors
-                            });
-                            confetti({
-                                particleCount: 15,
-                                angle: 120,
-                                spread: 55,
-                                origin: { x: 1 },
-                                colors: colors
-                            });
-                        }
-                        
-                        if (Date.now() < end) {
-                            requestAnimationFrame(frame);
-                        }
-                    })();
-                    
-                    // Play celebration sound sequence
-                    try {
-                        if (synth && audioContextStarted) {
-                            synth.triggerAttackRelease("C5", "8n");
-                            setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
-                            setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 400);
-                            setTimeout(() => synth.triggerAttackRelease("C6", "4n"), 600);
-                        }
-                    } catch (error) {
-                        logger.warn('Celebration sound failed:', error);
-                    }
-                    
-                    // Update celebration modal content
-                    celebrationTaskCount.textContent = taskCount;
-                    const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-                    celebrationQuote.textContent = randomQuote;
-                    
-                    // Show celebration modal with delay for effect
-                    setTimeout(() => {
-                        openModal(celebrationModal);
-                    }, 800);
-                };
-
-                // --- Helper Functions ---
-                const escapeHtml = (text) => {
-                    const div = document.createElement('div');
-                    div.textContent = text;
-                    return div.innerHTML;
-                };
-                
-                const toISODateString = (date) => {
-                    const d = new Date(date);
-                    d.setHours(0,0,0,0);
-                    return d.toISOString().split('T')[0];
-                };
-                selectedDate = toISODateString(selectedDate);
-                
-                // --- Initialization ---
-                const today = new Date();
-                copyrightEl.innerHTML = `&copy; ${today.getFullYear()} RodyTech LLC. All Rights Reserved.`;
-
-                // --- API Functions ---
-                const fetchTasks = async (date, includeArchived = false) => {
-                    try {
-                        return await ApiClient.fetchTasks(date, includeArchived);
-                    } catch (error) {
-                        logger.error('Error fetching tasks:', error);
-                        return [];
-                    }
-                };
-
-                const saveTask = async (task) => {
-                    try {
-                        return await ApiClient.saveTask(task);
-                    } catch (error) {
-                        logger.error('Error saving task:', error);
-                        throw error;
-                    }
-                };
-
-                const updateTask = async (id, updates) => {
-                    try {
-                        return await ApiClient.updateTask(id, updates);
-                    } catch (error) {
-                        logger.error('Error updating task:', error);
-                        throw error;
-                    }
-                };
-
-                const deleteTask = async (id) => {
-                    try {
-                        return await ApiClient.deleteTask(id);
-                    } catch (error) {
-                        logger.error('Error deleting task:', error);
-                        throw error;
-                    }
-                };
-
-                const clearAllTasks = async () => {
-                    try {
-                        return await ApiClient.clearAllTasks();
-                    } catch (error) {
-                        logger.error('Error clearing tasks:', error);
-                        throw error;
-                    }
-                };
-
-                // --- Archive API Functions ---
-                const archiveCompletedTasks = async (date) => {
-                    try {
-                        return await ApiClient.archiveTasks(date);
-                    } catch (error) {
-                        logger.error('Error archiving tasks:', error);
-                        throw error;
-                    }
-                };
-
-                const unarchiveTasks = async (taskIds) => {
-                    try {
-                        return await ApiClient.unarchiveTasks(taskIds);
-                    } catch (error) {
-                        logger.error('Error unarchiving tasks:', error);
-                        throw error;
-                    }
-                };
-
-                const updateArchiveUI = async () => {
-                    try {
-                        // Get archived tasks count for current date
-                        const archivedTasks = await fetchTasks(selectedDate, true);
-                        const archivedCount = archivedTasks.filter(task => task.archived).length;
-                        
-                        if (archivedCount > 0) {
-                            archiveCount.textContent = archivedCount;
-                            archiveCount.classList.remove('hidden');
-                        } else {
-                            archiveCount.classList.add('hidden');
-                        }
-                        
-                        // Update UI based on current view
-                        if (showingArchive) {
-                            archiveToggleText.textContent = 'Active';
-                            archiveIndicator.classList.remove('hidden');
-                            archiveToggleBtn.classList.add('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
-                            archiveToggleBtn.classList.remove('bg-black/20', 'border-white/10', 'text-gray-400');
-                        } else {
-                            archiveToggleText.textContent = 'Archive';
-                            archiveIndicator.classList.add('hidden');
-                            archiveToggleBtn.classList.remove('bg-amber-500/10', 'border-amber-400/30', 'text-amber-400');
-                            archiveToggleBtn.classList.add('bg-black/20', 'border-white/10', 'text-gray-400');
-                        }
-                    } catch (error) {
-                        logger.error('Error updating archive UI:', error);
-                    }
-                };
-
-                // --- Gemini API Call ---
-                async function callGemini(prompt) { 
-                    try {
-                        // Ensure ApiClient is loaded before using it
-                        if (!window.ApiClient || !window.ApiClient.callGemini) {
-                            throw new Error('ApiClient is not loaded or callGemini method is not available');
-                        }
-                        
-                        return await ApiClient.callGemini(prompt);
-                    } catch (error) {
-                        logger.error("Gemini API call failed:", error);
-                        
-                        // Provide more specific error messages
-                        if (error.message.includes('ApiClient')) {
-                            alert('AI feature is not ready yet. Please wait a moment and try again.');
-                        } else if (error.message.includes('Authentication')) {
-                            alert('Please log in to use AI features.');
-                        } else {
-                            alert(`AI feature failed: ${error.message}`);
-                        }
-                        return null;
-                    }
-                }
-
-                // --- Core Functions ---
-                renderWeek = () => {
-                    weekDaysContainer.innerHTML = '';
-                    const weekStart = new Date(currentDate);
-                    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of the week (Sunday)
-                    
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekEnd.getDate() + 6);
-
-                    currentWeekDisplay.textContent = `${weekStart.toLocaleDateString('en-US', {month: 'long', day: 'numeric'})} - ${weekEnd.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}`;
-
-                    for (let i = 0; i < 7; i++) {
-                        const day = new Date(weekStart);
-                        day.setDate(day.getDate() + i);
-                        const dayISO = toISODateString(day);
-                        
-                        const dayButton = document.createElement('button');
-                        dayButton.dataset.date = dayISO;
-                        dayButton.className = `day-selector p-2 rounded-lg text-center transition ${dayISO === selectedDate ? 'bg-indigo-500 text-white' : 'hover:bg-white/10'}`;
-                        dayButton.innerHTML = `<div class="text-xs opacity-75">${day.toLocaleDateString('en-US', {weekday: 'short'})}</div><div class="font-bold text-lg">${day.getDate()}</div>`;
-                        
-                        dayButton.addEventListener('click', () => {
-                            selectedDate = dayISO;
-                            renderWeek();
-                            renderTasks();
-                        });
-                        
-                        weekDaysContainer.appendChild(dayButton);
-                    }
-                    const selectedDateObj = new Date(selectedDate);
-                    selectedDateObj.setMinutes(selectedDateObj.getMinutes() + selectedDateObj.getTimezoneOffset());
-                    newTaskDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long'});
-                    taskListDate.textContent = selectedDateObj.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
-                };
-
-                // --- Drag and Drop Functions ---
-                let draggedElement = null;
-                let draggedTaskId = null;
-                let touchDragClone = null;
-                let touchStartY = 0;
-                let touchStartX = 0;
-                let isTouchDragging = false;
-                
-                // Event delegation for task interactions to prevent memory leaks
-                const setupEventDelegation = () => {
-                    // Handle checkbox changes separately with change event
-                    taskList.addEventListener('change', async (e) => {
-                        if (e.target.matches('input[type="checkbox"]')) {
-                            const taskElement = e.target.closest('.task-item');
-                            if (!taskElement) return;
-                            
-                            const taskId = parseInt(taskElement.dataset.id);
-                            await toggleComplete(taskId, e);
-                        }
-                    });
-                    
-                    // Single event listener for all other task interactions
-                    taskList.addEventListener('click', async (e) => {
-                        const taskElement = e.target.closest('.task-item');
-                        if (!taskElement) return;
-                        
-                        const taskId = parseInt(taskElement.dataset.id);
-                        
-                        // Check if taskId is valid
-                        if (isNaN(taskId)) {
-                            console.error('Invalid task ID:', taskElement.dataset.id, 'Element:', taskElement);
-                            console.error('Task element attributes:', [...taskElement.attributes].map(a => `${a.name}=${a.value}`));
-                            return;
-                        }
-                        
-                        // Handle delete button
-                        if (e.target.closest('.delete-btn')) {
-                            await removeTask(taskId);
-                        }
-                        // Handle edit button
-                        else if (e.target.closest('.edit-btn')) {
-                            openEditModal(taskId);
-                        }
-                        // Handle tag clicks
-                        else if (e.target.matches('.tag-btn')) {
-                            filterByTag(e.target.textContent);
-                        }
-                    });
-                    
-                    // Drag and drop event delegation
-                    taskList.addEventListener('dragstart', (e) => {
-                        const taskElement = e.target.closest('.task-item');
-                        if (!taskElement || !taskElement.draggable) return;
-                        
-                        draggedElement = taskElement;
-                        draggedTaskId = parseInt(taskElement.dataset.id);
-                        taskElement.classList.add('dragging');
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('text/html', taskElement.outerHTML);
-                    });
-                    
-                    taskList.addEventListener('dragend', (e) => {
-                        const taskElement = e.target.closest('.task-item');
-                        if (!taskElement) return;
-                        
-                        taskElement.classList.remove('dragging');
-                        draggedElement = null;
-                        draggedTaskId = null;
-                    });
-                    
-                    taskList.addEventListener('dragover', (e) => {
-                        const taskElement = e.target.closest('.task-item');
-                        if (!taskElement || taskElement === draggedElement) return;
-                        
-                        e.preventDefault();
-                        const afterElement = getDragAfterElement(taskList, e.clientY);
-                        
-                        if (afterElement == null) {
-                            taskList.appendChild(draggedElement);
-                        } else {
-                            taskList.insertBefore(draggedElement, afterElement);
-                        }
-                    });
-                    
-                    taskList.addEventListener('drop', async (e) => {
-                        const taskElement = e.target.closest('.task-item');
-                        if (!taskElement) return;
-                        
-                        e.preventDefault();
-                        taskElement.classList.remove('drag-over');
-                        
-                        await updateTaskPositions();
-                    });
-                    
-                    taskList.addEventListener('dragleave', (e) => {
-                        const taskElement = e.target.closest('.task-item');
-                        if (!taskElement) return;
-                        
-                        taskElement.classList.remove('drag-over');
-                    });
-                    
-                    // Touch event delegation for mobile drag and drop
-                    taskList.addEventListener('touchstart', (e) => {
-                        const dragHandle = e.target.closest('.drag-handle');
-                        if (!dragHandle) return;
-                        
-                        const taskElement = dragHandle.closest('.task-item');
-                        if (!taskElement || showingArchive) return;
-                        
-                        e.preventDefault();
-                        isTouchDragging = true;
-                        draggedElement = taskElement;
-                        draggedTaskId = parseInt(taskElement.dataset.id);
-                        
-                        const touch = e.touches[0];
-                        touchStartY = touch.clientY;
-                        touchStartX = touch.clientX;
-                        
-                        // Create a clone for visual feedback
-                        touchDragClone = taskElement.cloneNode(true);
-                        touchDragClone.style.position = 'fixed';
-                        touchDragClone.style.top = `${taskElement.getBoundingClientRect().top}px`;
-                        touchDragClone.style.left = `${taskElement.getBoundingClientRect().left}px`;
-                        touchDragClone.style.width = `${taskElement.offsetWidth}px`;
-                        touchDragClone.style.opacity = '0.8';
-                        touchDragClone.style.zIndex = '1000';
-                        touchDragClone.style.pointerEvents = 'none';
-                        touchDragClone.classList.add('dragging');
-                        document.body.appendChild(touchDragClone);
-                        
-                        taskElement.style.opacity = '0.3';
-                    });
-                    
-                    document.addEventListener('touchmove', (e) => {
-                        if (!isTouchDragging || !touchDragClone) return;
-                        
-                        e.preventDefault();
-                        const touch = e.touches[0];
-                        const deltaY = touch.clientY - touchStartY;
-                        const deltaX = touch.clientX - touchStartX;
-                        
-                        touchDragClone.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                        
-                        // Find element under touch point
-                        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-                        const taskBelow = elementBelow?.closest('.task-item');
-                        
-                        if (taskBelow && taskBelow !== draggedElement) {
-                            const afterElement = getDragAfterElement(taskList, touch.clientY);
-                            if (afterElement == null) {
-                                taskList.appendChild(draggedElement);
-                            } else {
-                                taskList.insertBefore(draggedElement, afterElement);
-                            }
-                        }
-                    });
-                    
-                    document.addEventListener('touchend', async (e) => {
-                        if (!isTouchDragging) return;
-                        
-                        isTouchDragging = false;
-                        
-                        if (touchDragClone) {
-                            touchDragClone.remove();
-                            touchDragClone = null;
-                        }
-                        
-                        if (draggedElement) {
-                            draggedElement.style.opacity = '';
-                            draggedElement = null;
-                            draggedTaskId = null;
-                        }
-                        
-                        await updateTaskPositions();
-                    });
-                };
-                
-                // Helper function to get the element after which the dragged element should be inserted
-                const getDragAfterElement = (container, y) => {
-                    const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
-                    
-                    return draggableElements.reduce((closest, child) => {
-                        const box = child.getBoundingClientRect();
-                        const offset = y - box.top - box.height / 2;
-                        
-                        if (offset < 0 && offset > closest.offset) {
-                            return { offset: offset, element: child };
-                        } else {
-                            return closest;
-                        }
-                    }, { offset: Number.NEGATIVE_INFINITY }).element;
-                };
-                
-                // New function to update task positions after drag and drop
-                const updateTaskPositions = async () => {
-                    const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
-                    const taskOrders = taskElements.map((el, index) => ({
-                        id: parseInt(el.dataset.id),
-                        position: index
-                    }));
-                    
-                    try {
-                        const result = await ApiClient.reorderTasks(taskOrders);
-                        
-                        if (result.error) {
-                            throw new Error(result.error);
-                        }
-                        
-                        // Update the allTasks array with new positions
-                        if (result.tasks) {
-                            allTasks = allTasks.map(task => {
-                                const updatedTask = result.tasks.find(t => t.id === task.id);
-                                return updatedTask ? { ...task, position: updatedTask.position } : task;
-                            });
-                        }
-                    } catch (error) {
-                        logger.error('Error updating task positions:', error);
-                        alert('Failed to save task order. Please refresh and try again.');
-                        await renderTasks();
-                    }
-                };
-                
-                const handleTaskReorder = async (draggedId, targetId, placement = 'before') => {
-                    try {
-                        // Check if user is authenticated before proceeding
-                        if (!currentUser) {
-                            alert('Please log in to reorder tasks.');
-                            return;
-                        }
-                        
-                        // Get current tasks order
-                        const taskElements = Array.from(taskList.querySelectorAll('.task-item'));
-                        const draggedElement = taskElements.find(el => parseInt(el.dataset.id) === draggedId);
-                        const targetElement = taskElements.find(el => parseInt(el.dataset.id) === targetId);
-                        
-                        if (!draggedElement || !targetElement || draggedId === targetId) return;
-                        
-                        // Calculate new positions
-                        const taskOrders = [];
-                        let position = 0;
-                        
-                        for (const element of taskElements) {
-                            const elementId = parseInt(element.dataset.id);
-                            
-                            if (elementId === draggedId) {
-                                // Skip the dragged element in its original position
-                                continue;
-                            }
-                            
-                            if (elementId === targetId) {
-                                if (placement === 'before') {
-                                    // Insert dragged task before target
-                                    taskOrders.push({ id: draggedId, position: position++ });
-                                    taskOrders.push({ id: targetId, position: position++ });
-                                } else {
-                                    // Insert dragged task after target
-                                    taskOrders.push({ id: targetId, position: position++ });
-                                    taskOrders.push({ id: draggedId, position: position++ });
-                                }
-                            } else {
-                                taskOrders.push({ id: elementId, position: position++ });
-                            }
-                        }
-                        
-                        // Send reorder request to API
-                        await ApiClient.reorderTasks(taskOrders);
-                        
-                        // Re-render tasks to show new order
-                        await renderTasks();
-                        
-                    } catch (error) {
-                        logger.error('Failed to reorder tasks:', error);
-                        logger.error('Error details:', error.message, error.stack);
-                        
-                        // Check if it's an authentication error
-                        if (error.message.includes('401') || error.message.includes('Authentication required') || error.message.includes('Invalid token')) {
-                            alert('Authentication required. Please log in to reorder tasks.');
-                            return;
-                        }
-                        
-                        // Check if it's an HTML error page (Internal Server Error)
-                        if (error.message.includes('<!DOCTYPE html>') || error.message.includes('<html')) {
-                            alert('Server error occurred. Please try again. If the problem persists, check if you are logged in.');
-                            return;
-                        }
-                        
-                        if (error.needsMigration) {
-                            positionColumnExists = false; // Disable drag and drop
-                            alert(`Database Update Required\n\nThe drag-and-drop feature requires a database update. Please run the following SQL in your Supabase dashboard:\n\n${error.message}\n\nCheck the migrate-add-position.sql file for the complete migration script.`);
-                            // Re-render to hide drag handles
-                            await renderTasks();
-                        } else {
-                            alert(`Failed to reorder tasks: ${error.message}. Please try again.`);
-                        }
-                    }
-                };
-                
-                // Performance optimization utilities
-                const debounce = (func, wait) => {
-                    let timeout;
-                    return function executedFunction(...args) {
-                        const later = () => {
-                            clearTimeout(timeout);
-                            func(...args);
-                        };
-                        clearTimeout(timeout);
-                        timeout = setTimeout(later, wait);
-                    };
-                };
-                
-                // Performance optimization: Task rendering with virtual DOM-like behavior
-                let cachedTasks = new Map(); // Cache for task elements
-                let lastRenderHash = ''; // Hash to detect if re-render is needed
-                
-                renderTasks = async (forceRender = false) => {
-                    const tasksForSelectedDay = await fetchTasks(selectedDate, showingArchive);
-                    // Always update allTasks with the latest fetched tasks for the selected day
-                    allTasks = tasksForSelectedDay;
-                    
-                    // Filter tasks based on archive view
-                    let filteredTasks = showingArchive 
-                        ? tasksForSelectedDay.filter(task => task.archived)
-                        : tasksForSelectedDay.filter(task => !task.archived);
-                    
-                    // Apply tag filter if active
-                    const tasksToRender = currentFilter 
-                        ? filteredTasks.filter(task => task.tags.includes(currentFilter))
-                        : filteredTasks;
-
-                    // Performance optimization: Check if we need to re-render
-                    const renderHash = JSON.stringify(tasksToRender.map(t => ({ 
-                        id: t.id, 
-                        text: t.text, 
-                        completed: t.completed, 
-                        position: t.position,
-                        time: t.time,
-                        tags: t.tags,
-                        priority: t.priority
-                    }))) + selectedDate + showingArchive + currentFilter;
-                    
-                    if (!forceRender && renderHash === lastRenderHash && tasksToRender.length > 0) {
-                        // No changes, just update counters
-                        updateUICounters(filteredTasks);
-                        return;
-                    }
-                    
-                    lastRenderHash = renderHash;
-
-                    const emptyState = document.getElementById('empty-state');
-                    
-                    if (tasksToRender.length === 0) {
-                        // Clear task list efficiently
-                        while (taskList.firstChild && taskList.firstChild.id !== 'empty-state') {
-                            taskList.removeChild(taskList.firstChild);
-                        }
-                        
-                        if (currentFilter) {
-                            emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${escapeHTML(currentFilter)}".</p>`;
-                        } else {
-                            emptyState.innerHTML = `<i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks for this day.</p>`;
-                        }
-                        emptyState.style.display = 'block';
+                if (tasksToRender.length === 0) {
+                    if (currentFilter) {
+                        emptyState.innerHTML = `<i class="fas fa-search text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks found for tag "${currentFilter}".</p>`;
                     } else {
-                        if(emptyState) emptyState.style.display = 'none';
-                        
-                        // Performance optimization: Use DocumentFragment for batch DOM updates
-                        const fragment = document.createDocumentFragment();
-                        
-                        // Get existing task elements
-                        const existingTasks = new Map();
-                        Array.from(taskList.children).forEach(el => {
-                            if (el.dataset.id) {
-                                existingTasks.set(el.dataset.id, el);
-                            }
-                        });
-                        
-                        // Clear task list but preserve empty state
-                        while (taskList.firstChild && taskList.firstChild.id !== 'empty-state') {
-                            taskList.removeChild(taskList.firstChild);
-                        }
-                        
-                        // Tasks are already sorted by position from the backend
-                        tasksToRender.forEach(task => {
-                            let taskElement = existingTasks.get(task.id.toString());
-                            
-                            // Performance optimization: Reuse existing elements when possible
-                            if (taskElement && !forceRender) {
-                                // Update existing element
-                                updateTaskElement(taskElement, task);
-                            } else {
-                                // Create new element - ensure we have an element to work with
-                                if (!taskElement) {
-                                    if (!task || !task.id || isNaN(task.id)) {
-                                        console.error('Invalid task data in renderTasks:', task);
-                                        return; // Skip this task
-                                    }
-                                    taskElement = document.createElement('div');
-                                    taskElement.className = 'task-item glass-pane p-4 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-300 border border-white/20';
-                                    taskElement.dataset.id = task.id;
-                                    taskElement.style.backdropFilter = 'blur(20px)';
-                                }
-                                
-                                const isCompleted = task.completed;
-                                const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                                const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHTML(tag)}</span>`).join('');
-
-                                taskElement.innerHTML = `
-                                    <div class="flex items-start justify-between">
-                                        ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
-                                            <i class="fas fa-grip-vertical"></i>
-                                        </div>` : ''}
-                                        <div class="flex items-start gap-4 flex-grow">
-                                            <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
-                                            <div class="flex-grow">
-                                                <div class="flex items-center gap-3">
-                                                    <span class="text-2xl">${escapeHTML(task.emoji)}</span>
-                                                    <span class="task-text font-medium text-gray-200">${escapeHTML(task.text)}</span>
-                                                </div>
-                                                <div class="mt-2 flex items-center flex-wrap gap-y-2">
-                                                    ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
-                                                    <div class="flex flex-wrap">${tagsHTML}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2 shrink-0 ml-2">
-                                            <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
-                                            <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
-                                        </div>
-                                    </div>
-                                `;
-                                taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
-                                taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
-                                taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
-                                
-                                // Add reminder button listener if it exists (tasks with time)
-                                const reminderBtn = taskElement.querySelector('.reminder-btn');
-                                if (reminderBtn && window.reminderUI) {
-                                    reminderBtn.addEventListener('click', () => {
-                                        window.reminderUI.openModal(task);
-                                    });
-                                }
-                                
-                                taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
-                                    tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
-                                });
-                                
-                                // Drag and drop is handled by event delegation above - no individual setup needed
-                            }
-                            
-                            fragment.appendChild(taskElement);
-                        });
-                        
-                        // Batch DOM update
-                        taskList.appendChild(fragment);
+                        emptyState.innerHTML = `<i class="fas fa-tasks text-4xl text-gray-600 mb-3"></i><p class="text-gray-400">No tasks for this day.</p>`;
                     }
-                    updateUICounters(filteredTasks);
-                    await updateArchiveUI();
-                };
-                
-                // Performance optimization: Separate function to create task elements
-                const createTaskElement = (task) => {
-                    if (!task || !task.id || isNaN(task.id)) {
-                        console.error('Invalid task data when creating element:', task);
-                        return null;
-                    }
-                    const taskElement = document.createElement('div');
-                    taskElement.dataset.id = task.id;
-                    taskElement.dataset.position = task.position || 0;
-                    taskElement.draggable = !showingArchive; // Only allow dragging in active view
-                    updateTaskElement(taskElement, task, true);
-                    return taskElement;
-                };
-                
-                // Performance optimization: Update task element without recreating
-                const updateTaskElement = (taskElement, task, isNew = false) => {
-                    const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
-                    // Always coerce completed to boolean for robust UI
-                    const isCompleted = !!task.completed;
-                    
-                    if (isNew || taskElement.dataset.lastCompleted !== isCompleted.toString()) {
-                        taskElement.className = `task-item glass-card p-4 rounded-xl border-l-4 transition-all duration-300 ${isCompleted ? 'border-green-400' : priorityClasses[task.priority]}`;
+                    emptyState.style.display = 'block';
+                } else {
+                    if(emptyState) emptyState.style.display = 'none';
+                    tasksToRender.sort((a,b) => (a.time || "23:59").localeCompare(b.time || "23:59")).forEach(task => {
+                        const taskElement = document.createElement('div');
+                        taskElement.dataset.id = task.id;
+                        const priorityClasses = { low: 'border-l-blue-400', medium: 'border-l-yellow-400', high: 'border-l-red-400' };
+                        // Always coerce completed to boolean for robust UI
+                        const isCompleted = !!task.completed;
+                        taskElement.className = `task-item bg-black/10 p-4 rounded-lg shadow-md border-l-4 transition-all duration-300 border border-white/10 ${isCompleted ? 'border-green-400' : priorityClasses[task.priority]}`;
                         if (isCompleted) taskElement.classList.add('completed');
-                        taskElement.dataset.lastCompleted = isCompleted.toString();
-                    }
-                    
-                    if (isNew || taskElement.dataset.position !== (task.position || 0).toString()) {
-                        taskElement.dataset.position = task.position || 0;
-                    }
-                    
-                    // Only update innerHTML if content changed
-                    const contentHash = task.text + task.time + JSON.stringify(task.tags) + task.emoji + task.priority;
-                    if (isNew || taskElement.dataset.contentHash !== contentHash) {
+                        
                         const formattedTime = task.time ? new Date(`1970-01-01T${task.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-                        const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${escapeHtml(tag)}</span>`).join('');
+                        const tagsHTML = (task.tags || []).map(tag => `<span class="tag-btn cursor-pointer text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full bg-black/20 hover:bg-indigo-500 transition text-gray-300 border border-white/10">${tag}</span>`).join('');
 
                         taskElement.innerHTML = `
                             <div class="flex items-start justify-between">
-                                ${!showingArchive && positionColumnExists ? `<div class="drag-handle cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mr-3 mt-1 flex-shrink-0" title="Drag to reorder">
-                                    <i class="fas fa-grip-vertical"></i>
-                                </div>` : ''}
                                 <div class="flex items-start gap-4 flex-grow">
                                     <input type="checkbox" class="custom-checkbox h-5 w-5 rounded border-white/20 mt-1 cursor-pointer appearance-none border-2 shrink-0" ${isCompleted ? 'checked' : ''}>
                                     <div class="flex-grow">
                                         <div class="flex items-center gap-3">
-                                            <span class="text-2xl">${escapeHtml(task.emoji)}</span>
-                                            <span class="task-text font-medium text-gray-200">${escapeHtml(task.text)}</span>
+                                            <span class="text-2xl">${task.emoji}</span>
+                                            <span class="task-text font-medium text-gray-200">${task.text}</span>
                                         </div>
                                         <div class="mt-2 flex items-center flex-wrap gap-y-2">
                                             ${task.time ? `<div class="text-sm text-gray-400 mr-4"><i class="far fa-clock mr-1"></i>${formattedTime}</div>` : ''}
@@ -2296,718 +868,585 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0 ml-2">
-                                    ${task.time ? `<button class="reminder-btn ${task.reminder_enabled ? 'text-indigo-400' : 'text-gray-400'} hover:text-indigo-400 transition" data-task-id="${task.id}" title="${task.reminder_enabled ? `Reminder set for ${task.reminder_minutes} minutes before` : 'Set reminder'}"><i class="fas fa-bell${task.reminder_enabled ? '' : '-slash'}"></i></button>` : ''}
                                     <button class="edit-btn text-gray-400 hover:text-indigo-400 transition"><i class="fas fa-pencil-alt"></i></button>
                                     <button class="delete-btn text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </div>
                         `;
-                        taskElement.dataset.contentHash = contentHash;
-                    } else if (!isNew) {
-                        // Just update the checkbox state if content didn't change
-                        const checkbox = taskElement.querySelector('.custom-checkbox');
-                        if (checkbox) {
-                            checkbox.checked = isCompleted;
-                        }
-                    }
-                };
-
-                const updateUICounters = (currentTasks) => {
-                    taskCounter.textContent = `${currentTasks.length} task${currentTasks.length !== 1 ? 's' : ''}`;
-                    const completedTasks = currentTasks.filter(t => t.completed).length;
-                    const progressPercentage = currentTasks.length > 0 ? (completedTasks / currentTasks.length) * 100 : 0;
-                    progressBar.style.width = `${progressPercentage}%`;
-                    progressText.textContent = `${Math.round(progressPercentage)}%`;
-                    const hasUnscheduledTasks = currentTasks.some(t => !t.time);
-                    // smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0); // Smart Plan disabled
-                    
-                    // Check for celebration when all tasks are completed (but NOT in archive view)
-                    if (!showingArchive && currentTasks.length > 0 && completedTasks === currentTasks.length && progressPercentage === 100) {
-                        // Add a small delay to let the final task animation complete
-                        setTimeout(() => {
-                            triggerCelebration(completedTasks);
-                        }, 500);
-                    }
-                };
-
-                const addTask = async (task) => {
-                    try {
-                        await saveTask(task);
-                        await renderTasks();
-                    } catch (error) {
-                        alert('Failed to add task. Please try again.');
-                    }
-                };
-
-                const toggleComplete = async (id, event) => {
-                    try {
-                        const task = allTasks.find(t => t.id === id);
-                        if (!task) {
-                            logger.error('Task not found:', id);
-                            return;
-                        }
-                        
-                        const wasCompleted = task.completed;
-                        const newCompletedState = !wasCompleted;
-                        
-                        // Play effects when completing a task (not when uncompleting)
-                        if (newCompletedState) {
-                            // Initialize audio context on first interaction
-                            await initAudio();
-                            
-                            // Trigger confetti animation
-                            try {
-                                // Load confetti if not already loaded
-                                if (!window.confetti) {
-                                    window.loadConfetti();
-                                    // Wait for confetti to load
-                                    await new Promise(resolve => {
-                                        const checkConfetti = () => {
-                                            if (window.confetti) resolve();
-                                            else setTimeout(checkConfetti, 50);
-                                        };
-                                        checkConfetti();
-                                    });
-                                }
-                                
-                                const rect = event.target.getBoundingClientRect();
-                                const origin = { 
-                                    x: (rect.left + rect.right) / 2 / window.innerWidth, 
-                                    y: (rect.top + rect.bottom) / 2 / window.innerHeight 
-                                };
-                                
-                                if (typeof confetti === 'function') {
-                                    confetti({ 
-                                        particleCount: 100, 
-                                        spread: 70, 
-                                        origin: origin, 
-                                        colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] 
-                                    });
-                                } else {
-                                    logger.warn('Confetti function not available');
-                                }
-                            } catch (confettiError) {
-                                logger.warn('Confetti animation failed:', confettiError);
-                            }
-                            
-                            // Play completion sound
-                            try {
-                                if (synth && audioContextStarted) {
-                                    synth.triggerAttackRelease("C5", "8n");
-                                }
-                            } catch (audioError) {
-                                logger.warn('Audio playback failed:', audioError);
-                            }
-                        }
-                        
-                        // Update task completion state
-                        const updatedTask = { ...task, completed: newCompletedState };
-                        await updateTask(id, updatedTask);
-                        
-                        // Update local state immediately for better UX
-                        const taskIndex = allTasks.findIndex(t => t.id === id);
-                        if (taskIndex !== -1) {
-                            allTasks[taskIndex] = updatedTask;
-                        }
-                        
-                        await renderTasks();
-                    } catch (error) {
-                        logger.error('Task completion toggle failed:', error);
-                        alert('Failed to update task. Please try again.');
-                        // Revert checkbox state on failure
-                        event.target.checked = !event.target.checked;
-                    }
-                };
-                
-                const removeTask = async (id) => {
-                    try {
-                        await deleteTask(id);
-                        await renderTasks();
-                    } catch (error) {
-                        // If task not found (404), it might already be deleted - refresh the view
-                        if (error.message.includes('404') || error.message.includes('not found')) {
-                            console.log('Task not found on server, refreshing view...');
-                            await renderTasks();
-                        } else {
-                            console.error('Delete task error:', error);
-                            alert('Failed to delete task. Please try again.');
-                        }
-                    }
-                };
-
-
-                const filterByTag = (tag) => {
-                    currentFilter = tag;
-                    filterContainer.classList.remove('hidden');
-                    activeFilterTag.textContent = `#${tag}`;
-                    renderTasks();
-                };
-
-                // --- Event Listeners ---
-                // Natural Language Task Parser
-                const parseNaturalLanguageTask = async (input) => {
-                    const now = new Date();
-                    const currentHours = String(now.getHours()).padStart(2, '0');
-                    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-                    const currentTime = `${currentHours}:${currentMinutes}`;
-                    
-                    // First try AI parsing with proper error handling
-                    try {
-                        // Check if AI is available
-                        if (window.ApiClient && typeof window.ApiClient.callGemini === 'function') {
-                            const parsePrompt = `Parse this task description and extract the components. Today is ${selectedDate} at ${currentTime}.
-                            
-    Task: "${input}"
-
-    Extract and return a JSON object with these fields:
-    - text: The main task description (clean, without time/priority/tags). IMPORTANT: Keep the full task description together (e.g., "clean bathroom" should remain as "clean bathroom", not split into separate words)
-    - time: Time in HH:MM format (24-hour). Convert natural language like "3pm", "tomorrow morning", "in 2 hours" to specific times. If no time mentioned, return null.
-    - priority: Either "high", "medium", or "low". Look for words like urgent, important, ASAP (high), normal (medium), whenever, later (low). Default to "medium" if not specified.
-    - tags: Array of tags. Look for hashtags (#work, #personal) or context words that could be tags (meeting->work, shopping->personal). Return empty array if none.
-    - emoji: A single relevant emoji for this task.
-
-    Examples:
-    "Clean room at 3pm high priority #home" -> {"text": "Clean room", "time": "15:00", "priority": "high", "tags": ["home"], "emoji": "🧹"}
-    "clean bathroom at 1pm" -> {"text": "clean bathroom", "time": "13:00", "priority": "medium", "tags": [], "emoji": "🚿"}
-    "Meeting with John tomorrow 2pm" -> {"text": "Meeting with John", "time": "14:00", "priority": "medium", "tags": ["work"], "emoji": "👥"}
-    "Buy groceries" -> {"text": "Buy groceries", "time": null, "priority": "medium", "tags": ["personal"], "emoji": "🛒"}
-
-    Return only the JSON object.`;
-
-                            const response = await callGemini(parsePrompt);
-                            if (response) {
-                                const cleaned = response.replace(/```json/g, '').replace(/```/g, '').trim();
-                                const parsed = JSON.parse(cleaned);
-                                
-                                // Validate and clean the parsed response
-                                return {
-                                    text: parsed.text || input,
-                                    time: parsed.time || '',
-                                    priority: ['high', 'medium', 'low'].includes(parsed.priority) ? parsed.priority : 'medium',
-                                    tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-                                    emoji: parsed.emoji || '📝'
-                                };
-                            }
-                        } else {
-                            console.log('AI not available, using fallback parser');
-                        }
-                    } catch (error) {
-                        console.error('AI parsing failed, using fallback:', error);
-                    }
-                    
-                    // Fallback: Simple parsing if AI fails
-                    let text = input;
-                    let time = '';
-                    let priority = 'medium';
-                    let tags = [];
-                    
-                    // Extract hashtags
-                    const hashtagMatches = input.match(/#\w+/g);
-                    if (hashtagMatches) {
-                        tags = hashtagMatches.map(tag => tag.slice(1));
-                        text = text.replace(/#\w+/g, '').trim();
-                    }
-                    
-                    // Extract priority
-                    if (/\b(high|urgent|important|asap)\b/i.test(input)) {
-                        priority = 'high';
-                        text = text.replace(/\b(high|urgent|important|asap)\s*(priority|pri)?\b/gi, '').trim();
-                    } else if (/\b(low|later|whenever)\b/i.test(input)) {
-                        priority = 'low';
-                        text = text.replace(/\b(low|later|whenever)\s*(priority|pri)?\b/gi, '').trim();
-                    } else if (/\b(medium|normal|med)\b/i.test(input)) {
-                        priority = 'medium';
-                        text = text.replace(/\b(medium|normal|med)\s*(priority|pri)?\b/gi, '').trim();
-                    }
-                    
-                    // Extract time (enhanced patterns)
-                    const timePatterns = [
-                        /\bat\s+(\d{1,2}):(\d{2})\s*(am|pm)\b/i,      // at 3:30pm
-                        /\bat\s+(\d{1,2})\s*(am|pm)\b/i,              // at 3pm
-                        /\b(\d{1,2}):(\d{2})\s*(am|pm)\b/i,           // 3:30pm
-                        /\b(\d{1,2})\s*(am|pm)\b/i,                   // 3pm
-                        /\b(\d{1,2}):(\d{2})\b/,                      // 15:30
-                    ];
-                    
-                    for (const pattern of timePatterns) {
-                        const timeMatch = text.match(pattern);
-                        if (timeMatch) {
-                            let hours = parseInt(timeMatch[1]);
-                            let minutes = timeMatch[2] !== undefined ? parseInt(timeMatch[2]) : 0;
-                            // Ensure minutes is not NaN
-                            if (isNaN(minutes)) minutes = 0;
-                            const period = timeMatch[3];
-                            
-                            // Convert to 24-hour format
-                            if (period) {
-                                const isPM = /pm/i.test(period);
-                                if (isPM && hours < 12) hours += 12;
-                                if (!isPM && hours === 12) hours = 0;
-                            }
-                            
-                            time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                            // Remove the entire matched time pattern including "at" if present
-                            text = text.replace(timeMatch[0], '').trim();
-                            break;
-                        }
-                    }
-                    
-                    // Simple emoji assignment based on keywords
-                    let emoji = '📝';
-                    const emojiMap = {
-                        'clean': '🧹', 'bathroom': '🚿', 'shower': '🚿', 'bath': '🛁',
-                        'meeting': '👥', 'call': '📞', 'buy': '🛒', 'shop': '🛒',
-                        'eat': '🍽️', 'cook': '👨‍🍳', 'exercise': '💪', 'gym': '🏋️', 'run': '🏃',
-                        'read': '📚', 'study': '📖', 'work': '💼', 'email': '📧', 'write': '✍️',
-                        'doctor': '👨‍⚕️', 'appointment': '📅', 'travel': '✈️', 'drive': '🚗',
-                        'laundry': '👔', 'wash': '🧼', 'kitchen': '🍳', 'bedroom': '🛏️'
-                    };
-                    
-                    for (const [keyword, emojiChar] of Object.entries(emojiMap)) {
-                        if (new RegExp(`\\b${keyword}`, 'i').test(input)) {
-                            emoji = emojiChar;
-                            break;
-                        }
-                    }
-                    
-                    return { text, time, priority, tags, emoji };
-                };
-
-                taskForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const inputText = taskInput.value.trim();
-                    if (inputText === '') return;
-
-                    // Initialize audio on first user interaction
-                    await initAudio();
-
-                    addTaskBtn.disabled = true;
-                    addSpinner.classList.remove('hidden');
-                    addBtnText.classList.add('hidden');
-                    
-                    // Parse the natural language input
-                    const parsedTask = await parseNaturalLanguageTask(inputText);
-                    logger.log('Parsed task data:', parsedTask);
-                    
-                    // If no time was extracted, use current time
-                    const now = new Date();
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const currentTime = `${hours}:${minutes}`;
-
-                    // Validate and prepare task data for API
-                    const task = {
-                        id: Date.now(),
-                        date: selectedDate,
-                        text: parsedTask.text.trim(),
-                        emoji: parsedTask.emoji || '📝',
-                        time: parsedTask.time || currentTime,
-                        priority: ['high', 'medium', 'low'].includes(parsedTask.priority) ? parsedTask.priority : 'medium',
-                        tags: Array.isArray(parsedTask.tags) ? parsedTask.tags : [],
-                        completed: false
-                    };
-                    
-                    // Update hidden inputs for compatibility
-                    timeInput.value = task.time;
-                    priorityInput.value = task.priority;
-                    tagsInput.value = Array.isArray(task.tags) ? task.tags.join(', ') : '';
-                    
-                    logger.log('Final task data being sent:', task);
-                    addTask(task);
-                    
-                    taskForm.reset();
-                    addTaskBtn.disabled = false;
-                    addSpinner.classList.add('hidden');
-                    addBtnText.classList.remove('hidden');
-                });
-
-                prevWeekBtn.addEventListener('click', () => {
-                    currentDate.setDate(currentDate.getDate() - 7);
-                    renderWeek();
-                    renderTasks();
-                });
-
-                nextWeekBtn.addEventListener('click', () => {
-                    currentDate.setDate(currentDate.getDate() + 7);
-                    renderWeek();
-                    renderTasks();
-                });
-                
-                suggestTasksBtn.addEventListener('click', () => openModal(suggestModal));
-                cancelSuggestBtn.addEventListener('click', () => closeModal(suggestModal));
-                
-                 generateTasksBtn.addEventListener('click', async () => {
-                    const goal = goalInput.value.trim();
-                    if (!goal) return;
-
-                    generateBtnText.classList.add('hidden');
-                    generateSpinner.classList.remove('hidden');
-                    generateTasksBtn.disabled = true;
-                    
-                    const prompt = `Based on the goal "${goal}", suggest a list of 3 to 5 actionable tasks. Return a JSON array of strings. Example: ["Task 1", "Task 2"]`;
-                    const responseText = await callGemini(prompt);
-
-                    if (responseText) {
-                        try {
-                            const suggestedTaskTexts = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
-                            
-                            const taskPromises = suggestedTaskTexts.map(async (taskText) => {
-                                const emojiPrompt = `Based on the task "${taskText}", suggest one single, relevant emoji. Only return the emoji itself.`;
-                                const emoji = await callGemini(emojiPrompt) || '💡';
-                                return {
-                                    id: Date.now() + Math.random(),
-                                    date: selectedDate,
-                                    text: taskText,
-                                    emoji: emoji.trim(),
-                                    time: null,
-                                    priority: 'medium',
-                                    tags: ['suggested', goal.split(' ')[0].toLowerCase()],
-                                    completed: false
-                                };
-                            });
-
-                            const newTasks = await Promise.all(taskPromises);
-                            newTasks.forEach(task => addTask(task));
-                            
-                            closeModal(suggestModal);
-                            goalInput.value = '';
-                        } catch (e) {
-                            alert("The AI returned an unexpected format. Please try a different goal.");
-                        }
-                    }
-                    
-                    generateBtnText.classList.remove('hidden');
-                    generateSpinner.classList.add('hidden');
-                    generateTasksBtn.disabled = false;
-                });
-                
-                // Smart Plan feature temporarily disabled
-                /* smartPlanBtn.addEventListener('click', async () => {
-                    const tasksForDay = allTasks.filter(t => t.date === selectedDate && !t.time);
-                    if (tasksForDay.length === 0) return;
-                    
-                    smartPlanBtn.innerHTML = `<div class="spinner h-5 w-5 rounded-full border-2 border-t-transparent"></div><span>Planning...</span>`;
-                    smartPlanBtn.disabled = true;
-
-                    try {
-                        // Use the proper smartPlanning method with authentication
-                        const response = await auth.smartPlanning(tasksForDay, selectedDate);
-                        logger.log('🤖 Smart Plan Response:', response);
-
-                        if (response.schedule) {
-                            logger.log('⏰ Parsed Schedule:', response.schedule);
-                            logger.log('📋 Tasks for Day:', tasksForDay);
-                            
-                            // Update tasks with suggested times and persist to database
-                            const updatePromises = [];
-                            for (const task of tasksForDay) {
-                                logger.log(`🔍 Checking task "${task.text}" for schedule match...`);
-                                if (response.schedule[task.text]) {
-                                    const suggestedTime = response.schedule[task.text];
-                                    logger.log(`⏱️ Found time "${suggestedTime}" for task "${task.text}"`);
-                                    const updatedTask = { ...task, time: suggestedTime };
-                                    updatePromises.push(updateTask(task.id, updatedTask));
-                                } else {
-                                    logger.log(`❌ No time found for task "${task.text}"`);
-                                    logger.log('Available schedule keys:', Object.keys(response.schedule));
-                                }
-                            }
-                            
-                            logger.log(`🔄 Updating ${updatePromises.length} tasks...`);
-                            await Promise.all(updatePromises);
-                            logger.log('✅ All task updates completed');
-                            await renderTasks();
-                        } else if (response.rawResponse) {
-                            // Fallback to parsing raw response if schedule parsing failed
-                            logger.log('📝 Fallback: parsing raw AI response');
-                            const cleanResponse = response.rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-                            const schedule = JSON.parse(cleanResponse);
-                            logger.log('⏰ Parsed Schedule from raw:', schedule);
-                            
-                            // Same update logic
-                            const updatePromises = [];
-                            for (const task of tasksForDay) {
-                                if (schedule[task.text]) {
-                                    const updatedTask = { ...task, time: schedule[task.text] };
-                                    updatePromises.push(updateTask(task.id, updatedTask));
-                                }
-                            }
-                            await Promise.all(updatePromises);
-                            await renderTasks();
-                        } else {
-                            throw new Error('No schedule data in response');
-                        }
-                    } catch (e) {
-                        logger.error('❌ Smart Plan Error:', e);
-                        alert("Smart planning failed. Please try again.");
-                    }
-
-                    smartPlanBtn.innerHTML = `<i class="fas fa-brain"></i> <span>✨ Smart Plan</span>`;
-                    smartPlanBtn.disabled = false;
-                }); */
-
-                editTaskForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const id = parseInt(editTaskId.value);
-                    const task = allTasks.find(t => t.id === id);
-                    if (!task) return;
-
-                    try {
-                        await updateTask(id, {
-                            ...task,
-                            text: editTaskText.value,
-                            time: editTaskTime.value,
-                            priority: editTaskPriority.value,
-                            tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                        taskElement.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleComplete(task.id, e));
+                        taskElement.querySelector('.delete-btn').addEventListener('click', () => removeTask(task.id));
+                        taskElement.querySelector('.edit-btn').addEventListener('click', () => openEditModal(task.id));
+                        taskElement.querySelectorAll('.tag-btn').forEach(tagBtn => {
+                            tagBtn.addEventListener('click', () => filterByTag(tagBtn.textContent));
                         });
-                        await renderTasks();
-                        closeModal(editModal);
-                    } catch (error) {
-                        alert('Failed to update task. Please try again.');
-                    }
-                });
-
-                cancelEditBtn.addEventListener('click', () => closeModal(editModal));
-                
-                clearAllBtn.addEventListener('click', () => openModal(confirmClearModal));
-                cancelClearBtn.addEventListener('click', () => closeModal(confirmClearModal));
-                confirmClearBtn.addEventListener('click', async () => {
-                    try {
-                        await clearAllTasks();
-                        await renderTasks();
-                        closeModal(confirmClearModal);
-                    } catch (error) {
-                        alert('Failed to clear tasks. Please try again.');
-                    }
-                });
-
-                clearFilterBtn.addEventListener('click', () => {
-                    currentFilter = null;
-                    filterContainer.classList.add('hidden');
-                    renderTasks();
-                });
-
-                // Celebration modal event listeners
-                closeCelebrationBtn.addEventListener('click', async () => {
-                    try {
-                        // Archive completed tasks when closing celebration
-                        await archiveCompletedTasks(selectedDate);
-                        closeModal(celebrationModal);
-                        await renderTasks(); // Refresh to show archived tasks are gone
-                    } catch (error) {
-                        logger.error('Error archiving tasks:', error);
-                        closeModal(celebrationModal);
-                    }
-                });
-
-                addTomorrowTasksBtn.addEventListener('click', async () => {
-                    try {
-                        // Archive completed tasks from today before moving to tomorrow
-                        const todayDate = selectedDate;
-                        await archiveCompletedTasks(todayDate);
-                        
-                        closeModal(celebrationModal);
-                        
-                        // Navigate to tomorrow - properly parse the ISO date string
-                        const currentSelectedDate = new Date(selectedDate + 'T00:00:00');
-                        const tomorrow = new Date(currentSelectedDate);
-                        tomorrow.setDate(tomorrow.getDate() + 1);
-                        
-                        // Update the selected date
-                        selectedDate = toISODateString(tomorrow);
-                        
-                        // Update the current date for week navigation
-                        currentDate = new Date(tomorrow);
-                        
-                        // Re-render everything for the new date
-                        renderWeek();
-                        renderTasks();
-                        updateSelectedDateDisplay();
-                        
-                        // Focus on the task input for easy task creation
-                        setTimeout(() => {
-                            taskInput.focus();
-                        }, 300);
-                        
-                        // Successfully archived tasks and navigated to tomorrow
-                    } catch (error) {
-                        logger.error('Error during tomorrow navigation:', error);
-                        closeModal(celebrationModal);
-                    }
-                });
-
-                // Archive toggle functionality
-                archiveToggleBtn.addEventListener('click', () => {
-                    showingArchive = !showingArchive;
-                    renderTasks();
-                });
-
-                // --- Setup Task List Drop Zone ---
-                const setupTaskListDropZone = () => {
-                    taskList.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                    });
-                    
-                    taskList.addEventListener('drop', async (e) => {
-                        e.preventDefault();
-                        
-                        if (draggedElement) {
-                            // If dropped on empty area, move to end
-                            const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
-                            if (allTasks.length > 0) {
-                                const lastTask = allTasks[allTasks.length - 1];
-                                const lastTaskId = parseInt(lastTask.dataset.id);
-                                if (lastTaskId !== draggedTaskId) {
-                                    await handleTaskReorder(draggedTaskId, lastTaskId, 'after');
-                                }
-                            }
-                        }
-                    });
-                };
-                
-                // --- Form Switching Logic ---
-                const registerBranding = document.getElementById('register-branding');
-                const loginBranding = document.querySelector('.mt-8.text-center.border-t');
-                
-                // Show register form
-                if (showRegisterBtn) {
-                    showRegisterBtn.addEventListener('click', () => {
-                        loginForm.classList.add('hidden');
-                        registerForm.classList.remove('hidden');
-                        registerSwitch.classList.remove('hidden');
-                        authMessage.classList.add('hidden');
-                        
-                        // Switch branding visibility
-                        if (loginBranding) loginBranding.classList.add('hidden');
-                        if (registerBranding) registerBranding.classList.remove('hidden');
+                        taskList.appendChild(taskElement);
                     });
                 }
+                updateUICounters(filteredTasks);
+                await updateArchiveUI();
+            };
+
+            const updateUICounters = (currentTasks) => {
+                taskCounter.textContent = `${currentTasks.length} task${currentTasks.length !== 1 ? 's' : ''}`;
+                const completedTasks = currentTasks.filter(t => t.completed).length;
+                const progressPercentage = currentTasks.length > 0 ? (completedTasks / currentTasks.length) * 100 : 0;
+                progressBar.style.width = `${progressPercentage}%`;
+                progressText.textContent = `${Math.round(progressPercentage)}%`;
+                const hasUnscheduledTasks = currentTasks.some(t => !t.time);
+                // smartPlanBtn.classList.toggle('hidden', !hasUnscheduledTasks || currentTasks.length === 0); // Smart Plan disabled
                 
-                // Show login form
-                if (showLoginBtn) {
-                    showLoginBtn.addEventListener('click', () => {
-                        registerForm.classList.add('hidden');
-                        loginForm.classList.remove('hidden');
-                        registerSwitch.classList.add('hidden');
-                        authMessage.classList.add('hidden');
-                        
-                        // Switch branding visibility
-                        if (registerBranding) registerBranding.classList.add('hidden');
-                        if (loginBranding) loginBranding.classList.remove('hidden');
-                    });
-                }
-                
-                // --- Initial Load ---
-                setupTaskListDropZone();
-                setupEventDelegation();
-                renderWeek();
-                // Initialize notification manager
-                let notificationManager;
-                let reminderUI;
-                
-                try {
-                    // Initialize notification manager
-                    if (window.NotificationManager) {
-                        notificationManager = new NotificationManager();
-                        window.notificationManager = notificationManager;
-                        
-                        // Initialize reminder UI
-                        if (window.ReminderUI) {
-                            reminderUI = new ReminderUI(notificationManager);
-                            window.reminderUI = reminderUI;
-                            reminderUI.init();
-                            
-                            // Sync reminders on startup
-                            if (notificationManager.isEnabled()) {
-                                await notificationManager.syncReminders();
-                            }
-                        }
-                        
-                        // Make task manager accessible for notifications
-                        window.taskManager = {
-                            allTasks: allTasks,
-                            toggleComplete: toggleComplete
-                        };
-                        
-                        // Request notification permission if not already granted
-                        if (notificationManager.permission === 'default') {
-                            // Show a friendly prompt after user has interacted with the app
-                            setTimeout(() => {
-                                const shouldAsk = localStorage.getItem('askForNotifications') !== 'false';
-                                if (shouldAsk && allTasks.some(t => t.time)) {
-                                    // Only ask if there are tasks with times
-                                    showNotificationPrompt();
-                                }
-                            }, 5000);
-                        }
-                    }
-                } catch (error) {
-                    logger.error('Failed to initialize notification system:', error);
-                }
-                
-                // Function to show notification permission prompt
-                const showNotificationPrompt = () => {
-                    const prompt = document.createElement('div');
-                    prompt.className = 'fixed top-4 right-4 glass-pane p-4 rounded-xl z-50 max-w-sm';
-                    prompt.innerHTML = `
-                        <div class="flex items-start gap-3">
-                            <i class="fas fa-bell text-2xl text-indigo-400"></i>
-                            <div class="flex-grow">
-                                <h3 class="font-semibold mb-1">Enable Reminders?</h3>
-                                <p class="text-sm text-gray-300 mb-3">Get notified before your scheduled tasks</p>
-                                <div class="flex gap-2">
-                                    <button id="enableNotifications" class="btn-primary text-sm py-1 px-3">Enable</button>
-                                    <button id="dismissNotifications" class="btn-secondary text-sm py-1 px-3">Not Now</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(prompt);
-                    
-                    document.getElementById('enableNotifications').addEventListener('click', async () => {
-                        const granted = await notificationManager.requestPermission();
-                        if (granted) {
-                            await notificationManager.syncReminders();
-                        }
-                        prompt.remove();
-                    });
-                    
-                    document.getElementById('dismissNotifications').addEventListener('click', () => {
-                        localStorage.setItem('askForNotifications', 'false');
-                        prompt.remove();
-                    });
-                    
-                    // Auto-dismiss after 10 seconds
+                // Check for celebration when all tasks are completed (but NOT in archive view)
+                if (!showingArchive && currentTasks.length > 0 && completedTasks === currentTasks.length && progressPercentage === 100) {
+                    // Add a small delay to let the final task animation complete
                     setTimeout(() => {
-                        if (prompt.parentNode) {
-                            prompt.remove();
+                        triggerCelebration(completedTasks);
+                    }, 500);
+                }
+            };
+
+            const addTask = async (task) => {
+                try {
+                    await saveTask(task);
+                    await renderTasks();
+                } catch (error) {
+                    alert('Failed to add task. Please try again.');
+                }
+            };
+
+            const toggleComplete = async (id, event) => {
+                try {
+                    const task = allTasks.find(t => t.id === id);
+                    if (!task) {
+                        console.error('Task not found:', id);
+                        return;
+                    }
+                    
+                    const wasCompleted = task.completed;
+                    const newCompletedState = !wasCompleted;
+                    
+                    // Play effects when completing a task (not when uncompleting)
+                    if (newCompletedState) {
+                        // Initialize audio context on first interaction
+                        await initAudio();
+                        
+                        // Trigger confetti animation
+                        try {
+                            const rect = event.target.getBoundingClientRect();
+                            const origin = { 
+                                x: (rect.left + rect.right) / 2 / window.innerWidth, 
+                                y: (rect.top + rect.bottom) / 2 / window.innerHeight 
+                            };
+                            
+                            if (typeof confetti === 'function') {
+                                confetti({ 
+                                    particleCount: 100, 
+                                    spread: 70, 
+                                    origin: origin, 
+                                    colors: ['#818cf8', '#c084fc', '#f472b6', '#4ade80'] 
+                                });
+                            } else {
+                                console.warn('Confetti function not available');
+                            }
+                        } catch (confettiError) {
+                            console.warn('Confetti animation failed:', confettiError);
                         }
-                    }, 10000);
-                };
-                
-                renderTasks();
+                        
+                        // Play completion sound
+                        try {
+                            if (synth && audioContextStarted) {
+                                synth.triggerAttackRelease("C5", "8n");
+                            }
+                        } catch (audioError) {
+                            console.warn('Audio playback failed:', audioError);
+                        }
+                    }
+                    
+                    // Update task completion state
+                    const updatedTask = { ...task, completed: newCompletedState };
+                    await updateTask(id, updatedTask);
+                    
+                    // Update local state immediately for better UX
+                    const taskIndex = allTasks.findIndex(t => t.id === id);
+                    if (taskIndex !== -1) {
+                        allTasks[taskIndex] = updatedTask;
+                    }
+                    
+                    await renderTasks();
+                } catch (error) {
+                    console.error('Task completion toggle failed:', error);
+                    alert('Failed to update task. Please try again.');
+                    // Revert checkbox state on failure
+                    event.target.checked = !event.target.checked;
+                }
+            };
+            
+            const removeTask = async (id) => {
+                try {
+                    await deleteTask(id);
+                    await renderTasks();
+                } catch (error) {
+                    alert('Failed to delete task. Please try again.');
+                }
+            };
+
+            const openModal = (modalEl) => {
+                modalEl.classList.remove('invisible', 'opacity-0');
+                modalEl.querySelector('.modal-content').classList.remove('scale-95');
             }
 
-            if (currentUser) {
-                await initializeMainApp();
+            const closeModal = (modalEl) => {
+                modalEl.classList.add('invisible', 'opacity-0');
+                modalEl.querySelector('.modal-content').classList.add('scale-95');
             }
-        });
-    </script>
-    
-    <!-- MagicUI Effects and Animations -->
-    <script src="/public/magicui-effects.js" defer></script>
-    
-    <!-- Debug Helper (only in development) -->
-    <!-- Debug helper removed - was causing console errors -->
-    
-    <!-- Vercel Analytics -->
-    <script type="module">
-        import('https://unpkg.com/@vercel/analytics@1.5.0?module')
-            .then(({ inject }) => inject())
-            .catch((error) => {
-                console.warn('Vercel Analytics failed to load', error);
+
+            const openEditModal = (id) => {
+                const task = allTasks.find(t => t.id === id);
+                if (!task) return;
+                editTaskId.value = task.id;
+                editTaskText.value = task.text;
+                editTaskTime.value = task.time;
+                editTaskPriority.value = task.priority;
+                editTaskTags.value = task.tags.join(', ');
+                openModal(editModal);
+            };
+
+            const filterByTag = (tag) => {
+                currentFilter = tag;
+                filterContainer.classList.remove('hidden');
+                activeFilterTag.textContent = `#${tag}`;
+                renderTasks();
+            };
+
+            // --- Natural Language Date/Time Parser ---
+            const parseNaturalLanguage = (text) => {
+                const result = {
+                    cleanText: text,
+                    date: selectedDate, // Default to selected date
+                    time: null
+                };
+
+                // Convert to lowercase for easier parsing
+                const lowerText = text.toLowerCase();
+
+                // Time extraction patterns
+                const timePatterns = [
+                    /\bat\s+(\d{1,2}):?(\d{2})?\s*(am|pm|a\.m\.|p\.m\.)/gi,
+                    /\bat\s+(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)/gi,
+                    /\bat\s+(\d{1,2}):(\d{2})/gi,
+                    /(\d{1,2}):(\d{2})\s*(am|pm|a\.m\.|p\.m\.)/gi,
+                    /(\d{1,2})\s*(am|pm|a\.m\.|p\.m\.)/gi
+                ];
+
+                // Extract time
+                let timeMatch = null;
+                let timeString = '';
+                for (const pattern of timePatterns) {
+                    timeMatch = lowerText.match(pattern);
+                    if (timeMatch) {
+                        timeString = timeMatch[0];
+                        break;
+                    }
+                }
+
+                if (timeMatch) {
+                    // Parse time components
+                    const cleanTimeString = timeString.replace(/\bat\s+/gi, '').trim();
+                    let hour, minute;
+                    
+                    if (cleanTimeString.includes(':')) {
+                        const parts = cleanTimeString.split(':');
+                        hour = parseInt(parts[0]);
+                        minute = parseInt(parts[1].replace(/[^\d]/g, ''));
+                    } else {
+                        hour = parseInt(cleanTimeString.replace(/[^\d]/g, ''));
+                        minute = 0;
+                    }
+
+                    // Handle AM/PM
+                    if (cleanTimeString.includes('pm') || cleanTimeString.includes('p.m.')) {
+                        if (hour !== 12) hour += 12;
+                    } else if (cleanTimeString.includes('am') || cleanTimeString.includes('a.m.')) {
+                        if (hour === 12) hour = 0;
+                    }
+
+                    // Format time as HH:MM
+                    result.time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    
+                    // Remove time from text
+                    result.cleanText = text.replace(new RegExp(timeString, 'gi'), '').trim();
+                }
+
+                // Date parsing - get today's date for relative calculations
+                const today = new Date();
+                const todayISO = toISODateString(today);
+
+                // Date patterns and their corresponding logic
+                const datePatterns = {
+                    'tomorrow': () => {
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return toISODateString(tomorrow);
+                    },
+                    'today': () => todayISO,
+                    'next week': () => {
+                        const nextWeek = new Date(today);
+                        nextWeek.setDate(nextWeek.getDate() + 7);
+                        return toISODateString(nextWeek);
+                    },
+                    'next monday': () => {
+                        const nextMonday = new Date(today);
+                        const daysUntilMonday = (1 - nextMonday.getDay() + 7) % 7 || 7;
+                        nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
+                        return toISODateString(nextMonday);
+                    },
+                    'next tuesday': () => {
+                        const nextTuesday = new Date(today);
+                        const daysUntilTuesday = (2 - nextTuesday.getDay() + 7) % 7 || 7;
+                        nextTuesday.setDate(nextTuesday.getDate() + daysUntilTuesday);
+                        return toISODateString(nextTuesday);
+                    },
+                    'next wednesday': () => {
+                        const nextWednesday = new Date(today);
+                        const daysUntilWednesday = (3 - nextWednesday.getDay() + 7) % 7 || 7;
+                        nextWednesday.setDate(nextWednesday.getDate() + daysUntilWednesday);
+                        return toISODateString(nextWednesday);
+                    },
+                    'next thursday': () => {
+                        const nextThursday = new Date(today);
+                        const daysUntilThursday = (4 - nextThursday.getDay() + 7) % 7 || 7;
+                        nextThursday.setDate(nextThursday.getDate() + daysUntilThursday);
+                        return toISODateString(nextThursday);
+                    },
+                    'next friday': () => {
+                        const nextFriday = new Date(today);
+                        const daysUntilFriday = (5 - nextFriday.getDay() + 7) % 7 || 7;
+                        nextFriday.setDate(nextFriday.getDate() + daysUntilFriday);
+                        return toISODateString(nextFriday);
+                    },
+                    'next saturday': () => {
+                        const nextSaturday = new Date(today);
+                        const daysUntilSaturday = (6 - nextSaturday.getDay() + 7) % 7 || 7;
+                        nextSaturday.setDate(nextSaturday.getDate() + daysUntilSaturday);
+                        return toISODateString(nextSaturday);
+                    },
+                    'next sunday': () => {
+                        const nextSunday = new Date(today);
+                        const daysUntilSunday = (7 - nextSunday.getDay()) % 7 || 7;
+                        nextSunday.setDate(nextSunday.getDate() + daysUntilSunday);
+                        return toISODateString(nextSunday);
+                    }
+                };
+
+                // Check for date patterns in the text
+                for (const [pattern, dateFunc] of Object.entries(datePatterns)) {
+                    if (lowerText.includes(pattern)) {
+                        result.date = dateFunc();
+                        // Remove the date phrase from the text
+                        const regex = new RegExp(pattern, 'gi');
+                        result.cleanText = result.cleanText.replace(regex, '').trim();
+                        break;
+                    }
+                }
+
+                // Clean up extra whitespace and common words
+                result.cleanText = result.cleanText
+                    .replace(/\s+/g, ' ')
+                    .replace(/\b(remind me to|reminder to|reminder)\b/gi, '')
+                    .replace(/\b(on|at)\b\s*/gi, '')
+                    .trim();
+
+                return result;
+            };
+
+            // --- Test Natural Language Parser (for debugging) ---
+            const testNaturalLanguageParser = () => {
+                const testCases = [
+                    "Remind me to create email filters for RodyTech emails tomorrow at 1pm",
+                    "Meeting with John next Monday at 9:30am", 
+                    "Buy groceries today at 5pm",
+                    "Call mom next Friday",
+                    "Dentist appointment next Tuesday at 2:00 PM"
+                ];
+
+                console.log("🧪 Natural Language Parser Tests:");
+                testCases.forEach((testCase, index) => {
+                    const result = parseNaturalLanguage(testCase);
+                    console.log(`${index + 1}. "${testCase}"`);
+                    console.log(`   → Date: ${result.date}`);
+                    console.log(`   → Time: ${result.time || 'none'}`);
+                    console.log(`   → Clean Text: "${result.cleanText}"`);
+                    console.log("");
+                });
+            };
+
+            // Run tests (remove this line after testing)
+            // testNaturalLanguageParser();
+
+            // --- Event Listeners ---
+            taskForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const taskText = taskInput.value.trim();
+                if (taskText === '') return;
+
+                // Initialize audio on first user interaction
+                await initAudio();
+
+                addTaskBtn.disabled = true;
+                addSpinner.classList.remove('hidden');
+                addBtnText.classList.add('hidden');
+                
+                // Parse natural language for date and time
+                const parsedInput = parseNaturalLanguage(taskText);
+                
+                const emojiPrompt = `Based on the task "${parsedInput.cleanText}", suggest one single, relevant emoji. Only return the emoji itself.`;
+                const emoji = await callGemini(emojiPrompt) || '📝';
+
+                const task = {
+                    id: Date.now(),
+                    date: parsedInput.date, // Use parsed date instead of selectedDate
+                    text: parsedInput.cleanText, // Use cleaned text without date/time phrases
+                    emoji: emoji.trim(),
+                    time: timeInput.value || parsedInput.time, // Prefer manual time input, fallback to parsed time
+                    priority: priorityInput.value,
+                    tags: tagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
+                    completed: false
+                };
+                addTask(task);
+                
+                taskForm.reset();
+                priorityInput.value = 'low';
+                addTaskBtn.disabled = false;
+                addSpinner.classList.add('hidden');
+                addBtnText.classList.remove('hidden');
             });
+
+            prevWeekBtn.addEventListener('click', () => {
+                currentDate.setDate(currentDate.getDate() - 7);
+                renderWeek();
+                renderTasks();
+            });
+
+            nextWeekBtn.addEventListener('click', () => {
+                currentDate.setDate(currentDate.getDate() + 7);
+                renderWeek();
+                renderTasks();
+            });
+            
+            suggestTasksBtn.addEventListener('click', () => openModal(suggestModal));
+            cancelSuggestBtn.addEventListener('click', () => closeModal(suggestModal));
+            
+             generateTasksBtn.addEventListener('click', async () => {
+                const goal = goalInput.value.trim();
+                if (!goal) return;
+
+                generateBtnText.classList.add('hidden');
+                generateSpinner.classList.remove('hidden');
+                generateTasksBtn.disabled = true;
+                
+                const prompt = `Based on the goal "${goal}", suggest a list of 3 to 5 actionable tasks. Return a JSON array of strings. Example: ["Task 1", "Task 2"]`;
+                const responseText = await callGemini(prompt);
+
+                if (responseText) {
+                    try {
+                        const suggestedTaskTexts = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
+                        
+                        const taskPromises = suggestedTaskTexts.map(async (taskText) => {
+                            const emojiPrompt = `Based on the task "${taskText}", suggest one single, relevant emoji. Only return the emoji itself.`;
+                            const emoji = await callGemini(emojiPrompt) || '💡';
+                            return {
+                                id: Date.now() + Math.random(),
+                                date: selectedDate,
+                                text: taskText,
+                                emoji: emoji.trim(),
+                                time: null,
+                                priority: 'medium',
+                                tags: ['suggested', goal.split(' ')[0].toLowerCase()],
+                                completed: false
+                            };
+                        });
+
+                        const newTasks = await Promise.all(taskPromises);
+                        for (const task of newTasks) {
+                            await addTask(task);
+                        }
+                        
+                        closeModal(suggestModal);
+                        goalInput.value = '';
+                    } catch (e) {
+                        alert("The AI returned an unexpected format. Please try a different goal.");
+                    }
+                }
+                
+                generateBtnText.classList.remove('hidden');
+                generateSpinner.classList.add('hidden');
+                generateTasksBtn.disabled = false;
+            });
+            
+            // Smart Plan feature temporarily disabled
+            /* smartPlanBtn.addEventListener('click', async () => {
+                const tasksForDay = allTasks.filter(t => t.date === selectedDate && !t.time);
+                if (tasksForDay.length === 0) return;
+                
+                smartPlanBtn.innerHTML = `<div class="spinner h-5 w-5 rounded-full border-2 border-t-transparent"></div><span>Planning...</span>`;
+                smartPlanBtn.disabled = true;
+
+                try {
+                    // Use the proper smartPlanning method with authentication
+                    const response = await auth.smartPlanning(tasksForDay, selectedDate);
+                    console.log('🤖 Smart Plan Response:', response);
+
+                    if (response.schedule) {
+                        console.log('⏰ Parsed Schedule:', response.schedule);
+                        console.log('📋 Tasks for Day:', tasksForDay);
+                        
+                        // Update tasks with suggested times and persist to database
+                        const updatePromises = [];
+                        for (const task of tasksForDay) {
+                            console.log(`🔍 Checking task "${task.text}" for schedule match...`);
+                            if (response.schedule[task.text]) {
+                                const suggestedTime = response.schedule[task.text];
+                                console.log(`⏱️ Found time "${suggestedTime}" for task "${task.text}"`);
+                                const updatedTask = { ...task, time: suggestedTime };
+                                updatePromises.push(updateTask(task.id, updatedTask));
+                            } else {
+                                console.log(`❌ No time found for task "${task.text}"`);
+                                console.log('Available schedule keys:', Object.keys(response.schedule));
+                            }
+                        }
+                        
+                        console.log(`🔄 Updating ${updatePromises.length} tasks...`);
+                        await Promise.all(updatePromises);
+                        console.log('✅ All task updates completed');
+                        await renderTasks();
+                    } else if (response.rawResponse) {
+                        // Fallback to parsing raw response if schedule parsing failed
+                        console.log('📝 Fallback: parsing raw AI response');
+                        const cleanResponse = response.rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const schedule = JSON.parse(cleanResponse);
+                        console.log('⏰ Parsed Schedule from raw:', schedule);
+                        
+                        // Same update logic
+                        const updatePromises = [];
+                        for (const task of tasksForDay) {
+                            if (schedule[task.text]) {
+                                const updatedTask = { ...task, time: schedule[task.text] };
+                                updatePromises.push(updateTask(task.id, updatedTask));
+                            }
+                        }
+                        await Promise.all(updatePromises);
+                        await renderTasks();
+                    } else {
+                        throw new Error('No schedule data in response');
+                    }
+                } catch (e) {
+                    console.error('❌ Smart Plan Error:', e);
+                    alert("Smart planning failed. Please try again.");
+                }
+
+                smartPlanBtn.innerHTML = `<i class="fas fa-brain"></i> <span>✨ Smart Plan</span>`;
+                smartPlanBtn.disabled = false;
+            }); */
+
+            editTaskForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = parseInt(editTaskId.value);
+                const task = allTasks.find(t => t.id === id);
+                if (!task) return;
+
+                try {
+                    await updateTask(id, {
+                        ...task,
+                        text: editTaskText.value,
+                        time: editTaskTime.value || null,
+                        priority: editTaskPriority.value,
+                        tags: editTaskTags.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                    });
+                    await renderTasks();
+                    closeModal(editModal);
+                } catch (error) {
+                    alert('Failed to update task. Please try again.');
+                }
+            });
+
+            cancelEditBtn.addEventListener('click', () => closeModal(editModal));
+            
+            clearAllBtn.addEventListener('click', () => openModal(confirmClearModal));
+            cancelClearBtn.addEventListener('click', () => closeModal(confirmClearModal));
+            confirmClearBtn.addEventListener('click', async () => {
+                try {
+                    await clearAllTasks();
+                    await renderTasks();
+                    closeModal(confirmClearModal);
+                } catch (error) {
+                    alert('Failed to clear tasks. Please try again.');
+                }
+            });
+
+            clearFilterBtn.addEventListener('click', () => {
+                currentFilter = null;
+                filterContainer.classList.add('hidden');
+                renderTasks();
+            });
+
+            // Celebration modal event listeners
+            closeCelebrationBtn.addEventListener('click', async () => {
+                try {
+                    // Archive completed tasks when closing celebration
+                    await archiveCompletedTasks(selectedDate);
+                    closeModal(celebrationModal);
+                    await renderTasks(); // Refresh to show archived tasks are gone
+                } catch (error) {
+                    console.error('Error archiving tasks:', error);
+                    closeModal(celebrationModal);
+                }
+            });
+
+            addTomorrowTasksBtn.addEventListener('click', async () => {
+                try {
+                    // Archive completed tasks from today before moving to tomorrow
+                    const todayDate = selectedDate;
+                    await archiveCompletedTasks(todayDate);
+                    
+                    closeModal(celebrationModal);
+                    
+                    // Navigate to tomorrow - properly parse the ISO date string
+                    const currentSelectedDate = new Date(selectedDate + 'T00:00:00');
+                    const tomorrow = new Date(currentSelectedDate);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    
+                    // Update the selected date
+                    selectedDate = toISODateString(tomorrow);
+                    
+                    // Update the current date for week navigation
+                    currentDate = new Date(tomorrow);
+                    
+                    // Re-render everything for the new date
+                    renderWeek();
+                    renderTasks();
+                    updateSelectedDateDisplay();
+                    
+                    // Focus on the task input for easy task creation
+                    setTimeout(() => {
+                        taskInput.focus();
+                    }, 300);
+                    
+                    console.log('Archived tasks from', todayDate, 'and navigated to tomorrow:', selectedDate);
+                } catch (error) {
+                    console.error('Error during tomorrow navigation:', error);
+                    closeModal(celebrationModal);
+                }
+            });
+
+            // Archive toggle functionality
+            archiveToggleBtn.addEventListener('click', () => {
+                showingArchive = !showingArchive;
+                renderTasks();
+            });
+
+            // --- Initial Load ---
+            renderWeek();
+            renderTasks();
+        });
     </script>
 </body>
 </html>

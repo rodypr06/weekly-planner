@@ -52,10 +52,11 @@ app.use('/api', createAuthRoutes(authAdapter, rateLimiters));
 app.use('/api/tasks', createTaskRoutes(dbAdapter, authAdapter, rateLimiters));
 app.use('/api', createAIRoutes(authAdapter, rateLimiters));
 
-// Start server
-const server = app.listen(PORT, () => {
-    logger.log(`Server is running on port ${PORT}`);
+// Start server on all network interfaces
+const server = app.listen(PORT, '0.0.0.0', () => {
+    logger.log(`Server is running on 0.0.0.0:${PORT}`);
     logger.log('Using SQLite for database and session-based authentication');
+    logger.log('Access remotely at: http://<your-vm-ip>:${PORT}');
 });
 
 // Setup graceful shutdown
