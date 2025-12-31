@@ -216,10 +216,10 @@ weekly-planner/
 - `PORT` - Server port (default: 2324)
 - `NODE_ENV` - Environment mode (development/production)
 
-### Legacy (Supabase - No Longer Used)
-- `SUPABASE_URL` - Deprecated
-- `SUPABASE_ANON_KEY` - Deprecated
-- `SUPABASE_SERVICE_ROLE_KEY` - Deprecated
+### Legacy (Deprecated - SQLite Migration)
+- `SUPABASE_URL` - (Legacy - no longer needed)
+- `SUPABASE_ANON_KEY` - (Legacy - no longer needed)
+- `SUPABASE_SERVICE_ROLE_KEY` - (Legacy - no longer needed)
 
 ## NPM Scripts
 
